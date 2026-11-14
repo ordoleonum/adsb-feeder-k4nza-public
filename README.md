@@ -13,6 +13,22 @@ Same feeder underneath, with the differences below. What changed in each release
 
 Compared with stock adsb.im v3.0.15:
 
+### Redesigned interface
+
+- Dashboard layout: top bar with live receiver status, sidebar menu (bottom tabs on phones), light/dark mode.
+- **Pi health in the top bar**: CPU temperature, free SD card space, SkyStats history size (and its
+  growth per month) and the power supply. A reading turns amber or red with advice when something
+  needs attention.
+- Home page: status tiles (aircraft now, messages/sec, positions/sec, aircraft today), shortcuts,
+  full-width aircraft-per-day chart, a one-line update status, and cards for the sites you feed.
+  Days run from midnight in the feeder's time zone.
+- Plain-English help under every settings section, tooltips on buttons, and confirmation before
+  shutdown, reboot and similar actions.
+- Radio (SDR) page with a step-by-step guide to better reception.
+- *Help → Share diagnostics* downloads anonymized logs and opens a problem report on this GitHub
+  repository (stock adsb.im uploads them to public paste sites for its own forums).
+- Live map, graphs, SkyStats and logs open in a new tab.
+
 ### SkyStats: stable for months, not weeks
 
 - Every request to the decoder and to internet services has a timeout, so one hung request can't
@@ -58,22 +74,6 @@ Compared with stock adsb.im v3.0.15:
 - Container logs are limited to 3 × 10 MB each (Docker's default has no limit).
 - The feeder doesn't register with my.adsb.im; it is reached at `http://adsb-feeder.local/` (the
   page footer also shows its IP address).
-
-### Redesigned interface
-
-- Dashboard layout: top bar with live receiver status, sidebar menu (bottom tabs on phones), light/dark mode.
-- **Pi health in the top bar**: CPU temperature, free SD card space, SkyStats history size (and its
-  growth per month) and the power supply. A reading turns amber or red with advice when something
-  needs attention.
-- Home page: status tiles (aircraft now, messages/sec, positions/sec, aircraft today), shortcuts,
-  full-width aircraft-per-day chart, a one-line update status, and cards for the sites you feed.
-  Days run from midnight in the feeder's time zone.
-- Plain-English help under every settings section, tooltips on buttons, and confirmation before
-  shutdown, reboot and similar actions.
-- Radio (SDR) page with a step-by-step guide to better reception.
-- *Help → Share diagnostics* downloads anonymized logs and opens a problem report on this GitHub
-  repository (stock adsb.im uploads them to public paste sites for its own forums).
-- Live map, graphs, SkyStats and logs open in a new tab.
 
 ### Live map
 
