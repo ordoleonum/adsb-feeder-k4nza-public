@@ -68,9 +68,3 @@ in this repository and every release tag is kept.
 **Behind the scenes**
 - Automatic tests for SkyStats, including tests against a real database on every build.
 - Old release pages are removed automatically when a new release is published; tags are kept.
-
-## v3.0.15-1 to v3.0.15-14 (2026-11)
-
-The first releases of the K4NZA build. What they changed compared with stock adsb.im v3.0.15
-is described in the README under
-[How this build is different](README.md#how-this-build-is-different).
