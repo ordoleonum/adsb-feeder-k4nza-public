@@ -144,8 +144,8 @@
         const sd = h.sd || {};
         if (sd.free_bytes !== null && sd.free_bytes !== undefined && sd.total_bytes) {
           const pct = Math.round((sd.free_bytes * 100) / sd.total_bytes);
-          let tip = `SD card: ${fmtBytes(sd.free_bytes)} free of ${fmtBytes(sd.total_bytes)} (${pct}%)`;
-          if (sd.state === "bad") tip += ". Almost full: the feeder and SkyStats can stop working. Shorten SkyStats history or use a bigger card.";
+          let tip = `Disk space: ${fmtBytes(sd.free_bytes)} free of ${fmtBytes(sd.total_bytes)} (${pct}%)`;
+          if (sd.state === "bad") tip += ". Almost full: the feeder and SkyStats can stop working. Shorten SkyStats history or use a bigger card or drive.";
           else if (sd.state === "warn") tip += ". Getting full: consider limiting SkyStats history (Setup > Advanced).";
           setHealth("k4-t-sd", fmtBytes(sd.free_bytes), sd.state === "ok" ? "good" : sd.state, tip);
         }
@@ -161,7 +161,7 @@
               const months = sd.free_bytes / g;
               if (months < 3) {
                 state = "warn";
-                tip += `. At this rate the SD card is full in about ${Math.max(1, Math.round(months))} month(s); limit SkyStats history (Setup > Advanced)`;
+                tip += `. At this rate the disk is full in about ${Math.max(1, Math.round(months))} month(s); limit SkyStats history (Setup > Advanced)`;
               }
             }
           } else {
