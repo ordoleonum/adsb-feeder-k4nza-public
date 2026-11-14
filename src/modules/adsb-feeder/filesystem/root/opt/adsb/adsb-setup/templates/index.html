@@ -99,43 +99,33 @@
     <div class="d-none">Status: <span id="{% if not is_enabled('stage2') %}mf_status_0{% endif %}"></span>
       &middot; <span id="{% if not is_enabled('stage2') %}mf_stats_0{% endif %}"></span></div>
   </div>
-  {% if not widget_mode and is_enabled('base_config') %}
-  <div class="col-12 mb-4">
-    <div class="k4-quick">
-      {% if adsb %}
-      <a class="k4-quick-item" href="/map/{{ env_value_by_tag('tar1090_query_params') }}" target="_blank" rel="noopener">
-        <span class="k4-quick-title">Live map &#8599;</span>
-        <span class="k4-quick-desc">Aircraft you are receiving right now</span></a>
-      <a class="k4-quick-item" href="/stats/" target="_blank" rel="noopener">
-        <span class="k4-quick-title">Reception graphs &#8599;</span>
-        <span class="k4-quick-desc">Range, message rate and signal over time</span></a>
-      {% endif %}
-      {% if is_enabled('skystats') %}
-      <a class="k4-quick-item" href="/skystats/" target="_blank" rel="noopener">
-        <span class="k4-quick-title">SkyStats &#8599;</span>
-        <span class="k4-quick-desc">Flight history, records, interesting aircraft &amp; export</span></a>
-      {% endif %}
-      {% if not is_enabled('stage2') and env_value_by_tag('aggregator_choice') not in ['micro', 'nano'] %}
-      <a class="k4-quick-item" href="/aggregators">
-        <span class="k4-quick-title">Data sharing</span>
-        <span class="k4-quick-desc">Choose which flight-tracking sites get your data</span></a>
-      {% endif %}
-      <a class="k4-quick-item" href="/sdr_setup">
-        <span class="k4-quick-title">Radio (SDR) &amp; gain</span>
-        <span class="k4-quick-desc">Tune reception, check your USB radio</span></a>
-      <a class="k4-quick-item" href="/backup">
-        <span class="k4-quick-title">Backup</span>
-        <span class="k4-quick-desc">Save your settings (and SkyStats data)</span></a>
+  {% if not widget_mode %}
+  {# Pi health, filled in by k4nza-ui.js; each tile's edge shows its own state #}
+  <div class="col-12 mb-3">
+    <div id="k4-health-tiles" class="k4-tiles" data-freedom-units="{{ 1 if is_enabled('freedom_units') else 0 }}">
+      <div class="k4-tile d-none" id="k4-t-cpu" title="Temperature of the Pi's processor">
+        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">CPU temperature</div></div>
+      <div class="k4-tile d-none" id="k4-t-ext" title="Temperature from the external sensor">
+        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">outside temperature</div></div>
+      <div class="k4-tile d-none" id="k4-t-pwr" title="Power supply">
+        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">power supply</div></div>
+      <div class="k4-tile d-none" id="k4-t-sd" title="Free space on the SD card">
+        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">SD card free</div></div>
+      <div class="k4-tile d-none" id="k4-t-data" title="Size of the SkyStats history">
+        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">SkyStats data</div></div>
     </div>
-    {% if is_enabled('skystats') %}
-    {# aircraft search: opens the SkyStats Search tab #}
-    <form class="k4-card k4-search mt-3" action="/skystats/" method="get" target="_blank" role="search">
-      <input class="form-control" type="search" name="q" required minlength="2" autocomplete="off" spellcheck="false"
+  </div>
+  {% endif %}
+  {% if not widget_mode and is_enabled('base_config') and is_enabled('skystats') %}
+  <div class="col-12 mb-4">
+    {# aircraft search: opens the SkyStats Search tab in a new tab; not a <form>, so the
+       page stays as it is and more searches can follow #}
+    <div class="k4-card k4-search" role="search">
+      <input class="form-control" type="search" id="k4-search-input" autocomplete="off" spellcheck="false"
              placeholder="Search your history: N812DN, A1B2C3, DAL1423, B739 or Delta"
              aria-label="Search SkyStats for a registration, hex code, callsign, type or operator">
-      <button class="btn btn-primary" type="submit" title="Opens SkyStats in a new tab">Search &#8599;</button>
-    </form>
-    {% endif %}
+      <button class="btn btn-primary" type="button" id="k4-search-btn" title="Opens SkyStats in a new tab">Search &#8599;</button>
+    </div>
   </div>
   {% endif %}
   <div class="col-12 mb-3 {% if not is_enabled('stage2') %} d-none {% endif %}">

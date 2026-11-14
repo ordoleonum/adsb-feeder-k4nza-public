@@ -169,21 +169,6 @@ body:has(#k4-topbar) .container.pt-5 {
 .k4-pill[data-state="warn"] .k4-dot { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25); }
 .k4-pill[data-state="bad"] .k4-dot { background: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25); }
 
-.k4-temp { display: flex; flex-direction: column; font-size: 0.68rem; line-height: 1.1; color: var(--k4-top-muted); text-align: center; }
-.k4-temp span:last-child { color: var(--k4-top-text); font-weight: 600; font-size: 0.8rem; }
-/* Pi health readings (SD card, SkyStats data, power) next to the CPU temperature */
-a.k4-health { text-decoration: none; color: var(--k4-top-muted); padding: 0 0.15rem; border-radius: 6px; }
-a.k4-health:hover { background: rgba(148, 163, 184, 0.16); }
-.k4-health[data-state="ok"] span:last-child { color: #4ade80; }
-.k4-health[data-state="warn"] span:last-child { color: #fbbf24; }
-.k4-health[data-state="bad"] span:last-child { color: #f87171; }
-.k4-health span:last-child { white-space: nowrap; }
-@media (max-width: 575.98px) {
-  .k4-health-wide { display: none !important; }
-  /* the subtitle would run into the CPU / PWR readings */
-  .k4-brand-sub { display: none; }
-}
-
 .k4-pill-unit { display: none; margin-left: -0.2rem; }
 .k4-pill[data-unit="1"] .k4-pill-unit { display: inline; }
 
@@ -519,39 +504,12 @@ label { line-height: 1.4; }
 .k4-tiles[data-state="good"] .k4-tile::before { background: var(--k4-good); }
 .k4-tiles[data-state="warn"] .k4-tile::before { background: var(--k4-warn); }
 .k4-tiles[data-state="bad"] .k4-tile::before { background: var(--k4-bad); }
+/* Pi health tiles: each tile has its own state */
+.k4-tile[data-state="good"]::before { background: var(--k4-good); }
+.k4-tile[data-state="warn"]::before { background: var(--k4-warn); }
+.k4-tile[data-state="bad"]::before { background: var(--k4-bad); }
 .k4-tile-value { font-size: 1.9rem; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .k4-tile-label { color: var(--k4-muted); font-size: 0.82rem; font-weight: 500; margin-top: 0.2rem; }
-
-.k4-quick {
-  display: grid;
-  /* 3 / 2 / 1 columns so six shortcuts always fill whole rows */
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-@media (max-width: 991.98px) { .k4-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-/* phones: compact 2-column shortcuts (titles only) - the bottom tab bar covers the rest */
-@media (max-width: 575.98px) {
-  .k4-quick { gap: 0.5rem; }
-  .k4-quick-item { padding: 0.6rem 0.75rem; }
-  .k4-quick-desc { display: none; }
-}
-.k4-quick-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.85rem 1rem;
-  border-radius: var(--k4-radius);
-  background: var(--k4-surface);
-  border: 1px solid var(--k4-border);
-  box-shadow: var(--k4-shadow);
-  color: var(--k4-text) !important;
-  text-decoration: none;
-  transition: transform 0.12s ease, border-color 0.12s ease;
-}
-.k4-quick-item:hover, .k4-quick-item:focus { transform: translateY(-1px); border-color: var(--k4-accent); }
-.k4-quick-title { font-weight: 650; color: var(--k4-accent); }
-.k4-quick-title .k4-ico { width: 14px; height: 14px; vertical-align: -1px; opacity: 0.7; }
-.k4-quick-desc { font-size: 0.82rem; color: var(--k4-muted); }
 
 .k4-update-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
 

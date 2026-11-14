@@ -2,6 +2,7 @@
  *  - light/dark toggle (remembered per browser)
  *  - phone menu (sidebar slides in)
  *  - live receiver status in the top bar and the home page tiles
+ *  - Pi health tiles and the aircraft search box on the home page
  */
 (function () {
   "use strict";
@@ -83,7 +84,7 @@
       });
   }
 
-  // ---------- Pi health (top bar) ----------
+  // ---------- Pi health tiles (Home page) ----------
   const GB = 1024 * 1024 * 1024;
   function fmtBytes(b) {
     if (b === null || b === undefined) return "–";
@@ -100,11 +101,40 @@
   function setHealth(id, value, state, tip) {
     const el = $id(id);
     if (!el) return;
-    el.lastElementChild.textContent = value;
+    el.querySelector(".k4-tile-value").textContent = value;
     if (state) el.dataset.state = state; else delete el.dataset.state;
-    el.title = tip + " (click for System)";
+    el.title = tip;
     el.setAttribute("aria-label", tip);
     el.classList.remove("d-none");
+  }
+
+  function fmtTemp(c) {
+    const tiles = $id("k4-health-tiles");
+    const freedom = tiles && tiles.dataset.freedomUnits === "1";
+    return freedom ? Math.round(c * 1.8 + 32) + "°F" : Math.round(c) + "°C";
+  }
+
+  function updateTemperatures() {
+    fetch("/api/get_temperatures.json", { signal: AbortSignal.timeout(15000) })
+      .then((r) => r.json())
+      .then((t) => {
+        if (t.cpu !== undefined && t.cpu !== null && !isNaN(t.cpu)) {
+          const c = Number(t.cpu);
+          let state = "good", tip = `CPU temperature: ${fmtTemp(c)}, normal`;
+          if (c >= 80) {
+            state = "bad";
+            tip = `CPU temperature: ${fmtTemp(c)}, too hot. The Pi slows itself down; add a heatsink or a case with a fan and give it air`;
+          } else if (c >= 55) {
+            state = "warn";
+            tip = `CPU temperature: ${fmtTemp(c)}, warm. The Pi slows down at 80°C; a heatsink or fan helps`;
+          }
+          setHealth("k4-t-cpu", fmtTemp(c), state, tip);
+        }
+        if (t.ext !== undefined && t.ext !== null && !isNaN(t.ext)) {
+          setHealth("k4-t-ext", fmtTemp(Number(t.ext)), "", `Temperature from the external sensor: ${fmtTemp(Number(t.ext))}`);
+        }
+      })
+      .catch(() => { /* keep the last readings */ });
   }
 
   function updateHealth() {
@@ -117,13 +147,13 @@
           let tip = `SD card: ${fmtBytes(sd.free_bytes)} free of ${fmtBytes(sd.total_bytes)} (${pct}%)`;
           if (sd.state === "bad") tip += ". Almost full: the feeder and SkyStats can stop working. Shorten SkyStats history or use a bigger card.";
           else if (sd.state === "warn") tip += ". Getting full: consider limiting SkyStats history (Setup > Advanced).";
-          setHealth("k4-h-sd", fmtBytes(sd.free_bytes), sd.state === "ok" ? "" : sd.state, tip);
+          setHealth("k4-t-sd", fmtBytes(sd.free_bytes), sd.state === "ok" ? "good" : sd.state, tip);
         }
 
         const db = h.skystats || {};
         if (db.bytes !== null && db.bytes !== undefined) {
           let tip = `SkyStats history: ${fmtBytes(db.bytes)}`;
-          let state = "";
+          let state = "good";
           const g = db.growth_per_month_bytes;
           if (g !== null && g !== undefined) {
             tip += g > 0 ? `, growing about ${fmtBytes(g)} a month` : ", not growing";
@@ -137,7 +167,7 @@
           } else {
             tip += " (monthly growth is shown after a week)";
           }
-          setHealth("k4-h-data", fmtBytes(db.bytes), state, tip);
+          setHealth("k4-t-data", fmtBytes(db.bytes), state, tip);
         }
 
         const p = h.power || {};
@@ -154,10 +184,34 @@
             tip = "Power supply: OK now (low voltage was seen earlier, more than a day ago)";
           }
           if (p.throttled && p.state !== "ok") tip += ". The Pi slowed itself down to cope";
-          setHealth("k4-h-pwr", value, p.state, tip);
+          setHealth("k4-t-pwr", value, p.state === "ok" ? "good" : p.state, tip);
         }
       })
       .catch(() => { /* keep the last readings */ });
+  }
+
+  // ---------- aircraft search box (Home page) ----------
+  // Opens the SkyStats Search tab in a new tab; the box stays as it is for
+  // the next search.
+  function initSearch() {
+    const input = $id("k4-search-input");
+    const button = $id("k4-search-btn");
+    if (!input || !button) return;
+    const go = () => {
+      const q = input.value.trim();
+      if (q.replace(/[^a-z0-9]/gi, "").length < 2) {
+        input.focus();
+        return;
+      }
+      window.open("/skystats/?q=" + encodeURIComponent(q), "_blank", "noopener");
+    };
+    button.addEventListener("click", go);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        go();
+      }
+    });
   }
 
   // ---------- init ----------
@@ -195,10 +249,14 @@
       }
     });
 
-    if ($id("k4-h-pwr")) {
+    if ($id("k4-health-tiles")) {
       updateHealth();
+      updateTemperatures();
       setInterval(() => { if (!document.hidden) updateHealth(); }, 60000);
+      setInterval(() => { if (!document.hidden) updateTemperatures(); }, 15000);
     }
+
+    initSearch();
 
     if ($id("k4-status-pill") || $id("k4-tiles")) {
       updateStatus();

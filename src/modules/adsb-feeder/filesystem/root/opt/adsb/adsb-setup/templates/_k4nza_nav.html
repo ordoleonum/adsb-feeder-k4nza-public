@@ -55,14 +55,6 @@
     </span>
   </a>
   <div class="k4-top-spacer"></div>
-  {% if is_enabled('temperature_block') %}
-  <div id="cpu_temp_block" class="d-none k4-temp"><span>CPU</span><span id="cpu_temp"></span></div>
-  <div id="ext_temp_block" class="d-none k4-temp"><span>EXT</span><span id="ext_temp"></span></div>
-  {% endif %}
-  {# Pi health, filled in by k4nza-ui.js from /api/k4nza/health; SD and DATA are hidden on phones #}
-  <a id="k4-h-sd" class="d-none k4-temp k4-health k4-health-wide" href="{{ url_for('systemmgmt') }}"><span>SD</span><span>&ndash;</span></a>
-  <a id="k4-h-data" class="d-none k4-temp k4-health k4-health-wide" href="{{ url_for('systemmgmt') }}"><span>DATA</span><span>&ndash;</span></a>
-  <a id="k4-h-pwr" class="d-none k4-temp k4-health" href="{{ url_for('systemmgmt') }}"><span>PWR</span><span>&ndash;</span></a>
   {% if base_ok and not nonadsb %}
   <a id="k4-status-pill" class="k4-pill" href="{{ mapurl }}" target="_blank" rel="noopener" title="Messages per second your radio is decoding (opens the live map)">
     <span class="k4-dot"></span><span id="k4-status-text">checking&hellip;</span><span class="k4-pill-unit">msg/s</span>
