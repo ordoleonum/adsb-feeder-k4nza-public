@@ -740,9 +740,13 @@
               fmtMonthDay = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" });
             }
             todayString = fmtMonthDay.format(new Date());
+            // today's calendar date in that time zone, then step back whole days
+            // (not 24 hours, which goes wrong around daylight-saving changes)
+            let parts = {};
+            new Intl.DateTimeFormat("en-US", { year: "numeric", month: "numeric", day: "numeric", timeZone: fmtDay.resolvedOptions().timeZone })
+              .formatToParts(new Date()).forEach(p => { parts[p.type] = Number(p.value); });
             for (let i = days-1; i >= 0; i--) {
-              let date = new Date(Date.now() - i * 86400000);
-              labels.push(Number(fmtDay.format(date)));
+              labels.push(new Date(Date.UTC(parts.year, parts.month - 1, parts.day - i)).getUTCDate());
             }
             // now collect the feeder names - need to do this in jinja, not JS
             feeders[0] = "{{ list_value_by_tag('site_name', 0) }}";
