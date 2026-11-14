@@ -123,8 +123,9 @@ the selected-aircraft card. *(Sample aircraft, shown over Chicago.)*
 waiting and what's new in the newest release.
 ![Updates page](docs/screenshots/updates.png)
 
-**SkyStats aircraft search**: every visit of an aircraft with its route, closest distance, highest
-altitude and time in view, ready to download as CSV. *(Sample data.)*
+**SkyStats aircraft search**: every visit of an aircraft with its photo, route, closest distance,
+highest altitude and time in view, ready to download as CSV. *(Sample data; photo: U.S. Air Force
+photo by Heide Couch, public domain.)*
 ![SkyStats aircraft search](docs/screenshots/skystats-search.jpg)
 
 **SkyStats reception charts**: the farthest aircraft heard in each direction (a dent shows where the antenna
