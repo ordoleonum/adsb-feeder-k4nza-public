@@ -194,7 +194,7 @@ Open **Updates** (or use the line at the bottom of Home):
 
 - **Update feeder software** installs the newest release from this repository, including
   a new SkyStats when there is one. Your settings and SkyStats history are kept.
-  Takes 5-15 minutes; feeding is only briefly interrupted.
+  Could take 5-15 minutes; feeding is only briefly interrupted.
 - **Update Pi OS** installs Raspberry Pi OS security and bug-fix updates for the packages
   already installed.
 - **Go back to ...** appears after an update: it reinstalls the version the feeder ran before,
