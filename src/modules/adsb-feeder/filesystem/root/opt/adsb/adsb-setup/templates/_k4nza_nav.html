@@ -51,7 +51,7 @@
     </span>
     <span class="k4-brand-text">
       <span class="k4-brand-name">{{ list_value_by_tag("site_name", 0) or 'K4NZA Feeder' }}</span>
-      <span class="k4-brand-sub">{% if nonadsb %}SDR{% else %}ADS-B{% endif %} feeder &middot; K4NZA build</span>
+      <span class="k4-brand-sub">{% if nonadsb %}SDR{% else %}ADS-B{% endif %} feeder &middot; K4NZA build {{ env_value_by_tag("base_version") | replace("(k4nza)", "") }}</span>
     </span>
   </a>
   <div class="k4-top-spacer"></div>
