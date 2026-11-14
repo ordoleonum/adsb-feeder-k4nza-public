@@ -15,11 +15,12 @@ Compared with stock adsb.im v3.0.15:
 
 ### Redesigned interface
 
-- Dashboard layout: top bar with live receiver status, sidebar menu (bottom tabs on phones), light/dark mode.
+- Dashboard layout: top bar with the installed version and live receiver status, sidebar menu (bottom
+  tabs on phones), light/dark mode.
 - Home page: status tiles (aircraft now, messages/sec, positions/sec, aircraft today), an aircraft
   search box, full-width aircraft-per-day chart, a one-line update status, and cards for the sites
   you feed. Days run from midnight in the feeder's time zone.
-- **Pi health tiles** on Home: CPU temperature, power supply, free SD card space and SkyStats history
+- **Pi health tiles** on Home: CPU temperature, power supply, free disk space and SkyStats history
   size (and its growth per month). A tile's edge turns amber or red, with advice in its tooltip, when
   something needs attention.
 - Plain-English help under every settings section, tooltips on buttons, and confirmation before
@@ -110,7 +111,7 @@ Compared with stock adsb.im v3.0.15:
 
 ## Screenshots
 
-**Home dashboard**: live receiver status, Pi health tiles (CPU temperature, power supply, SD card space,
+**Home dashboard**: live receiver status, Pi health tiles (CPU temperature, power supply, disk space,
 SkyStats size), aircraft search, aircraft per day and the sites you feed.
 ![Home dashboard](docs/screenshots/home.png)
 

@@ -6,7 +6,7 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 ## v3.0.15-21 (not released yet)
 
 **Changed**
-- Home: the Pi health readings (CPU temperature, power supply, SD card space and SkyStats history)
+- Home: the Pi health readings (CPU temperature, power supply, disk space and SkyStats history)
   moved from the top bar to a row of tiles under the receiver tiles. Each tile's edge turns green,
   amber or red, with advice in its tooltip. The top bar keeps the message-rate indicator.
 - Home: the six shortcut buttons are gone (the same links are always in the menu), and the aircraft
@@ -15,8 +15,13 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - SkyStats search shows a photo of the aircraft from planespotters.net, credited to the photographer.
 - SkyStats search links to FlightAware instead of the live map, so aircraft that are out of range
   can still be looked up.
+- The top bar shows the installed K4NZA version next to the station name.
+- The page footer links to this repository instead of adsb.im.
 
 **Fixed**
+- "Your feeds on other sites" on Home showed only a heading for sites without a card of their own
+  (adsb.fi, for example). Every site you feed now gets a card with its map and feed status page,
+  and the section stays hidden when there is nothing to show.
 - The day numbers under the aircraft-per-day chart on Home could repeat a day around a
   daylight-saving change.
 
