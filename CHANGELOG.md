@@ -3,6 +3,23 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-21 (not released yet)
+
+**Changed**
+- Home: the Pi health readings (CPU temperature, power supply, SD card space and SkyStats history)
+  moved from the top bar to a row of tiles under the receiver tiles. Each tile's edge turns green,
+  amber or red, with advice in its tooltip. The top bar keeps the message-rate indicator.
+- Home: the six shortcut buttons are gone (the same links are always in the menu), and the aircraft
+  search box moved up in their place.
+- The aircraft search box on Home stays in place after a search, ready for the next one.
+- SkyStats search shows a photo of the aircraft from planespotters.net, credited to the photographer.
+- SkyStats search links to FlightAware instead of the live map, so aircraft that are out of range
+  can still be looked up.
+
+**Fixed**
+- The day numbers under the aircraft-per-day chart on Home could repeat a day around a
+  daylight-saving change.
+
 ## v3.0.15-20 (2026-11-13)
 
 The start of the public change log: from this release on, every change is its own commit

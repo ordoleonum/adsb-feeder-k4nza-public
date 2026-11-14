@@ -16,12 +16,12 @@ Compared with stock adsb.im v3.0.15:
 ### Redesigned interface
 
 - Dashboard layout: top bar with live receiver status, sidebar menu (bottom tabs on phones), light/dark mode.
-- **Pi health in the top bar**: CPU temperature, free SD card space, SkyStats history size (and its
-  growth per month) and the power supply. A reading turns amber or red with advice when something
-  needs attention.
-- Home page: status tiles (aircraft now, messages/sec, positions/sec, aircraft today), shortcuts,
-  full-width aircraft-per-day chart, a one-line update status, and cards for the sites you feed.
-  Days run from midnight in the feeder's time zone.
+- Home page: status tiles (aircraft now, messages/sec, positions/sec, aircraft today), an aircraft
+  search box, full-width aircraft-per-day chart, a one-line update status, and cards for the sites
+  you feed. Days run from midnight in the feeder's time zone.
+- **Pi health tiles** on Home: CPU temperature, power supply, free SD card space and SkyStats history
+  size (and its growth per month). A tile's edge turns amber or red, with advice in its tooltip, when
+  something needs attention.
 - Plain-English help under every settings section, tooltips on buttons, and confirmation before
   shutdown, reboot and similar actions.
 - Radio (SDR) page with a step-by-step guide to better reception.
@@ -48,6 +48,8 @@ Compared with stock adsb.im v3.0.15:
 - **Search** tab (or the search box on the feeder's Home page): find an aircraft by registration,
   hex code, callsign, type (for example `B739` or `C17`) or operator, and see every visit: when,
   callsign, route, closest distance, highest altitude and time in view. Download the visits as CSV.
+- Shows a photo of the aircraft from planespotters.net (credited to the photographer) and links to
+  FlightAware, so aircraft that are out of range can still be looked up.
 - SkyStats records how close each aircraft came (also in the Flights export).
 
 ### SkyStats: reception charts
@@ -108,8 +110,8 @@ Compared with stock adsb.im v3.0.15:
 
 ## Screenshots
 
-**Home dashboard**: live receiver status, Pi health in the top bar (CPU temperature, SD card space,
-SkyStats size, power supply), shortcuts, aircraft search, aircraft per day and the sites you feed.
+**Home dashboard**: live receiver status, Pi health tiles (CPU temperature, power supply, SD card space,
+SkyStats size), aircraft search, aircraft per day and the sites you feed.
 ![Home dashboard](docs/screenshots/home.png)
 
 **Live map**: modern panels, buttons with words instead of single letters, a tidy aircraft list and
@@ -132,7 +134,7 @@ is blocked), and signal strength against distance for tuning gain. *(Sample data
   <tr>
     <td valign="top" width="60%"><b>SkyStats export</b>: download everything as a ZIP, or one dataset at a time as CSV for Excel or Google Sheets, with an optional date range.<br><br>
       <img src="docs/screenshots/skystats-export.jpg" alt="SkyStats export" width="100%"></td>
-    <td valign="top" width="40%"><b>On a phone</b>: bottom tabs, a slide-in menu and the key readings in the top bar.<br><br>
+    <td valign="top" width="40%"><b>On a phone</b>: bottom tabs, a slide-in menu and the status tiles.<br><br>
       <img src="docs/screenshots/phone.jpg" alt="Home page on a phone" width="100%"></td>
   </tr>
 </table>
@@ -174,7 +176,7 @@ The menu on the left (or the **Menu** tab on a phone) has everything:
 
 | Page | What it's for |
 |---|---|
-| **Home** | Receiver status: aircraft now, messages per second, aircraft today, update status |
+| **Home** | Receiver status, Pi health, aircraft search, aircraft per day, update status |
 | **Live map** | The aircraft you're receiving right now; Heatmap, Tracks and Replay are just below it |
 | **SkyStats** | Flight history, routes, records, interesting aircraft, **Search**, **Export** |
 | **Reception graphs** | How well your station is doing over hours, days and months |
