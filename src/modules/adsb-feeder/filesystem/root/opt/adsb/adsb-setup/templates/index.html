@@ -393,6 +393,8 @@
     {% set ns.planefinder = true %}
     {% endif %}
     {% endfor %}
+    {% set k4_own_cards = ["adsblol", "flightradar", "flightaware", "planefinder", "adsbx", "alive"] %}
+    {% set ns.other_feeds = (aggregators | rejectattr(0, "in", k4_own_cards) | list | length) > 0 %}
     <div id="UAT978" class="row {% if not ns.uat978 %}d-none{% endif %}">
       <hr />
       <div class="col-12">
@@ -416,7 +418,7 @@
       </div>
     </div>
     <div
-         class="row mt-3 k4-agg-links {% if not (ns.adsblol or ns.flightradar or ns.planefinder or ns.adsbx or ns.alive or ns.flightaware) %}d-none{% endif %}">
+         class="row mt-3 k4-agg-links {% if not (ns.adsblol or ns.flightradar or ns.planefinder or ns.adsbx or ns.alive or ns.flightaware or ns.other_feeds) %}d-none{% endif %}">
       <div class="col-12 k4-agg-links-title">
         <h5 class="mb-0">Your feeds on other sites</h5>
         <div class="small k4-muted">Status pages and maps on the flight-tracking sites you share data with</div>
@@ -564,6 +566,20 @@
           </tbody>
         </table>
       </div>
+      {# every other site you feed: its map and feed status page #}
+      {% for agg, name, map, status, table in aggregators if agg not in k4_own_cards %}
+      <div class="col-12">
+        <div class="lead">{{ name }}</div>
+        <ul class="mb-0">
+          {% if map %}<li><a href="{{ map }}" target="_blank" rel="noopener">Map</a></li>{% endif %}
+          {% for idx in ns.site_indices %}
+          {% if list_is_enabled(agg, idx) and status[idx] %}
+          <li><a href="{{ status[idx] }}" target="_blank" rel="noopener">{% if num_micro_sites > 1 %}{{ list_value_by_tag('site_name', idx) }}: {% endif %}Feed status</a></li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
     </div>
   </div>
   <div

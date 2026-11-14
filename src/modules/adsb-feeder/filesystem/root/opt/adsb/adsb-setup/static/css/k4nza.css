@@ -567,6 +567,8 @@ footer { color: var(--k4-muted); }
   margin-left: 0;
   margin-right: 0;
 }
+/* the grid above must not undo "hidden" when there's nothing to show */
+.k4-agg-links.d-none { display: none !important; }
 .k4-agg-links > [class*="col-"] {
   width: auto;
   max-width: none;
