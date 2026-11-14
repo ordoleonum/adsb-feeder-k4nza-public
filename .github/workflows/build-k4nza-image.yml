@@ -1,0 +1,202 @@
+# Builds the K4NZA Raspberry Pi (2/3/4/5, 64-bit) image with the SkyStats
+# container built in, and publishes it as a GitHub release for Raspberry Pi
+# Imager. Runs for k4nza-v* tags (release) or manually (test build).
+#
+# Based on the adsb.im build-images.yml (GPL-3.0, CustomPiOS).
+name: build K4NZA image
+
+on:
+  push:
+    tags:
+    - "k4nza-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # create the release
+  packages: read    # pull the SkyStats container
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    env:
+      IMG_NAME: raspberrypi64-pi-2-3-4-5
+      BASE_ARCH: arm64
+      VARIANT: default
+      IMAGE_URL: https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2026-06-19/2026-06-18-raspios-trixie-arm64-lite.img.xz
+      MAGIC_PATH: repository/src/image/2026-06-18-raspios-trixie-arm64-lite.img.xz
+
+    steps:
+    - name: mask secrets
+      run: |
+        echo "::add-mask::${{ secrets.USER_PASSWORD }}"
+        echo "::add-mask::${{ secrets.ROOT_PASSWORD }}"
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        show-progress: false
+        path: repository
+
+    - name: Install Dependencies
+      run: |
+        sudo rm -f /var/lib/man-db/auto-update
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends -y coreutils p7zip-full qemu-user-static qemu-utils lz4
+
+    - name: Build in the SkyStats container
+      run: |
+        set -euo pipefail
+        VERSIONS=repository/src/modules/adsb-feeder/filesystem/root/opt/adsb/docker.image.versions
+        SKYSTATS=$(grep '^SKYSTATS_CONTAINER=' "$VERSIONS" | cut -d= -f2)
+        echo "SkyStats container: $SKYSTATS"
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        docker pull --platform linux/arm64 "$SKYSTATS"
+        DEST=repository/src/modules/adsb-feeder/filesystem/root/opt/adsb/preloaded-images
+        mkdir -p "$DEST"
+        docker save "$SKYSTATS" -o "$DEST/skystats.tar"
+        echo "$SKYSTATS" > "$DEST/skystats.ref"
+        ls -lh "$DEST"
+
+    - name: Checkout CustomPiOS
+      uses: actions/checkout@v4
+      with:
+        repository: 'dirkhh/CustomPiOS'
+        ref: 'adsbim'
+        show-progress: false
+        path: CustomPiOS
+
+    - name: Update CustomPiOS Paths and create image directories
+      run: |
+        cd repository/src
+        ../../CustomPiOS/src/update-custompios-paths
+        mkdir -p image image-armbian image-dietpi
+
+    - name: Download base Raspberry Pi OS image
+      run: |
+        mkdir -p "$(dirname "${MAGIC_PATH}")"
+        wget -qO "${MAGIC_PATH}" "$IMAGE_URL"
+
+    - name: Version tag for this build
+      id: tag
+      run: |
+        if [ "${{ github.ref_type }}" = "tag" ] ; then
+          tag="${{ github.ref_name }}"; is_release=release
+        else
+          tag="k4nza-test-$(echo ${{ github.sha }} | cut -c1-8)"; is_release=test
+        fi
+        echo "tag=${tag}" >> $GITHUB_OUTPUT
+        echo "is_release=${is_release}" >> $GITHUB_OUTPUT
+
+    - name: Record version and attach SkyStats container to the release
+      run: |
+        set -euo pipefail
+        ADSB=repository/src/modules/adsb-feeder/filesystem/root/opt/adsb
+        # shown on the Updates page and compared with the newest release
+        echo "${{ steps.tag.outputs.tag }}" > "$ADSB/k4nza.version"
+        # the Pi's one-click updater downloads this when a release needs a new SkyStats container
+        mkdir -p uploads
+        gzip -c "$ADSB/preloaded-images/skystats.tar" > uploads/skystats-image.tar.gz
+        # the updater checks the download against this before installing it
+        (cd uploads && sha256sum skystats-image.tar.gz > skystats-image.tar.gz.sha256)
+        ls -lh uploads
+
+    - name: Build Image
+      id: build
+      run: |
+        sudo modprobe loop
+        cd repository/src
+        echo "export BASE_ARCH=${BASE_ARCH}" >> config
+        # e.g. adsb-feeder-k4nza-v3.0.15-10.img
+        tag="${{ steps.tag.outputs.tag }}"
+        feeder_image_name="adsb-feeder-k4nza-${tag#k4nza-}.img"
+        # Passwords for the image's built-in 'pi' and 'root' accounts. If the
+        # USER_PASSWORD / ROOT_PASSWORD repo secrets are not set, a random
+        # password is generated for every build. Day-to-day use needs no login
+        # (web interface); for SSH use System > Management in the web UI.
+        UPW="${{ secrets.USER_PASSWORD }}"
+        RPW="${{ secrets.ROOT_PASSWORD }}"
+        [ -n "$UPW" ] || UPW=$(openssl rand -hex 16)
+        [ -n "$RPW" ] || RPW=$(openssl rand -hex 16)
+        echo "::add-mask::$UPW"
+        echo "::add-mask::$RPW"
+        echo "export BASE_USER_PASSWORD=$UPW" >> config
+        echo "export ROOT_PWD=$RPW" >> config
+        # no SSH key is built in; add your own from the web UI
+        echo "export SSH_PUB_KEY=''" >> config
+        echo "export FEEDER_IMAGE_NAME=${feeder_image_name}" >> config
+        # room for the built-in SkyStats container (~205 MB, copied twice
+        # during the build); the release step shrinks the image again afterwards
+        echo "export BASE_IMAGE_ENLARGEROOT=1500" >> config
+        echo "export BASE_IMAGE_RESIZEROOT=10" >> config
+        echo "feeder_image_name=${feeder_image_name}" >> $GITHUB_OUTPUT
+        git fetch --tags --force
+        # the version shown in the web UI is derived from the latest v* tag
+        sudo K4NZA_TAG="${{ steps.tag.outputs.tag }}" GH_REF_TYPE=branch GH_TRGT_REF=k4nza bash -x ./build_dist "${VARIANT}"
+
+    - name: Release Image (shrink)
+      env:
+        BASE_RELEASE_COMPRESS: no
+      run: |
+        cd repository/src
+        export CUSTOM_PI_OS_PATH="$(realpath ../../CustomPiOS/src/)"
+        source config
+        sudo --preserve-env ../../CustomPiOS/src/release "${VARIANT}"
+
+    - name: Collect and compress
+      run: |
+        mkdir -p uploads
+        IMAGE="${{ steps.build.outputs.feeder_image_name }}"
+        BUILT_IMAGE="$(find repository/src/workspace -name "*.img" | head -n 1)"
+        sudo mv -v "${BUILT_IMAGE}" "uploads/${IMAGE}"
+        cd uploads
+        sudo xz -z -6 -T0 "${IMAGE}"
+        sha256sum "${IMAGE}.xz" | sudo tee "${IMAGE}.xz.sha256"
+        ls -lh .
+
+    - name: Release notes
+      run: |
+        # this release's section of CHANGELOG.md ("## v3.0.15-20 ..." up to the
+        # next "## "), then the install note. The feeder's Updates page shows
+        # the part above the "---" line.
+        version="${{ steps.tag.outputs.tag }}"
+        version="${version#k4nza-}"
+        repository/.github/k4nza-changelog-section.sh repository/CHANGELOG.md "$version" > release-notes.md || true
+        cat >> release-notes.md <<'NOTES'
+
+        ---
+
+        **Install:** download the `adsb-feeder-k4nza-v...img.xz` below and write it with
+        Raspberry Pi Imager. Already running K4NZA? Use **Updates → Update feeder software** instead.
+
+        What's different from stock adsb.im, setup and usage:
+        [README](https://github.com/ordoleonum/adsb-feeder-k4nza-public#readme).
+        All changes: [CHANGELOG](https://github.com/ordoleonum/adsb-feeder-k4nza-public/blob/main/CHANGELOG.md).
+        NOTES
+        sed -i 's/^        //' release-notes.md
+        cat release-notes.md
+
+    - name: Publish release
+      uses: softprops/action-gh-release@v2.4.2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ steps.tag.outputs.is_release == 'release' && github.ref_name || 'k4nza-latest-test' }}
+        name: ${{ steps.tag.outputs.is_release == 'release' && github.ref_name || format('Test build {0}', steps.tag.outputs.tag) }}
+        prerelease: ${{ steps.tag.outputs.is_release != 'release' }}
+        body_path: release-notes.md
+        files: uploads/*
+
+    - name: Remove older release pages (their tags are kept)
+      if: steps.tag.outputs.is_release == 'release'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # only the newest release is listed on the Releases page; every tag
+        # stays, so a feeder can still go back to the version it ran before
+        gh release list -R "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease \
+            -q '.[] | select(.isPrerelease | not) | .tagName' | while read -r t ; do
+          case "$t" in
+            "${{ github.ref_name }}") ;;
+            k4nza-v*) echo "removing release page $t (tag kept)"; gh release delete "$t" -R "$GITHUB_REPOSITORY" --yes ;;
+          esac
+        done

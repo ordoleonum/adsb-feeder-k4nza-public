@@ -1,0 +1,62 @@
+services:
+  skystats-db:
+    image: postgres:17
+    container_name: skystats-db
+    # cap this container's log on the SD card (Docker's default has no limit)
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    hostname: skystats-db
+    restart: unless-stopped
+    # stability:
+    #  - shm_size: docker's 64MB default makes PostgreSQL fail with
+    #    "could not resize shared memory segment" on larger queries
+    #  - stop_grace_period: let PostgreSQL shut down cleanly instead of being
+    #    killed after 10s (which forces crash recovery on every reboot/update)
+    shm_size: 256mb
+    stop_grace_period: 60s
+    networks:
+      - adsb_im_bridge
+    # ports:
+    #  - 127.0.0.1:5432:5432
+    environment:
+      - POSTGRES_USER=${SKYSTATS_DB_USER}
+      - POSTGRES_PASSWORD=${SKYSTATS_DB_PASSWORD}
+      - POSTGRES_DB=${SKYSTATS_DB_NAME}
+    # fewer, larger writes to protect the SD card. synchronous_commit=off
+    # can lose the last few seconds of data on a sudden power cut, but never
+    # corrupts the database.
+    command:
+      - postgres
+      - -c
+      - wal_writer_delay=10000ms
+      - -c
+      - synchronous_commit=off
+      - -c
+      - checkpoint_timeout=30min
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - max_wal_size=1GB
+      - -c
+      - min_wal_size=128MB
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=64MB
+      - -c
+      - autovacuum_naptime=5min
+      - -c
+      - log_checkpoints=off
+    volumes:
+      - ${SKYSTATS_DB_DATA_PATH}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SKYSTATS_DB_USER} -d ${SKYSTATS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s

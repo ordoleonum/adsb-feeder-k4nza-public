@@ -1,0 +1,646 @@
+/* K4NZA dashboard theme for the feeder web UI.
+   Loaded after mdb.min.css on every page (see base.html). The shell markup is
+   in templates/_k4nza_nav.html; everything else restyles the existing markup. */
+
+/* ======================================================================
+   Tokens
+   ====================================================================== */
+:root {
+  --k4-font: "Inter", "Segoe UI", system-ui, -apple-system, "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --k4-accent: #2563eb;
+  --k4-accent-hover: #1d4ed8;
+  --k4-accent-soft: rgba(37, 99, 235, 0.10);
+  --k4-accent-rgb: 37, 99, 235;
+  --k4-good: #16a34a;
+  --k4-warn: #d97706;
+  --k4-bad: #dc2626;
+
+  --k4-bg: #f3f5f9;
+  --k4-surface: #ffffff;
+  --k4-surface-2: #f8fafc;
+  --k4-border: #e2e8f0;
+  --k4-text: #0f172a;
+  --k4-muted: #64748b;
+
+  --k4-top: #0f172a;           /* top bar + sidebar */
+  --k4-top-text: #e2e8f0;
+  --k4-top-muted: #94a3b8;
+  --k4-side-hover: rgba(148, 163, 184, 0.12);
+  --k4-side-active: rgba(59, 130, 246, 0.22);
+
+  --k4-radius: 14px;
+  --k4-radius-sm: 9px;
+  --k4-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 18px rgba(15, 23, 42, 0.06);
+  --k4-topbar-h: 60px;
+  --k4-sidebar-w: 248px;
+  --k4-tabbar-h: 62px;
+
+  /* hand MDB our palette */
+  --mdb-primary: var(--k4-accent);
+  --mdb-primary-rgb: var(--k4-accent-rgb);
+  --mdb-link-color: var(--k4-accent);
+  --mdb-link-hover-color: var(--k4-accent-hover);
+  --mdb-font-sans-serif: var(--k4-font);
+  --mdb-body-font-family: var(--k4-font);
+}
+
+[data-mdb-theme="dark"] {
+  --k4-accent: #60a5fa;
+  --k4-accent-hover: #93c5fd;
+  --k4-accent-soft: rgba(96, 165, 250, 0.14);
+  --k4-accent-rgb: 96, 165, 250;
+  --k4-bg: #0b1120;
+  --k4-surface: #131b2e;
+  --k4-surface-2: #182238;
+  --k4-border: #24314a;
+  --k4-text: #e2e8f0;
+  --k4-muted: #94a3b8;
+  --k4-top: #070b16;
+  --k4-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --mdb-body-bg: var(--k4-bg);
+  --mdb-body-color: var(--k4-text);
+}
+
+/* ======================================================================
+   Base
+   ====================================================================== */
+html, body {
+  font-family: var(--k4-font);
+}
+body {
+  background: var(--k4-bg) !important;
+  color: var(--k4-text);
+  -webkit-font-smoothing: antialiased;
+  font-size: 0.95rem;
+}
+a { color: var(--k4-accent); }
+a:hover { color: var(--k4-accent-hover); }
+.k4-muted, .text-muted { color: var(--k4-muted) !important; }
+code { color: inherit; background: var(--k4-accent-soft); padding: 0.05em 0.35em; border-radius: 5px; }
+
+/* page area: make room for the fixed shell */
+body:has(#k4-topbar) {
+  padding-top: var(--k4-topbar-h);
+}
+@media (min-width: 992px) {
+  body:has(#k4-sidebar) { padding-left: var(--k4-sidebar-w); }
+}
+@media (max-width: 991.98px) {
+  body:has(#k4-tabbar) { padding-bottom: calc(var(--k4-tabbar-h) + env(safe-area-inset-bottom)); }
+}
+body:has(#k4-topbar) > .container,
+body:has(#k4-topbar) .container.pt-5 {
+  max-width: 1280px;
+  padding-top: 1.5rem !important;
+  margin-top: 0 !important;
+}
+
+/* ======================================================================
+   Shell: top bar
+   ====================================================================== */
+#k4-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--k4-topbar-h);
+  z-index: 1040;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1rem;
+  background: var(--k4-top);
+  color: var(--k4-top-text);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+.k4-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--k4-top-text) !important;
+  text-decoration: none;
+  min-width: 0;
+}
+.k4-brand-icon {
+  flex: none;
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: #bfdbfe;
+  background: linear-gradient(135deg, #1d4ed8, #0f766e);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.k4-brand-icon svg { width: 28px; height: 28px; }
+.k4-brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.k4-brand-name { font-weight: 650; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k4-brand-sub { font-size: 0.72rem; color: var(--k4-top-muted); white-space: nowrap; }
+.k4-top-spacer { flex: 1; }
+
+.k4-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--k4-top-text);
+}
+.k4-iconbtn:hover { background: rgba(148, 163, 184, 0.16); }
+.k4-ico { width: 20px; height: 20px; flex: none; }
+
+.k4-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--k4-top-text) !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.k4-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--k4-top-muted); }
+.k4-pill[data-state="good"] .k4-dot { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25); }
+.k4-pill[data-state="warn"] .k4-dot { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25); }
+.k4-pill[data-state="bad"] .k4-dot { background: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25); }
+
+.k4-temp { display: flex; flex-direction: column; font-size: 0.68rem; line-height: 1.1; color: var(--k4-top-muted); text-align: center; }
+.k4-temp span:last-child { color: var(--k4-top-text); font-weight: 600; font-size: 0.8rem; }
+/* Pi health readings (SD card, SkyStats data, power) next to the CPU temperature */
+a.k4-health { text-decoration: none; color: var(--k4-top-muted); padding: 0 0.15rem; border-radius: 6px; }
+a.k4-health:hover { background: rgba(148, 163, 184, 0.16); }
+.k4-health[data-state="ok"] span:last-child { color: #4ade80; }
+.k4-health[data-state="warn"] span:last-child { color: #fbbf24; }
+.k4-health[data-state="bad"] span:last-child { color: #f87171; }
+.k4-health span:last-child { white-space: nowrap; }
+@media (max-width: 575.98px) {
+  .k4-health-wide { display: none !important; }
+  /* the subtitle would run into the CPU / PWR readings */
+  .k4-brand-sub { display: none; }
+}
+
+.k4-pill-unit { display: none; margin-left: -0.2rem; }
+.k4-pill[data-unit="1"] .k4-pill-unit { display: inline; }
+
+@media (max-width: 480px) {
+  .k4-pill[data-unit="1"] .k4-pill-unit { display: none; }
+  .k4-brand-sub { display: none; }
+  .k4-pill { padding: 0.3rem 0.6rem; }
+}
+
+/* ======================================================================
+   Shell: sidebar
+   ====================================================================== */
+#k4-sidebar {
+  position: fixed;
+  top: var(--k4-topbar-h);
+  bottom: 0;
+  left: 0;
+  width: var(--k4-sidebar-w);
+  z-index: 1035;
+  overflow-y: auto;
+  padding: 0.75rem 0.6rem 1rem;
+  background: var(--k4-top);
+  color: var(--k4-top-text);
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+  scrollbar-width: thin;
+}
+.k4-nav-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 0.9rem; }
+.k4-nav-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k4-top-muted);
+  padding: 0.35rem 0.75rem 0.25rem;
+}
+.k4-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  color: var(--k4-top-text) !important;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.k4-nav-item .k4-ico { color: var(--k4-top-muted); }
+.k4-nav-item:hover { background: var(--k4-side-hover); }
+.k4-nav-item.active { background: var(--k4-side-active); }
+.k4-nav-item.active .k4-ico { color: #93c5fd; }
+.k4-nav-label { flex: 1; }
+/* sub-items (map views under "Live map") */
+.k4-nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 0 0.25rem 1.55rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--k4-side-hover);
+}
+.k4-nav-sub .k4-nav-item { padding: 0.32rem 0.6rem; font-size: 0.84rem; gap: 0.55rem; }
+.k4-nav-sub .k4-ico { width: 16px; height: 16px; }
+.k4-nav-ext .k4-ico { width: 14px; height: 14px; opacity: 0.55; }
+.k4-target { display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0 0.6rem; }
+.k4-target .btn { color: var(--k4-top-text); border-color: rgba(148, 163, 184, 0.35); }
+.k4-sidebar-foot { font-size: 0.72rem; color: var(--k4-top-muted); padding: 0.5rem 0.75rem; }
+.k4-sidebar-foot a { color: var(--k4-top-text); }
+
+#k4-backdrop { display: none; }
+@media (max-width: 991.98px) {
+  #k4-sidebar {
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    width: min(85vw, 300px);
+    bottom: calc(var(--k4-tabbar-h) + env(safe-area-inset-bottom));
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.3);
+  }
+  body.k4-menu-open #k4-sidebar { transform: none; }
+  body.k4-menu-open #k4-backdrop {
+    display: block;
+    position: fixed;
+    inset: var(--k4-topbar-h) 0 0 0;
+    z-index: 1030;
+    background: rgba(2, 6, 23, 0.5);
+  }
+}
+
+/* ======================================================================
+   Shell: phone tab bar
+   ====================================================================== */
+#k4-tabbar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 1040;
+  height: calc(var(--k4-tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  background: var(--k4-surface);
+  border-top: 1px solid var(--k4-border);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+}
+#k4-tabbar a, #k4-tabbar button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 0;
+  background: none;
+  color: var(--k4-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+#k4-tabbar .k4-ico { width: 22px; height: 22px; }
+#k4-tabbar .active { color: var(--k4-accent); }
+
+/* ======================================================================
+   Page headers
+   ====================================================================== */
+.k4-page-header { margin-bottom: 1.25rem; }
+.k4-page-title { font-size: clamp(1.45rem, 3vw, 1.9rem); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.k4-page-subtitle { color: var(--k4-muted); font-size: 0.95rem; margin-top: 0.15rem; }
+
+/* stock pages use a big red centred h1: turn it into a calm left-aligned title */
+.container > h1.text-danger,
+.container h1.mt-3.text-center,
+.container > h1.mt-3 {
+  color: var(--k4-text) !important;
+  text-align: left !important;
+  font-weight: 700;
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  letter-spacing: -0.01em;
+  margin: 0 0 1.25rem !important;
+}
+
+/* ======================================================================
+   Cards
+   ====================================================================== */
+.k4-card {
+  background: var(--k4-surface);
+  border: 1px solid var(--k4-border);
+  border-radius: var(--k4-radius);
+  box-shadow: var(--k4-shadow);
+  padding: 1.1rem 1.25rem;
+}
+.card { border-radius: var(--k4-radius); border: 1px solid var(--k4-border); box-shadow: var(--k4-shadow); background: var(--k4-surface); }
+
+/* stock settings pages: each column holding an <h5> + form becomes a card */
+.container .row > [class*="col-"]:has(> h5.mt-3),
+.container .row > [class*="col-"]:has(> h5.mt-4),
+.container .row > [class*="col-"]:has(> h5.mt-1) {
+  background: var(--k4-surface);
+  border-radius: calc(var(--k4-radius) + 8px);
+  padding: 0.35rem 1.25rem 1.1rem;
+  margin-bottom: 1rem;
+  border: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  background-clip: padding-box;
+  box-shadow: inset 0 0 0 1px var(--k4-border);
+}
+.container h5.mt-3, .container h5.mt-4, .container h5.mt-1, .container h4, .k4-card h5 {
+  font-weight: 650;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+}
+.container h5.mt-3, .container h5.mt-4, .container h5.mt-1 { padding-top: 0.75rem; margin-bottom: 0.6rem; }
+hr { border-color: var(--k4-border); opacity: 1; }
+
+/* explanation text that k4nza-help.js adds under section titles */
+.k4-section-help {
+  font-size: 0.84rem;
+  color: var(--k4-muted);
+  background: var(--k4-accent-soft);
+  border-left: 3px solid var(--k4-accent);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin: -0.15rem 0 0.9rem;
+}
+
+/* key / value list (Updates page) */
+.k4-kv { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; align-items: center; }
+.k4-kv dt { font-weight: 500; color: var(--k4-muted); }
+.k4-kv dd { margin: 0; }
+
+/* ======================================================================
+   Buttons
+   ====================================================================== */
+.btn {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 600;
+  border-radius: var(--k4-radius-sm) !important;
+  box-shadow: none !important;
+  padding: 0.5rem 1rem;
+}
+.btn-lg { padding: 0.7rem 1.35rem; font-size: 1rem; }
+.btn-sm { padding: 0.3rem 0.7rem; border-radius: 7px !important; }
+.btn-rounded { border-radius: var(--k4-radius-sm) !important; }
+.btn-primary {
+  --mdb-btn-bg: var(--k4-accent);
+  --mdb-btn-hover-bg: var(--k4-accent-hover);
+  --mdb-btn-focus-bg: var(--k4-accent-hover);
+  --mdb-btn-active-bg: var(--k4-accent-hover);
+  --mdb-btn-color: #fff;
+  --mdb-btn-hover-color: #fff;
+  background-color: var(--k4-accent) !important;
+  color: #fff !important;
+}
+[data-mdb-theme="dark"] .btn-primary { color: #0b1120 !important; }
+.btn-primary:hover { background-color: var(--k4-accent-hover) !important; }
+.btn-secondary {
+  background-color: var(--k4-surface-2) !important;
+  color: var(--k4-text) !important;
+  border: 1px solid var(--k4-border) !important;
+}
+.btn-secondary:hover { border-color: var(--k4-accent) !important; }
+.btn[disabled], .btn:disabled { opacity: 0.45; }
+.btn[data-k4-danger] {
+  background-color: var(--k4-bad) !important;
+  color: #fff !important;
+}
+
+/* ======================================================================
+   Forms
+   ====================================================================== */
+.form-control, .form-select,
+input[type="text"], input[type="number"], input[type="password"], input[type="email"], input[type="url"],
+select, textarea {
+  border-radius: var(--k4-radius-sm);
+  border: 1px solid var(--k4-border);
+  background-color: var(--k4-surface);
+  color: var(--k4-text);
+  padding: 0.45rem 0.7rem;
+  min-height: 2.35rem;
+}
+input:focus, select:focus, textarea:focus, .form-control:focus {
+  outline: none;
+  border-color: var(--k4-accent) !important;
+  box-shadow: 0 0 0 3px var(--k4-accent-soft) !important;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--k4-accent); min-height: 0; }
+label { line-height: 1.4; }
+.form-text { font-size: 0.8rem; color: var(--k4-muted); }
+
+/* ======================================================================
+   Tables, alerts, badges
+   ====================================================================== */
+.table {
+  --mdb-table-bg: var(--k4-surface);
+  --mdb-table-color: var(--k4-text);
+  border-color: var(--k4-border);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.88rem;
+}
+.table thead td, .table thead th, .table thead {
+  font-weight: 650;
+  color: var(--k4-muted);
+  background: var(--k4-surface-2);
+}
+.table-info, .table-info th { --mdb-table-bg: var(--k4-surface-2) !important; background: var(--k4-surface-2) !important; color: var(--k4-text) !important; }
+.alert { border-radius: var(--k4-radius-sm); border: 0; }
+.version-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 7px;
+  background: var(--k4-accent-soft);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+/* ======================================================================
+   Help bubbles & tooltips (k4nza-help.js)
+   ====================================================================== */
+.k4-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.3rem;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  color: var(--k4-accent);
+  background: var(--k4-accent-soft);
+  vertical-align: middle;
+  user-select: none;
+}
+.k4-tip {
+  position: absolute;
+  z-index: 3000;
+  max-width: min(22rem, 90vw);
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.97);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* ======================================================================
+   Home page
+   ====================================================================== */
+.k4-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.9rem;
+}
+.k4-tile {
+  background: var(--k4-surface);
+  border: 1px solid var(--k4-border);
+  border-radius: var(--k4-radius);
+  box-shadow: var(--k4-shadow);
+  padding: 1rem 1.15rem;
+  position: relative;
+  overflow: hidden;
+}
+.k4-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--k4-accent);
+}
+.k4-tiles[data-state="good"] .k4-tile::before { background: var(--k4-good); }
+.k4-tiles[data-state="warn"] .k4-tile::before { background: var(--k4-warn); }
+.k4-tiles[data-state="bad"] .k4-tile::before { background: var(--k4-bad); }
+.k4-tile-value { font-size: 1.9rem; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.k4-tile-label { color: var(--k4-muted); font-size: 0.82rem; font-weight: 500; margin-top: 0.2rem; }
+
+.k4-quick {
+  display: grid;
+  /* 3 / 2 / 1 columns so six shortcuts always fill whole rows */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+@media (max-width: 991.98px) { .k4-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* phones: compact 2-column shortcuts (titles only) - the bottom tab bar covers the rest */
+@media (max-width: 575.98px) {
+  .k4-quick { gap: 0.5rem; }
+  .k4-quick-item { padding: 0.6rem 0.75rem; }
+  .k4-quick-desc { display: none; }
+}
+.k4-quick-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--k4-radius);
+  background: var(--k4-surface);
+  border: 1px solid var(--k4-border);
+  box-shadow: var(--k4-shadow);
+  color: var(--k4-text) !important;
+  text-decoration: none;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.k4-quick-item:hover, .k4-quick-item:focus { transform: translateY(-1px); border-color: var(--k4-accent); }
+.k4-quick-title { font-weight: 650; color: var(--k4-accent); }
+.k4-quick-title .k4-ico { width: 14px; height: 14px; vertical-align: -1px; opacity: 0.7; }
+.k4-quick-desc { font-size: 0.82rem; color: var(--k4-muted); }
+
+.k4-update-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+
+/* charts / canvases sit on a card */
+#chart-wrapper {
+  background: var(--k4-surface);
+  border: 1px solid var(--k4-border);
+  border-radius: var(--k4-radius);
+  padding: 0.75rem;
+  box-shadow: var(--k4-shadow);
+}
+
+/* footer */
+footer { color: var(--k4-muted); }
+
+/* phones: a little more breathing room */
+@media (max-width: 576px) {
+  body:has(#k4-topbar) > .container { padding-left: 12px; padding-right: 12px; }
+  .container .row > [class*="col-"]:has(> h5.mt-3),
+  .container .row > [class*="col-"]:has(> h5.mt-4),
+  .container .row > [class*="col-"]:has(> h5.mt-1) { border-left-width: 0; border-right-width: 0; }
+  .k4-tile-value { font-size: 1.55rem; }
+}
+
+/* the stock "TAR1090 Mapping Interface" link list duplicates the sidebar */
+#UF { display: none !important; }
+
+/* ---------- home page: aircraft search box ---------- */
+.k4-search { display: flex; gap: 0.6rem; padding: 0.75rem; align-items: center; }
+.k4-search .form-control { flex: 1; min-width: 0; }
+.k4-search .btn { white-space: nowrap; }
+
+/* ---------- home page: update line, chart, legend, aggregator links ---------- */
+.k4-update-line { padding: 0.75rem 1rem; }
+.k4-update-sep { color: var(--k4-muted); }
+.k4-chart-card { padding: 0.75rem 1rem; }
+.k4-feed-legend { font-size: 0.85rem; }
+.k4-link-summary { cursor: pointer; color: var(--k4-accent); display: inline; }
+.k4-link-summary::-webkit-details-marker { display: none; }
+.k4-legend-body {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--k4-border);
+  border-radius: var(--k4-radius-sm);
+  background: var(--k4-surface-2);
+  display: grid;
+  gap: 0.35rem;
+}
+
+/* "Your feeds on other sites": one small card per site, links as pill buttons */
+.k4-agg-links {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.75rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+.k4-agg-links > [class*="col-"] {
+  width: auto;
+  max-width: none;
+  padding: 0.85rem 1rem;
+  margin: 0 !important;
+  background: var(--k4-surface);
+  border: 1px solid var(--k4-border);
+  border-radius: var(--k4-radius);
+  box-shadow: var(--k4-shadow);
+}
+.k4-agg-links > .k4-agg-links-title {
+  grid-column: 1 / -1;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.k4-agg-links hr { display: none; }
+.k4-agg-links .lead { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
+.k4-agg-links ul { list-style: none; padding: 0; margin: 0 0 0.4rem; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.k4-agg-links table { margin: 0 0 0.4rem !important; }
+.k4-agg-links ul a,
+.k4-agg-links td a {
+  display: inline-block;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid var(--k4-border);
+  border-radius: 999px;
+  background: var(--k4-surface-2);
+  font-size: 0.82rem;
+  text-decoration: none;
+  line-height: 1.3;
+}
+.k4-agg-links ul a:hover,
+.k4-agg-links td a:hover { border-color: var(--k4-accent); background: var(--k4-accent-soft); }
+.k4-agg-links .small, .k4-agg-links > [class*="col-"] { font-size: 0.85rem; }

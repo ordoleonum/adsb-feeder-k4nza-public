@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% set active_page = "updates" %}
+{% block content %}
+<div class="k4-page-header">
+  <h1 class="k4-page-title">{% block title %}Updates{% endblock %}</h1>
+  <div class="k4-page-subtitle">Keep the Pi's operating system and the K4NZA feeder software up to date</div>
+</div>
+<div>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-warning">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+</div>
+
+<div class="row g-3">
+  <!-- Feeder software -->
+  <div class="col-12 col-xl-6">
+    <div class="k4-card h-100">
+      <h5 class="mb-1">Feeder software</h5>
+      <p class="small k4-muted mb-3">The web interface, setup apps, SkyStats and container versions of this K4NZA build.</p>
+
+      <dl class="k4-kv mb-3">
+        <dt>Installed</dt><dd><span class="version-badge fw-bold">{{ k4.installed }}</span></dd>
+        <dt>Latest</dt>
+        <dd>
+          {% if k4.latest %}<span class="version-badge fw-bold">{{ k4.latest }}</span>
+            {% if k4.update_available %}<span class="badge bg-success ms-2">Update available</span>
+            {% else %}<span class="badge bg-secondary ms-2">Up to date</span>{% endif %}
+          {% elif k4.error %}<span class="small text-warning">{{ k4.error }}</span>
+          {% else %}<span class="small k4-muted">unknown</span>{% endif %}
+        </dd>
+      </dl>
+
+      <form method="POST" class="d-flex flex-wrap gap-2 mb-2"
+            onsubmit="if (event.submitter && event.submitter.name === 'k4nza_feeder_update') { if (!confirm('Update the feeder software now? The web page pauses for a few minutes while it updates; feeding is only briefly interrupted.')) return false; show_spinner(); } return true;">
+        <button type="submit" class="btn btn-primary btn-lg" name="k4nza_feeder_update" value="go"
+                title="Download and install the newest K4NZA release">Update feeder software</button>
+        <button type="submit" class="btn btn-outline-secondary" name="check_updates" value="go"
+                title="Ask GitHub for the newest version again">Check again</button>
+      </form>
+      <p class="small k4-muted mb-0">Takes about 5-15 minutes. Your settings and SkyStats data are kept.
+        A backup first is still a good idea (<a href="/backup">Backup</a>).</p>
+
+      {% if k4.notes_html %}
+      <details class="k4-notes mt-3" {% if k4.update_available %}open{% endif %}>
+        <summary class="fw-semibold" style="cursor: pointer;">What's new in {{ k4.latest }}</summary>
+        <div class="small mt-2">{{ k4.notes_html | safe }}</div>
+      </details>
+      {% endif %}
+
+      {% if k4.previous %}
+      <div class="border-top mt-3 pt-3">
+        <form method="POST" class="d-flex flex-wrap align-items-center gap-2"
+              onsubmit="if (!confirm('Go back to {{ k4.previous }}? Your settings and SkyStats data are kept. The web page pauses for a few minutes.')) return false; show_spinner(); return true;">
+          <span class="small k4-muted me-auto">Something not right since the last update?
+            You can go back to <span class="version-badge">{{ k4.previous }}</span>.</span>
+          <button type="submit" class="btn btn-sm btn-outline-secondary" name="k4nza_rollback" value="go"
+                  title="Reinstall the version this feeder ran before its last update">Go back to {{ k4.previous }}</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pi OS -->
+  <div class="col-12 col-xl-6">
+    <div class="k4-card h-100">
+      <h5 class="mb-1">Raspberry Pi OS</h5>
+      <p class="small k4-muted mb-3">Security and bug-fix updates for the operating system underneath the feeder.</p>
+
+      <dl class="k4-kv mb-3">
+        <dt>Installed</dt><dd><span class="version-badge fw-bold">{{ osu.installed }}</span></dd>
+        <dt>Latest</dt>
+        <dd id="k4_os_latest">
+          {% if osu.checking %}<span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <span class="small k4-muted">Checking for updates...</span>
+          {% elif osu.count is not none %}
+            {% if osu.count > 0 %}<span class="fw-bold">{{ osu.count }} package update{{ 's' if osu.count != 1 }}</span>
+              <span class="badge bg-success ms-2">Update available</span>
+            {% else %}<span class="fw-bold">All packages current</span><span class="badge bg-secondary ms-2">Up to date</span>{% endif %}
+            <div class="small k4-muted">checked {{ osu.checked_ago }}</div>
+            {% if osu.error %}<div class="small text-warning">{{ osu.error }}</div>{% endif %}
+          {% elif osu.error %}<span class="small text-warning">{{ osu.error }}</span>
+          {% else %}<span class="small k4-muted">not checked yet</span>{% endif %}
+        </dd>
+      </dl>
+      {% if osu.packages %}
+      <details class="small mb-3">
+        <summary class="k4-muted" style="cursor: pointer;">Show waiting packages</summary>
+        <div class="mt-1" style="word-break: break-word;">{{ osu.packages | join(', ') }}{% if osu.count > osu.packages|length %} and {{ osu.count - osu.packages|length }} more{% endif %}</div>
+      </details>
+      {% endif %}
+
+      {% if osu.reboot_needed %}
+      <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 py-2 mb-3">
+        <span class="small">A new kernel is installed. Restart the Pi to start using it.</span>
+        <form method="POST" class="ms-auto"
+              onsubmit="if (!confirm('Restart the Pi now? The feeder is offline for a minute or two.')) return false; show_spinner(); return true;">
+          <button type="submit" class="btn btn-sm btn-warning" name="os_reboot" value="go">Restart now</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <form method="POST" class="d-flex flex-wrap gap-2"
+            onsubmit="if (event.submitter && event.submitter.name === 'os_update') { if (!confirm('Install operating system updates now? This can take several minutes and the Pi may restart.')) return false; show_spinner(); } return true;">
+        <button type="submit" class="btn btn-primary btn-lg" name="os_update" value="go"
+                title="Install the latest Raspberry Pi OS updates now">Update Pi OS now</button>
+        <button type="submit" class="btn btn-outline-secondary" name="check_os" value="go"
+                title="Ask the Raspberry Pi OS servers for new updates again">Check again</button>
+      </form>
+      <p class="small k4-muted mt-2 mb-0">{% if is_enabled('nightly_base_update') %}Pi OS updates also install every night (System &rsaquo; Management).{% else %}Nothing updates automatically - updates only run when you click.{% endif %}</p>
+      {% if osu.checking %}
+      <script>
+        // reload once the background check has finished
+        (function poll() {
+          setTimeout(function () {
+            fetch("/api/k4nza/os_status").then(function (r) { return r.json(); }).then(function (j) {
+              if (j.checking) { poll(); } else { location.reload(); }
+            }).catch(poll);
+          }, 4000);
+        })();
+      </script>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

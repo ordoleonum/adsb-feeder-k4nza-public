@@ -1,0 +1,20 @@
+# K4NZA feeder - WiFi setup
+#
+# Fill in your WiFi below BEFORE the first boot (open this file in Notepad
+# right after flashing the card), save it, then put the card in the Pi.
+#
+# - Type the values right after the = sign, no quotes needed.
+# - SSID and PASSWORD are case-sensitive.
+# - Leave PASSWORD empty for an open network.
+# - COUNTRY is your two-letter country code (US, CA, GB, DE, ...).
+#
+# On boot the Pi joins this network and then ERASES the password from this
+# file, so it isn't left readable on the card. To change WiFi later, fill
+# this file in again, or use System > Management in the web interface.
+#
+# If nothing is filled in (or the WiFi can't be joined) the Pi still starts
+# its "adsb.im-feeder" setup hotspot, as usual.
+
+SSID=
+PASSWORD=
+COUNTRY=US

@@ -1,0 +1,162 @@
+{#- K4NZA dashboard shell: top bar + left sidebar (desktop) / bottom tabs (phones).
+    Included from base.html in place of the stock navbar. Links that leave the
+    settings app (maps, graphs, SkyStats, logs) open in a new tab. -#}
+{% set ap = active_page | default('') %}
+{% set nonadsb = env_value_by_tag("aggregator_choice") == 'nonadsb' %}
+{% set full_maps = env_value_by_tag("aggregator_choice") not in ['nano', 'nonadsb'] %}
+{% set base_ok = is_enabled('base_config') %}
+{% set mapurl = '/map/' ~ env_value_by_tag('tar1090_query_params') %}
+{%- macro icon(name) -%}
+<svg class="k4-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+{%- if name == 'home' -%}<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>
+{%- elif name == 'map' -%}<path d="M9 4l-6 2v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>
+{%- elif name == 'plane' -%}<path d="M2 13l8-2 4-8h2l-1 8 6 2v2l-6-1-1 6 2 2v1l-4-1-4 1v-1l2-2-1-6-6 1z"/>
+{%- elif name == 'chart' -%}<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+{%- elif name == 'star' -%}<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.2-.9z"/>
+{%- elif name == 'share' -%}<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/>
+{%- elif name == 'sliders' -%}<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>
+{%- elif name == 'radio' -%}<circle cx="12" cy="12" r="2"/><path d="M8 8a6 6 0 0 0 0 8M16 8a6 6 0 0 1 0 8M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>
+{%- elif name == 'refresh' -%}<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/>
+{%- elif name == 'server' -%}<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>
+{%- elif name == 'save' -%}<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/>
+{%- elif name == 'help' -%}<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/>
+{%- elif name == 'menu' -%}<path d="M4 7h16M4 12h16M4 17h16"/>
+{%- elif name == 'moon' -%}<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>
+{%- elif name == 'ext' -%}<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>
+{%- elif name == 'msg' -%}<path d="M4 5h16v11H8l-4 4z"/>
+{%- elif name == 'ship' -%}<path d="M3 17l2 3h14l2-3H3zM6 17V9h12v8M12 3v6"/>
+{%- elif name == 'balloon' -%}<path d="M12 3a6 6 0 0 1 6 6c0 4-6 8-6 8s-6-4-6-8a6 6 0 0 1 6-6zM12 17v4"/>
+{%- endif -%}
+</svg>
+{%- endmacro -%}
+{%- macro item(href, label, ic, desc='', key='', newtab=False, cls='', id='') -%}
+<a class="k4-nav-item {% if key and ap == key %}active{% endif %} {{ cls }}" href="{{ href }}"{% if id %} id="{{ id }}"{% endif %}
+   {% if newtab %}target="_blank" rel="noopener"{% endif %} title="{{ desc }}{% if newtab %} (opens in a new tab){% endif %}">
+  {{ icon(ic) }}<span class="k4-nav-label">{{ label }}</span>{% if newtab %}<span class="k4-nav-ext">{{ icon('ext') }}</span>{% endif %}
+</a>
+{%- endmacro %}
+
+<header id="k4-topbar">
+  <button class="k4-iconbtn d-lg-none" type="button" id="k4-menu-toggle" aria-label="Open menu" aria-controls="k4-sidebar">{{ icon('menu') }}</button>
+  <a class="k4-brand" href="{{ url_for('director') }}">
+    {# built-in radar + plane icon (no image file, so cachebust.sh can't break it) #}
+    <span class="k4-brand-icon" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="32" height="32">
+        <circle cx="16" cy="16" r="12.5" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4"/>
+        <circle cx="16" cy="16" r="7.5" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4"/>
+        <path d="M16 16 L16 3.5 A12.5 12.5 0 0 1 27.4 11 Z" fill="currentColor" fill-opacity=".28"/>
+        <circle cx="16" cy="16" r="1.6" fill="currentColor"/>
+        <path d="M22.6 8.4l1.1-.5 .9.9-.5 1.1-2.4 2.1 .6 4.1-.8.8-1.7-3.3-2 1.8.2 1.6-.6.6-1-1.9-1.9-1 .6-.6 1.6.2 1.8-2-3.3-1.7.8-.8 4.1.6z" fill="#fff"/>
+      </svg>
+    </span>
+    <span class="k4-brand-text">
+      <span class="k4-brand-name">{{ list_value_by_tag("site_name", 0) or 'K4NZA Feeder' }}</span>
+      <span class="k4-brand-sub">{% if nonadsb %}SDR{% else %}ADS-B{% endif %} feeder &middot; K4NZA build</span>
+    </span>
+  </a>
+  <div class="k4-top-spacer"></div>
+  {% if is_enabled('temperature_block') %}
+  <div id="cpu_temp_block" class="d-none k4-temp"><span>CPU</span><span id="cpu_temp"></span></div>
+  <div id="ext_temp_block" class="d-none k4-temp"><span>EXT</span><span id="ext_temp"></span></div>
+  {% endif %}
+  {# Pi health, filled in by k4nza-ui.js from /api/k4nza/health; SD and DATA are hidden on phones #}
+  <a id="k4-h-sd" class="d-none k4-temp k4-health k4-health-wide" href="{{ url_for('systemmgmt') }}"><span>SD</span><span>&ndash;</span></a>
+  <a id="k4-h-data" class="d-none k4-temp k4-health k4-health-wide" href="{{ url_for('systemmgmt') }}"><span>DATA</span><span>&ndash;</span></a>
+  <a id="k4-h-pwr" class="d-none k4-temp k4-health" href="{{ url_for('systemmgmt') }}"><span>PWR</span><span>&ndash;</span></a>
+  {% if base_ok and not nonadsb %}
+  <a id="k4-status-pill" class="k4-pill" href="{{ mapurl }}" target="_blank" rel="noopener" title="Messages per second your radio is decoding (opens the live map)">
+    <span class="k4-dot"></span><span id="k4-status-text">checking&hellip;</span><span class="k4-pill-unit">msg/s</span>
+  </a>
+  {% endif %}
+  <button class="k4-iconbtn" type="button" id="k4-theme-toggle" title="Switch light / dark mode" aria-label="Switch light or dark mode">{{ icon('moon') }}</button>
+  {# elements the stock scripts still reference #}
+  <span id="kofi-navbar-button" class="d-none"></span>
+</header>
+
+<div id="k4-backdrop" class="d-lg-none"></div>
+<aside id="k4-sidebar" aria-label="Main menu">
+  {% if is_enabled('stage2') %}
+  <div class="k4-nav-group">
+    <div class="k4-nav-title">Target</div>
+    <div class="k4-target">
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="stage2_feeder_target_submit(0);return false;">Combined</button>
+      {% for i in range(env_value_by_tag('num_micro_sites')) %}
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="stage2_feeder_target_submit({{ i + 1 }});return false;">{{ i + 1 }}</button>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <nav class="k4-nav-group">
+    {{ item(url_for('director'), 'Home', 'home', 'Status, feeds and quick links', key='index') }}
+    {% if base_ok %}
+    {{ item(mapurl, 'Live map', 'plane', 'Aircraft you receive right now', newtab=True, id='k4-nav-livemap') }}
+    <div class="k4-nav-sub" role="group" aria-label="More map views">
+      {% if full_maps %}{{ item('/map/?heatmap', 'Heatmap', 'map', 'Where aircraft were seen most', newtab=True, id='heatmap') }}{% endif %}
+      {{ item('/map/?pTracks', 'Tracks', 'map', 'Flight paths from the last 24 hours', newtab=True, id='tracks') }}
+      {% if full_maps %}{{ item('/map/?replay', 'Replay', 'map', 'Play back earlier traffic', newtab=True, id='replay') }}{% endif %}
+      {{ item('/visualization', 'Map options', 'sliders', 'Range rings, labels and map defaults', key='visualization', id='options') }}
+    </div>
+    {% endif %}
+    {% if is_enabled('skystats') %}
+    {{ item('/skystats/', 'SkyStats', 'star', 'Flight history, records, interesting aircraft and export', newtab=True, id='skystats-navbar-button') }}
+    {% endif %}
+    {% if base_ok and full_maps %}
+    {{ item('/stats/', 'Reception graphs', 'chart', 'Message rate, range and signal over time', newtab=True) }}
+    {% endif %}
+    {% if is_enabled('acarshub') %}{{ item('/acarshub', 'ACARS Hub', 'msg', 'Aircraft text messages', newtab=True, id='k4-nav-acarshub') }}{% endif %}
+    {% if is_enabled('run_shipfeeder') %}{{ item('/aiscatcher', 'AIS Catcher', 'ship', 'Ships', newtab=True, id='k4-nav-aiscatcher') }}{% endif %}
+    {% if is_enabled('run_sonde') %}{{ item('/radiosonde', 'Radiosonde', 'balloon', 'Weather balloons', newtab=True, id='k4-nav-radiosonde') }}{% endif %}
+  </nav>
+
+  <nav class="k4-nav-group">
+    <div class="k4-nav-title">Setup</div>
+    {{ item('/setup', 'Stage 2 setup' if is_enabled('stage2') else 'Basic setup', 'sliders', 'Name, location, altitude, time zone', key='setup') }}
+    {% if base_ok %}
+    <div class="k4-nav-sub" role="group" aria-label="More setup pages">
+      {{ item('/advanced', 'Advanced', 'sliders', 'SkyStats, extra decoders, temperature, healthcheck', key='advanced') }}
+      {{ item('/expert', 'Expert', 'sliders', 'Raw decoder options - only if following a guide', key='expert') }}
+    </div>
+    {{ item('/sdr_setup', 'Radio (SDR)', 'radio', 'USB radios, gain and reception tips', key='sdr_setup') }}
+    {% endif %}
+    {% if not is_enabled('stage2') %}
+    {% if not ((not base_ok or env_value_by_tag('aggregator_choice') in ['micro', 'nano']) and not is_enabled('shipfeeder') and not is_enabled('acarshub')) %}
+    {{ item('/aggregators', 'Data sharing', 'share', 'Choose which flight-tracking sites get your data', key='aggregators', id='data_sharing_link') }}
+    {% endif %}
+    {% else %}
+    {{ item('#', 'Data sharing', 'share', 'Data sharing for the selected micro feeder', id='data_sharing_current_link') }}
+    {% endif %}
+  </nav>
+
+  <nav class="k4-nav-group">
+    <div class="k4-nav-title">System</div>
+    {{ item('/updates', 'Updates', 'refresh', 'Update the Pi OS and the feeder software', key='updates') }}
+    {{ item('/systemmgmt', 'Management', 'server', 'Reboot, shut down, WiFi, SSH, remote access', key='systemmgmt') }}
+    {{ item('/backup', 'Backup', 'save', 'Download your settings and SkyStats data', key='backup') }}
+    {{ item('/restore', 'Restore', 'save', 'Load settings or SkyStats data from a backup', key='restore') }}
+    {% if is_enabled('stage2') and full_maps %}
+    {{ item('/stats_1/', 'Current stats', 'chart', 'Graphs for the selected micro feeder', newtab=True, id='stats_current') }}
+    {% endif %}
+  </nav>
+
+  <nav class="k4-nav-group">
+    <div class="k4-nav-title">Help</div>
+    {{ item('/logs/', 'Logs', 'help', 'Live log of what the feeder is doing', newtab=True) }}
+    {{ item('/info', 'Support info', 'help', 'Versions, disk, memory, containers', key='info') }}
+    {{ item('/support', 'Share diagnostics', 'help', 'Download anonymized logs and report a problem on GitHub', key='support') }}
+  </nav>
+
+  <div class="k4-sidebar-foot">
+    Based on <a href="https://adsb.im" target="_blank" rel="noopener">adsb.im</a> by Dirk Hohndel<br>
+    K4NZA build &middot; <a href="https://ko-fi.com/ordoleonum" target="_blank" rel="noopener">support it on Ko-fi</a>
+  </div>
+</aside>
+
+<nav id="k4-tabbar" class="d-lg-none" aria-label="Quick navigation">
+  <a href="{{ url_for('director') }}" class="{% if ap == 'index' %}active{% endif %}">{{ icon('home') }}<span>Home</span></a>
+  {% if base_ok %}<a href="{{ mapurl }}" target="_blank" rel="noopener">{{ icon('plane') }}<span>Map</span></a>{% endif %}
+  {% if is_enabled('skystats') %}<a href="/skystats/" target="_blank" rel="noopener">{{ icon('star') }}<span>SkyStats</span></a>
+  {% elif base_ok and full_maps %}<a href="/stats/" target="_blank" rel="noopener">{{ icon('chart') }}<span>Graphs</span></a>{% endif %}
+  <a href="/updates" class="{% if ap == 'updates' %}active{% endif %}">{{ icon('refresh') }}<span>Updates</span></a>
+  <button type="button" id="k4-tab-menu">{{ icon('menu') }}<span>Menu</span></button>
+</nav>

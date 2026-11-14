@@ -1,0 +1,38 @@
+name: Report a problem
+description: Something isn't working on your K4NZA feeder
+title: "Problem: "
+labels: ["problem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. The quickest way to get it sorted is to attach the feeder's logs:
+        in the feeder's web interface open **Help > Share diagnostics**, click **Download logs**,
+        and drag the downloaded `.txt` file into the "Logs" box below. The logs are anonymized:
+        IP addresses, your location and aggregator keys are removed before download.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: "After clicking Update Pi OS and restarting, the live map no longer opens."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Feeder version
+      description: Shown at the bottom of every page, for example v3.0.15(k4nza)-13.
+    validations:
+      required: true
+  - type: input
+    id: board
+    attributes:
+      label: Hardware
+      description: Pi model, and the radio (SDR) and antenna if it's about reception.
+      placeholder: "Raspberry Pi 5, RTL-SDR Blog V4, indoor antenna"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Drag the downloaded log file (.txt) here.
