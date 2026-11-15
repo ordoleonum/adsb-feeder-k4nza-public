@@ -32,6 +32,9 @@ Compared with stock adsb.im v3.0.15:
 
 ### SkyStats: stable for months, not weeks
 
+This build ships **[SkyStats-K4NZA](https://github.com/ordoleonum/skystats-k4nza)**, a modified
+SkyStats with its own public repository. Everything in the SkyStats sections below comes from it.
+
 - Every request to the decoder and to internet services has a timeout, so one hung request can't
   freeze recording.
 - Recording runs separately from the slower background jobs, and every job recovers from errors
@@ -69,9 +72,19 @@ Compared with stock adsb.im v3.0.15:
 - **Export** page: download flights, interesting aircraft, records, registrations and routes as CSV
   (opens in Excel or Google Sheets), one at a time or all together in a ZIP, with an optional date range.
 - SkyStats backups are streamed and compressed, and can be **restored** (*System → Restore*).
-- Optional **nightly backup to a NAS** (a Synology or any SMB share, *System → Backup*): settings,
-  graphs and the SkyStats database, with old backups deleted automatically. The feeder only connects
-  while the backup runs, so it keeps working if the NAS is off.
+
+### Nightly backup to a NAS
+
+- *System → Backup → Network backup*: every night at the time you choose, the feeder saves your
+  settings, graphs and SkyStats database to a shared folder on a NAS (a Synology or any SMB share).
+- Keeps as many nightly backups as you ask for and deletes older ones automatically.
+- **Test connection** and **Back up now** check it straight away; the page shows whether the last
+  backup worked.
+- The feeder only connects while the backup runs. If the NAS is off, the feeder keeps working normally
+  and tries again an hour later. Nothing extra is written to the SD card.
+- The NAS password is stored in its own file on the feeder, readable only by the system, and is not
+  part of the configuration backup.
+- To restore, copy a backup folder from the NAS to your computer and use *System → Restore*.
 
 ### Gentle on the SD card and CPU
 
@@ -126,6 +139,10 @@ the selected-aircraft card. *(Sample aircraft, shown over Chicago.)*
 **One-click updates** for the feeder software and Raspberry Pi OS, showing what's installed, what's
 waiting and what's new in the newest release.
 ![Updates page](docs/screenshots/updates.png)
+
+**Nightly backup to a NAS**: settings, graphs and the SkyStats database saved to a shared folder every
+night, with the result of the last backup at the top. *(Sample settings.)*
+![Network backup (NAS) settings](docs/screenshots/backup-nas.png)
 
 **SkyStats aircraft search**: every visit of an aircraft with its photo, route, closest distance,
 highest altitude and time in view, ready to download as CSV. *(Sample data; photo: U.S. Air Force
@@ -231,6 +248,8 @@ The **Radio (SDR)** page has the full guide.
   as possible, and container logs are size-limited. A good-quality card still matters.
 - **SkyStats history** is kept forever by default. To limit it, set
   *Setup → Advanced → SkyStats → Keep history (days)*.
+- **Backups:** SD cards do wear out. Turn on the nightly NAS backup, or download a configuration
+  backup and a SkyStats data backup now and then (*System → Backup*).
 
 ## Credits and license
 
