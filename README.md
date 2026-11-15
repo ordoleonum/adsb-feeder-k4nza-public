@@ -236,7 +236,8 @@ The **Radio (SDR)** page has the full guide.
 - **[adsb.im ADS-B Feeder Image](https://github.com/dirkhh/adsb-feeder-image)** by Dirk Hohndel
   and contributors: the foundation of this project.
 - **[SkyStats](https://github.com/tomcarman/skystats)** by Tom Carman (via
-  [wiedehopf's fork](https://github.com/wiedehopf/skystats)).
+  [wiedehopf's fork](https://github.com/wiedehopf/skystats)). This feeder ships
+  **[SkyStats-K4NZA](https://github.com/ordoleonum/skystats-k4nza)**, the modified build.
 - **[tar1090](https://github.com/wiedehopf/tar1090)**, **readsb** and **graphs1090** by wiedehopf,
   packaged by the [SDR Enthusiasts](https://github.com/sdr-enthusiasts) containers.
 - Interesting-aircraft data from the community
