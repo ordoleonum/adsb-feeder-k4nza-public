@@ -51,6 +51,7 @@ Compared with stock adsb.im v3.0.15:
   callsign, route, closest distance, highest altitude and time in view. Download the visits as CSV.
 - Shows a photo of the aircraft from planespotters.net (credited to the photographer) and links to
   FlightAware, so aircraft that are out of range can still be looked up.
+- Click a registration in Interesting Aircraft or Record Holders to search your history for it.
 - SkyStats records how close each aircraft came (also in the Flights export).
 
 ### SkyStats: reception charts

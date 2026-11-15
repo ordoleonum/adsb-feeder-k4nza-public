@@ -3,6 +3,28 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-22 (2026-11-14)
+
+**New**
+- Nightly backup to a NAS (System → Backup → Network backup). Enter the NAS address, shared folder,
+  username and password, and the feeder saves your settings, graphs and SkyStats database to the
+  NAS every night at the time you choose, keeping as many backups as you ask for. **Test connection**
+  and **Back up now** buttons check it straight away, and the page shows whether the last backup
+  worked. If the NAS is off, the feeder carries on normally and tries again an hour later. Off unless
+  you turn it on.
+- SkyStats: click a registration in Interesting Aircraft or Record Holders to open the Search tab
+  with every visit of that aircraft in your history.
+
+**Changed**
+- SkyStats is now called SkyStats-K4NZA, and its footer and Settings → About link to its own public
+  repository ([ordoleonum/skystats-k4nza](https://github.com/ordoleonum/skystats-k4nza)). About still
+  credits Tom Carman's original SkyStats.
+- SkyStats Activity tab: the range-by-direction and signal-vs-distance charts come first, above
+  Aircraft Seen and Top types.
+
+**Fixed**
+- SkyStats header on phones: the light/dark switch no longer covers the title.
+
 ## v3.0.15-21 (2026-11-13)
 
 **Changed**
