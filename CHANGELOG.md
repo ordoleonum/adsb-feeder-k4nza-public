@@ -3,6 +3,13 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-23 (not released yet)
+
+**Fixed**
+- Backup → Network backup: turning on "Back up to the NAS every night" wasn't saved, and the page
+  always said "Nightly NAS backup is off", so the nightly backup never ran (Back up now did work).
+  The setting is now a switch and is saved. After updating, turn it on and click Save once more.
+
 ## v3.0.15-22 (2026-11-14)
 
 **New**

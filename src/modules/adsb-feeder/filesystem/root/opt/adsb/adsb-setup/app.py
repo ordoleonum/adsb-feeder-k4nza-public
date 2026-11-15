@@ -5457,7 +5457,9 @@ class AdsbIm:
                 settings["keep"] = int(form.get("nas_keep", settings["keep"]))
             except ValueError:
                 settings["keep"] = 0
-            settings["enabled"] = form.get("nas_enabled") == "on"
+            # base.html rewrites every checkbox on submit to send "1" (on) or "0" (off);
+            # "on" is what a browser sends without that script
+            settings["enabled"] = form.get("nas_enabled") in ("1", "on")
 
         errors = k4nza_nas_backup.validate(settings)
         if errors and (settings["enabled"] or action != "save"):

@@ -79,9 +79,11 @@ written to the SD card. Older backups are deleted automatically.
 </div>
 <form method="POST" action="/k4nza/nas-backup" autocomplete="off">
   <div class="row g-2 align-items-center">
-    <div class="col-12 form-check ms-2 mb-2">
-      <input class="form-check-input" type="checkbox" name="nas_enabled" id="nas_enabled" {% if nas.enabled %}checked{% endif %}>
-      <label class="form-check-label" for="nas_enabled">Back up to the NAS every night</label>
+    <div class="col-12 mb-2">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" name="nas_enabled" id="nas_enabled" {% if nas.enabled %}checked{% endif %}>
+        <label class="form-check-label" for="nas_enabled">Back up to the NAS every night</label>
+      </div>
     </div>
     <div class="col-12 col-md-6">
       <label class="form-label mb-0" for="nas_host">NAS address</label>
