@@ -27,7 +27,6 @@ import zipfile
 from base64 import b64encode
 from copy import deepcopy
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
 from time import sleep
 from typing import Dict, List, Tuple
 from uuid import uuid4
@@ -49,7 +48,7 @@ from flask import (
     url_for,
 )
 from flask.logging import logging as flask_logging  # pyright: ignore[reportPrivateImportUsage]
-from utils import k4nza_health, k4nza_skystats_db, k4nza_updates
+from utils import k4nza_health, k4nza_nas_backup, k4nza_skystats_db, k4nza_updates
 from utils.agg_status import AggStatus, Healthcheck, ImStatus
 from utils.auth import WebAuth
 from utils.background import Background
@@ -94,6 +93,7 @@ from utils.util import (
 )
 from utils.wifi import Wifi
 from werkzeug.utils import secure_filename
+from zoneinfo import ZoneInfo
 
 
 # don't log static assets
@@ -374,6 +374,9 @@ class AdsbIm:
         self.app.add_url_rule("/backupexecutegraphs", "backupexecutegraphs", self.backup_execute_graphs)
         self.app.add_url_rule("/backupexecuteconfig", "backupexecuteconfig", self.backup_execute_config)
         self.app.add_url_rule("/backupexecuteskystatsdb", "backupexecuteskystatsdb", self.backup_execute_skystats_db)
+        # nightly backup to a NAS (SMB share)
+        self.app.add_url_rule("/k4nza/nas-backup", "k4nza_nas_backup", self.k4nza_nas_backup_post, methods=["POST"])
+        self.app.add_url_rule("/api/k4nza/nas_backup_status", "k4nza_nas_backup_status", self.k4nza_nas_backup_status)
         # SkyStats database restore
         self.app.add_url_rule(
             "/restoreskystatsdb", "restoreskystatsdb", self.restore_skystats_db, methods=["POST"]
@@ -930,7 +933,13 @@ class AdsbIm:
         return "OK"
 
     def backup(self):
-        return render_template("/backup.html")
+        config_dir = self._d.config_path
+        return render_template(
+            "/backup.html",
+            nas=k4nza_nas_backup.public_settings(k4nza_nas_backup.load_settings(config_dir)),
+            nas_status=k4nza_nas_backup.load_status(config_dir),
+            nas_progress=k4nza_nas_backup.progress(),
+        )
 
     def backup_execute_config(self):
         return self.create_backup_zip()
@@ -988,7 +997,8 @@ class AdsbIm:
         flash(message)
         return redirect(url_for("restore"))
 
-    def create_backup_zip(self, include_graphs=False, include_heatmap=False):
+    def write_backup_zip(self, file, include_graphs=False, include_heatmap=False):
+        # write the backup zip to an open file object (the download pipe, or a file on the NAS)
         adsb_path = self._d.config_path
 
         def graphs1090_writeback(uf_path, microIndex):
@@ -1040,51 +1050,54 @@ class AdsbIm:
 
                 report_issue(f"{context}: writeback timed out - backed up graph data might miss up to 6h")
 
+        with zipfile.ZipFile(file, mode="w") as backup_zip:
+            backup_zip.write(adsb_path / "config.json", arcname="config.json")
+
+            def backup_if_exists(file):
+                if not file.exists():
+                    return
+                backup_zip.write(file, arcname=file.relative_to(adsb_path))
+
+            backup_if_exists(adsb_path / "custom_aggregators.csv")
+
+            for microIndex in [0] + self.micro_indices():
+                if microIndex == 0:
+                    uf_path = adsb_path / "ultrafeeder"
+                else:
+                    uf_path = adsb_path / "ultrafeeder" / str(self._d.env_by_tags("mf_ip").list_get(microIndex))
+
+                gh_path = uf_path / "globe_history"
+                if include_heatmap and gh_path.is_dir():
+                    for subpath in gh_path.iterdir():
+                        pstring = str(subpath)
+                        if subpath.name == "internal_state":
+                            continue
+                        if subpath.name == "tar1090-update":
+                            continue
+
+                        print_err(f"add: {pstring}")
+                        for f in subpath.rglob("*"):
+                            backup_zip.write(f, arcname=f.relative_to(adsb_path))
+
+                # do graphs after heatmap data as this can pause a couple seconds in graphs1090_writeback
+                # due to buffers, the download won't be recognized by the browsers until some data is added to the zipfile
+                if include_graphs:
+                    graphs1090_writeback(uf_path, microIndex)
+                    graphs_path = uf_path / "graphs1090/rrd/localhost.tar.gz"
+                    if graphs_path.exists():
+                        backup_zip.write(graphs_path, arcname=graphs_path.relative_to(adsb_path))
+                    else:
+                        report_issue(f"graphs1090 backup failed, file not found: {graphs_path}")
+
+    def create_backup_zip(self, include_graphs=False, include_heatmap=False):
         fdOut, fdIn = os.pipe()
         pipeOut = os.fdopen(fdOut, "rb")
         pipeIn = os.fdopen(fdIn, "wb")
 
         def zip2fobj(fobj, include_graphs, include_heatmap):
             try:
-                with fobj as file, zipfile.ZipFile(file, mode="w") as backup_zip:
-                    backup_zip.write(adsb_path / "config.json", arcname="config.json")
-
-                    def backup_if_exists(file):
-                        if not file.exists():
-                            return
-                        backup_zip.write(file, arcname=file.relative_to(adsb_path))
-
-                    backup_if_exists(adsb_path / "custom_aggregators.csv")
-
-                    for microIndex in [0] + self.micro_indices():
-                        if microIndex == 0:
-                            uf_path = adsb_path / "ultrafeeder"
-                        else:
-                            uf_path = adsb_path / "ultrafeeder" / str(self._d.env_by_tags("mf_ip").list_get(microIndex))
-
-                        gh_path = uf_path / "globe_history"
-                        if include_heatmap and gh_path.is_dir():
-                            for subpath in gh_path.iterdir():
-                                pstring = str(subpath)
-                                if subpath.name == "internal_state":
-                                    continue
-                                if subpath.name == "tar1090-update":
-                                    continue
-
-                                print_err(f"add: {pstring}")
-                                for f in subpath.rglob("*"):
-                                    backup_zip.write(f, arcname=f.relative_to(adsb_path))
-
-                        # do graphs after heatmap data as this can pause a couple seconds in graphs1090_writeback
-                        # due to buffers, the download won't be recognized by the browsers until some data is added to the zipfile
-                        if include_graphs:
-                            graphs1090_writeback(uf_path, microIndex)
-                            graphs_path = uf_path / "graphs1090/rrd/localhost.tar.gz"
-                            if graphs_path.exists():
-                                backup_zip.write(graphs_path, arcname=graphs_path.relative_to(adsb_path))
-                            else:
-                                report_issue(f"graphs1090 backup failed, file not found: {graphs_path}")
-
+                with fobj as file:
+                    self.write_backup_zip(file, include_graphs, include_heatmap)
             except BrokenPipeError:
                 report_issue(f"warning: backup download aborted mid-stream")
 
@@ -4876,6 +4889,12 @@ class AdsbIm:
         # readsb makes it a bit annoying to get that
         self.track_planes_seen_per_day()
 
+        # nightly backup to a NAS: only starts a thread when one is due, never blocks
+        try:
+            self.k4nza_nas_backup_check()
+        except Exception as e:
+            print_err(f"nas backup check failed: {e}")
+
         # make sure DNS works, every 5 minutes is sufficient
         # check every minute as long as the check fails
         if now + 5 > self.next_dns_check:
@@ -5371,6 +5390,106 @@ class AdsbIm:
         resp = make_response(send_file(path, mimetype=mimetypes[name], max_age=300))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp
+
+    def _nas_site_name(self):
+        site_name = self._d.env_by_tags("site_name_sanitized").list_get(0) or "adsb-feeder"
+        if self._d.is_enabled("stage2"):
+            site_name = f"stage2-{site_name}"
+        return site_name
+
+    def _nas_dump_skystats(self):
+        # None tells the backup that SkyStats is off, so only the settings get saved
+        if not (self._d.is_enabled("skystats") and self._d.is_enabled("skystats_db")):
+            return None
+        user = self._d.env_by_tags("skystats_db_user").value
+        password = self._d.env_by_tags("skystats_db_password").value
+        name = self._d.env_by_tags("skystats_db_name").value
+        return lambda path: k4nza_skystats_db.dump_to_file(user, password, name, path)
+
+    def _nas_start(self, slot=None):
+        """Start a NAS backup in the background. Returns False if one is already running."""
+        if k4nza_nas_backup.progress()["running"]:
+            return False
+        config_dir = self._d.config_path
+        settings = k4nza_nas_backup.load_settings(config_dir)
+
+        def run():
+            ok, message, total = k4nza_nas_backup.run_backup(
+                settings,
+                self._nas_site_name(),
+                lambda f: self.write_backup_zip(f, include_graphs=True),
+                self._nas_dump_skystats(),
+                log=print_err,
+            )
+            print_err(f"nas backup {'succeeded' if ok else 'failed'}: {message}")
+            if message != "A backup is already running.":
+                k4nza_nas_backup.record_result(config_dir, ok, message, total, slot)
+
+        threading.Thread(target=run, daemon=True).start()
+        return True
+
+    def k4nza_nas_backup_check(self):
+        config_dir = self._d.config_path
+        settings = k4nza_nas_backup.load_settings(config_dir)
+        if not settings["enabled"] or k4nza_nas_backup.validate(settings):
+            return
+        slot = k4nza_nas_backup.due(settings, k4nza_nas_backup.load_status(config_dir), datetime.now())
+        if slot:
+            self._nas_start(slot)
+
+    def k4nza_nas_backup_status(self):
+        config_dir = self._d.config_path
+        return {"status": k4nza_nas_backup.load_status(config_dir), "progress": k4nza_nas_backup.progress()}
+
+    def k4nza_nas_backup_post(self):
+        config_dir = self._d.config_path
+        form = request.form
+        action = form.get("action", "save")
+        old = k4nza_nas_backup.load_settings(config_dir)
+        settings = dict(old)
+        if action in ("save", "test"):
+            for key in ("host", "share", "folder", "user", "time"):
+                settings[key] = form.get(f"nas_{key}", "").strip()
+            # an empty password field keeps the saved password
+            if form.get("nas_password", ""):
+                settings["password"] = form.get("nas_password", "")
+            try:
+                settings["keep"] = int(form.get("nas_keep", settings["keep"]))
+            except ValueError:
+                settings["keep"] = 0
+            settings["enabled"] = form.get("nas_enabled") == "on"
+
+        errors = k4nza_nas_backup.validate(settings)
+        if errors and (settings["enabled"] or action != "save"):
+            # nothing is saved, so a typo can never break a backup that already works
+            for error in errors:
+                flash(error, "nas")
+            return redirect(url_for("backup") + "#nas")
+
+        if action == "save":
+            k4nza_nas_backup.save_settings(config_dir, settings)
+            if settings["enabled"] and (not old["enabled"] or old["time"] != settings["time"]):
+                # the first nightly backup happens at the chosen time, not right away
+                slot = k4nza_nas_backup.current_slot(settings, datetime.now())
+                if slot:
+                    status = k4nza_nas_backup.load_status(config_dir)
+                    status["done_slot"] = slot
+                    k4nza_nas_backup.save_status(config_dir, status)
+            if settings["enabled"]:
+                flash(f"Saved. The NAS backup runs every night at {settings['time']}.", "nas")
+            else:
+                flash("Saved. Nightly NAS backup is off.", "nas")
+        elif action == "test":
+            # testing remembers the connection details but never switches the nightly backup on or off
+            k4nza_nas_backup.save_settings(config_dir, dict(settings, enabled=old["enabled"]))
+            ok, message = k4nza_nas_backup.test_connection(settings, self._nas_site_name(), log=print_err)
+            flash(("✓ " if ok else "✗ ") + message, "nas")
+        elif action == "run":
+            if self._nas_start():
+                flash("Backup started. This page shows when it is done.", "nas")
+            else:
+                flash("A backup is already running.", "nas")
+        return redirect(url_for("backup") + "#nas")
 
     @check_restart_lock
     def k4nza_updates_page(self):

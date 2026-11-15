@@ -88,7 +88,8 @@ apt-get install -y \
     gnupg hostapd isc-dhcp-server avahi-utils \
     git rtl-sdr \
     apt-transport-https ca-certificates curl gnupg2 \
-    jq zstd netcat-openbsd
+    jq zstd netcat-openbsd \
+    cifs-utils
 
 df -h
 

@@ -96,6 +96,23 @@ def stream_dump(user, password, dbname):
             proc.kill()
 
 
+def dump_to_file(user, password, dbname, path: Path, timeout=4 * 3600):
+    """Write a compressed custom-format pg_dump to path. Returns (ok, error)."""
+    if not db_container_running():
+        return False, "the SkyStats database is not running"
+    cmd = ["docker", "exec", "-e", f"PGPASSWORD={password}", DB_CONTAINER, "pg_dump", "-h", "localhost"]
+    cmd += ["-U", user, "-d", dbname, "--no-owner", "--no-privileges", "-Fc", "-Z", "6"]
+    try:
+        with open(path, "wb") as f:
+            r = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, timeout=timeout, check=False)
+    except subprocess.TimeoutExpired:
+        return False, "pg_dump took too long"
+    if r.returncode != 0:
+        err = r.stderr.decode(errors="replace").strip().splitlines()[-1:] or ["pg_dump failed"]
+        return False, err[0]
+    return True, ""
+
+
 def restore(upload_path: Path, user, password, dbname, log=print):
     """Restore upload_path into the SkyStats database. Returns (ok, message)."""
     if not db_container_running():

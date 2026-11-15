@@ -68,6 +68,9 @@ Compared with stock adsb.im v3.0.15:
 - **Export** page: download flights, interesting aircraft, records, registrations and routes as CSV
   (opens in Excel or Google Sheets), one at a time or all together in a ZIP, with an optional date range.
 - SkyStats backups are streamed and compressed, and can be **restored** (*System → Restore*).
+- Optional **nightly backup to a NAS** (a Synology or any SMB share, *System → Backup*): settings,
+  graphs and the SkyStats database, with old backups deleted automatically. The feeder only connects
+  while the backup runs, so it keeps working if the NAS is off.
 
 ### Gentle on the SD card and CPU
 
@@ -185,7 +188,7 @@ The menu on the left (or the **Menu** tab on a phone) has everything:
 | **Radio (SDR)** | Check your radio, gain, and a step-by-step guide to better reception |
 | **Data sharing** | Choose which flight-tracking sites receive your data |
 | **Updates** | Install feeder and Raspberry Pi OS updates with one click |
-| **Backup / Restore** | Save or bring back your settings and SkyStats history |
+| **Backup / Restore** | Save or bring back your settings and SkyStats history, with an optional nightly backup to a NAS |
 
 The live map, graphs and SkyStats open in a new browser tab.
 
