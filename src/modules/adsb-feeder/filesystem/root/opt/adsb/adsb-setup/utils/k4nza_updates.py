@@ -173,9 +173,6 @@ def render_notes(md: str, max_lines: int = 80) -> str:
 # on a slow link) and is repeated at most every few hours unless asked.
 
 OS_CHECK_MAX_AGE = 6 * 3600
-# the Home page only refreshes the package lists once a day: each refresh
-# rewrites tens of MB of package lists on the SD card
-OS_CHECK_MAX_AGE_HOME = 24 * 3600
 
 _os: dict = {"t": 0.0, "running": False, "count": None, "packages": [], "error": ""}
 _os_lock = threading.Lock()
@@ -230,12 +227,12 @@ def _apt_env() -> dict:
     return env
 
 
-def os_check(force: bool = False, max_age: int = OS_CHECK_MAX_AGE) -> None:
+def os_check(force: bool = False) -> None:
     """Start a background check unless one is running or a recent result exists."""
     with _os_lock:
         if _os["running"]:
             return
-        if not force and _os["t"] and time.time() - _os["t"] < max_age:
+        if not force and _os["t"] and time.time() - _os["t"] < OS_CHECK_MAX_AGE:
             return
         _os["running"] = True
     threading.Thread(target=_run_os_check, name="k4nza-os-check", daemon=True).start()
@@ -281,9 +278,9 @@ def reboot_needed() -> bool:
     return _kernel_key(newest) > _kernel_key(running)
 
 
-def os_status(start_check: bool = True, max_age: int = OS_CHECK_MAX_AGE) -> dict:
+def os_status(start_check: bool = True) -> dict:
     if start_check:
-        os_check(max_age=max_age)
+        os_check()
     with _os_lock:
         checked = int(_os["t"])
         return {

@@ -530,58 +530,6 @@
       {% endfor %}
     </div>
   </div>
-  <!-- One-click updates (details on the Updates page) -->
-  <div class="col-12 mt-3 mb-4">
-    <div id="update_block" class="k4-card k4-update-line">
-      <form method="POST" action="/updates" class="d-flex flex-wrap align-items-center gap-2 m-0"
-            onsubmit="const n = event.submitter ? event.submitter.name : ''; const msg = n === 'os_update' ? 'Install Raspberry Pi OS updates now? This can take several minutes and the Pi may restart.' : 'Update the K4NZA feeder software now? The web page pauses for a few minutes; feeding is only briefly interrupted.'; if (!confirm(msg)) return false; show_spinner(); return true;">
-        <strong class="me-1">Updates</strong>
-        <span class="k4-update-item">Feeder: <span id="k4-update-note" class="k4-muted">checking&hellip;</span></span>
-        <button type="submit" class="btn btn-sm btn-primary d-none" name="k4nza_feeder_update" value="go" id="k4-feeder-update-btn"
-                title="Download and install the newest K4NZA feeder release">Install</button>
-        <span class="k4-update-sep" aria-hidden="true">&middot;</span>
-        <span class="k4-update-item">Pi OS: <span id="k4-os-note" class="k4-muted">checking&hellip;</span></span>
-        <button type="submit" class="btn btn-sm btn-primary d-none" name="os_update" value="go" id="k4-os-update-btn"
-                title="Install the waiting Raspberry Pi OS updates now">Install</button>
-        <a class="small ms-auto" href="/updates">Details &rsaquo;</a>
-      </form>
-    </div>
-  </div>
-  <script>
-    // one-line update status (details and settings on the Updates page)
-    (function () {
-      const $ = (id) => document.getElementById(id);
-      fetch("/api/k4nza/update_status").then(r => r.json()).then(s => {
-        const note = $("k4-update-note");
-        if (s.update_available) {
-          note.innerHTML = '<span class="badge bg-success">' + s.latest + ' available</span>';
-          $("k4-feeder-update-btn").classList.remove("d-none");
-        } else if (s.latest) {
-          note.textContent = "up to date (" + s.installed + ")";
-        } else {
-          note.textContent = s.error || "unknown";
-        }
-      }).catch(() => { $("k4-update-note").textContent = "unknown"; });
-
-      function osStatus() {
-        fetch("/api/k4nza/os_status?from=home").then(r => r.json()).then(o => {
-          const note = $("k4-os-note");
-          if (o.checking) {
-            note.textContent = "checking…";
-            setTimeout(osStatus, 5000);
-          } else if (o.count > 0) {
-            note.innerHTML = '<span class="badge bg-success">' + o.count + ' update' + (o.count === 1 ? '' : 's') + '</span>';
-            $("k4-os-update-btn").classList.remove("d-none");
-          } else if (o.count === 0) {
-            note.textContent = "up to date";
-          } else {
-            note.textContent = o.error ? "couldn't check" : "unknown";
-          }
-        }).catch(() => { $("k4-os-note").textContent = "unknown"; });
-      }
-      osStatus();
-    })();
-  </script>
   <div
        class="col-12 {% if not stage2_suggestion or env_value_by_tag('aggregator_choice') in ['micro', 'nano', 'nonadsb'] %} d-none {% endif %}">
     <br>

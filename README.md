@@ -137,8 +137,8 @@ SD cards wear out from writes, and a feeder writes all day. This build cuts that
 - **Lighter database jobs:** small indexes, so background jobs don't scan the whole flight history.
 - **Lean updates:** only the release being installed is downloaded, the "Go back" copy of SkyStats
   is kept compressed, and downloaded OS packages are deleted after installing.
-- **Fewer background checks:** Home looks for Pi OS updates at most once a day (the Updates page
-  checks every 6 hours).
+- **Fewer background checks:** Pi OS updates are only looked for when you open the Updates page,
+  at most every 6 hours.
 
 It also stays reachable and quiet on your network:
 
@@ -228,7 +228,7 @@ The menu on the left (or the **Menu** tab on a phone) has everything:
 
 | Page | What it's for |
 |---|---|
-| **Home** | Receiver status, Pi health, aircraft search, aircraft per day, update status |
+| **Home** | Receiver status, Pi health, aircraft search, aircraft per day |
 | **Live map** | The aircraft you're receiving right now; Heatmap, Tracks and Replay are just below it |
 | **SkyStats** | Flight history, routes, records, interesting aircraft, **Search**, **Export** |
 | **Reception graphs** | How well your station is doing over hours, days and months |
