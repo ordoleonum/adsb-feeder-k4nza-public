@@ -246,3 +246,20 @@ def test_page_first_save_waits_for_the_chosen_time(tmp_path):
     with patch.object(nas, "current_slot", return_value="2026-11-14 03:00"):
         _post(tmp_path, _form())
     assert nas.load_status(tmp_path)["done_slot"] == "2026-11-14 03:00"
+
+
+def test_mount_refuses_a_share_that_is_not_really_mounted(tmp_path):
+    # mount says OK, but nothing is mounted: never write into /run (memory)
+    ok_run = __import__("subprocess").CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+    with (
+        patch.object(nas, "MOUNT_POINT", tmp_path / "mnt"),
+        patch.object(nas, "CRED_FILE", tmp_path / "cred"),
+        patch.object(nas, "ensure_cifs", return_value=(True, "")),
+        patch.object(nas, "unmount"),
+        patch.object(nas, "_run", return_value=ok_run),
+        patch.object(nas.os.path, "ismount", return_value=False),
+    ):
+        ok, message = nas.mount(GOOD, log=lambda *a: None)
+    assert not ok
+    assert "did not stay connected" in message
+    assert not (tmp_path / "cred").exists()

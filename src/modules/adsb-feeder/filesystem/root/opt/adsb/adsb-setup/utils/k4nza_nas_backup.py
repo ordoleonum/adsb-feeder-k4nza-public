@@ -252,6 +252,11 @@ def mount(settings: dict, log=print):
     if r.returncode != 0:
         log(f"nas backup: mount failed: {(r.stderr or r.stdout).strip()}")
         return False, _explain_mount_error((r.stderr or "") + (r.stdout or ""), settings["host"])
+    # never write unless the share really is mounted: otherwise the backup
+    # would land in /run, which is the Pi's memory
+    if not os.path.ismount(MOUNT_POINT):
+        log("nas backup: mount reported success but the share is not mounted")
+        return False, "Could not connect to the NAS: the share did not stay connected. Try again."
     return True, ""
 
 
