@@ -137,8 +137,8 @@ SD cards wear out from writes, and a feeder writes all day. This build cuts that
 - **Lighter database jobs:** small indexes, so background jobs don't scan the whole flight history.
 - **Lean updates:** only the release being installed is downloaded, the "Go back" copy of SkyStats
   is kept compressed, and downloaded OS packages are deleted after installing.
-- **Fewer background checks:** Pi OS updates are only looked for when you open the Updates page,
-  at most every 6 hours.
+- **Fewer background checks:** Home looks for Pi OS updates at most once a day (the Updates page
+  checks every 6 hours).
 
 It also stays reachable and quiet on your network:
 

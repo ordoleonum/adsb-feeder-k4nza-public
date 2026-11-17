@@ -5359,6 +5359,8 @@ class AdsbIm:
         return k4nza_updates.status(refresh=refresh)
 
     def k4nza_os_status(self):
+        if request.args.get("from") == "home":
+            return k4nza_updates.os_status(max_age=k4nza_updates.OS_CHECK_MAX_AGE_HOME)
         return k4nza_updates.os_status()
 
     def k4nza_health(self):

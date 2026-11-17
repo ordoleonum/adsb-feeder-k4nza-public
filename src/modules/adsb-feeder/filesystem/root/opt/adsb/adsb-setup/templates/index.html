@@ -530,6 +530,11 @@
       {% endfor %}
     </div>
   </div>
+  <script>
+    // no Updates line on Home, but opening Home still starts the Pi OS update check
+    // (at most once a day) so the Updates page has a recent answer
+    fetch("/api/k4nza/os_status?from=home").catch(() => {});
+  </script>
   <div
        class="col-12 {% if not stage2_suggestion or env_value_by_tag('aggregator_choice') in ['micro', 'nano', 'nonadsb'] %} d-none {% endif %}">
     <br>

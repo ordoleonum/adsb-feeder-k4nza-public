@@ -6,8 +6,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 ## v3.0.15-25 (unreleased)
 
 **Changed**
-- Home: the Updates line is gone (the Updates page shows the same, with more detail). Pi OS
-  updates are now only looked for when the Updates page is opened.
+- Home: the Updates line is gone (the Updates page shows the same, with more detail). Home still
+  starts the once-a-day Pi OS update check in the background.
 
 ## v3.0.15-24 (2026-11-16)
 
