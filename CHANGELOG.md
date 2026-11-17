@@ -3,6 +3,38 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-24 (not released yet)
+
+**New**
+- SkyStats Search: click a group heading in Interesting Aircraft (Military, Government, Police,
+  Civilian) to list every aircraft of that group ever seen, not just the recent ones on the card.
+- SkyStats Search: click a column heading (Registration, Operator, Type, Visits, Last seen) to sort
+  the results; click again to reverse.
+- SkyStats Activity → Signal vs Distance: a "How to read this chart" section explains what a
+  healthy chart looks like and what too much or too little gain, range limits and gaps look like.
+
+**Changed**
+- Container logs are kept in memory again instead of being written to the SD card (as in stock
+  adsb.im). The update switches Docker back and recreates the containers once, so all of them
+  restart during this update. Logs from before a reboot are no longer kept.
+- WiFi power saving is off. It caused delay spikes on the Pi's WiFi, which slowed the map and
+  anything reached over WiFi.
+- Home: the four aircraft tiles refresh every 5 seconds (was 15).
+- Home: the Updates line moved below "Your feeds on other sites".
+- Home checks for Pi OS updates at most once a day (each check rewrites the package lists on the SD
+  card). The Updates page still checks every 6 hours.
+- After a Pi OS update, the downloaded packages are deleted from the SD card.
+- The SkyStats container copy kept for "Go back" is stored compressed only: about a third of the
+  space and far fewer SD card writes per update.
+- The live map container only opens the network ports something uses: the map (8080), SBS output
+  for tools like Planefence (30003), Beast in (30004, 30104) and out (30005, 30006), and MLAT
+  results for a stage 2 feeder (31005). The readsb API (30152, no password) and the other unused
+  ports are closed.
+
+**Fixed**
+- NAS backup: a backup is only written once the NAS share is really connected, never into the
+  Pi's memory.
+
 ## v3.0.15-23 (2026-11-14)
 
 **Fixed**
