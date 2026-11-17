@@ -16,22 +16,19 @@ services:
       - 'c 188:* rwm'
       # USB devices
       - 'c 189:* rwm'
+    # K4NZA: only the ports something on the network uses are published. The
+    # other containers on this feeder reach ultrafeeder over the docker network.
+    # Removed: 30001/30002 raw in/out, 30047 JSON positions, 30152 readsb API
+    # (no password), 31003 MLATHUB SBS, 31004 MLATHUB Beast in, 31006 MLATHUB
+    # Beast reduce, 32006 SBS in.
     ports:
       - ${AF_TAR1090_PORT_ADJUSTED:-8080}:80 # to expose the web interface
-      - 30001:30001 # Raw input
-      - 30002:30002 # Raw output
-      - 30003:30003 # SBS output
-      - 32006:32006 # SBS input
-      - 30004:30004 # Beast input
-      - 30104:30104 # Beast input
-      - 30005:30005 # Beast output
-      - 30006:30006 # Beast reduce output
-      - 30047:30047 # JSON position output
-      - 30152:30152 # to expose re-api
-      - 31003:31003 # MLATHUB SBS output
-      - 31004:31004 # MLATHUB Beast input
-      - 31005:31005 # MLATHUB Beast output
-      - 31006:31006 # MLATHUB Beast reduce output
+      - 30003:30003 # SBS output (e.g. Planefence / Plane-Alert on another machine)
+      - 30004:30004 # Beast input (remote radios)
+      - 30104:30104 # Beast input (remote radios)
+      - 30005:30005 # Beast output (stage 2 / other decoders)
+      - 30006:30006 # Beast reduce output (stage 2)
+      - 31005:31005 # MLATHUB Beast output (MLAT results for stage 2)
     environment:
       # --------------------------------------------------
       # general parameters:
