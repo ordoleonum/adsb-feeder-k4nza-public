@@ -23,7 +23,9 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - Home: the Updates line moved below "Your feeds on other sites".
 - Home checks for Pi OS updates at most once a day (each check rewrites the package lists on the SD
   card). The Updates page still checks every 6 hours.
-- After a Pi OS update, the downloaded packages are deleted from the SD card.
+- Pi OS updates now include new kernels (before, they were held back forever). Packages
+  nothing needs any more, such as old kernels, are removed, and so are the downloaded package
+  files. After a kernel update the Updates page offers **Restart now**.
 - The SkyStats container copy kept for "Go back" is stored compressed only: about a third of the
   space and far fewer SD card writes per update.
 - The live map container only opens the network ports something uses: the map (8080), SBS output

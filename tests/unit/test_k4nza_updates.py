@@ -122,12 +122,13 @@ def test_restart_blocked_while_os_update_runs():
         assert k4nza_updates.os_update_running() is False
 
 
-def test_os_check_uses_plain_upgrade():
+def test_os_check_includes_kernel_updates():
+    # same as scripts/update-os: --with-new-pkgs, so new kernels are counted
     k4nza_updates.os_forget()
     with patch.object(k4nza_updates.subprocess, "run", side_effect=[_done(), _done("")]) as run:
         k4nza_updates._run_os_check()
     sim = run.call_args_list[1][0][0]
-    assert sim[-1] == "upgrade" and "--with-new-pkgs" not in sim
+    assert sim[-1] == "upgrade" and "--with-new-pkgs" in sim
 
 
 # ---------------------------------------------------------------------------

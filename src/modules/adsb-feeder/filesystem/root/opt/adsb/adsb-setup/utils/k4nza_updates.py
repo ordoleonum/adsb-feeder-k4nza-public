@@ -206,7 +206,7 @@ def _run_os_check() -> None:
             error = "Could not refresh the package lists (is the feeder online?)."
         # same command scripts/update-os runs, so the list shown is what installs
         sim = subprocess.run(
-            ["apt-get", "-s", "-o", "Debug::NoLocking=1", "upgrade"],
+            ["apt-get", "-s", "-o", "Debug::NoLocking=1", "--with-new-pkgs", "upgrade"],
             capture_output=True,
             text=True,
             timeout=120,

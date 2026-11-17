@@ -10,11 +10,15 @@ else
     export DEBIAN_FRONTEND=noninteractive
     export APT_LISTCHANGES_FRONTEND=none
     apt-get update
-    # plain upgrade: updates installed packages only. Updates that would add new
-    # packages (new kernels, new system services) are left alone.
-    if ! apt-get -y -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef upgrade; then
+    # upgrade with --with-new-pkgs: also installs the new packages an update
+    # needs, which is how Raspberry Pi kernel updates arrive (a plain upgrade
+    # holds them back forever). Nothing is ever removed by the upgrade itself.
+    if ! apt-get -y -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --with-new-pkgs upgrade; then
         dpkg --configure -a --force-confold --force-confdef
     fi
+    # remove kernels and other packages nothing needs any more (apt always keeps
+    # the running kernel and the newest one)
+    apt-get -y autoremove
     # the downloaded packages are installed now; don't keep them on the SD card
     apt-get clean
 fi
