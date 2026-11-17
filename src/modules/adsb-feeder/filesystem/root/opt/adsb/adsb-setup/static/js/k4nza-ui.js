@@ -35,7 +35,12 @@
     if (el) el.textContent = value;
   }
 
+  // refreshed every 5 s; skip a round while the previous request is still
+  // waiting so a slow link can't pile up requests
+  let statusBusy = false;
   function updateStatus() {
+    if (statusBusy) return;
+    statusBusy = true;
     fetch("/api/stage2_stats", { signal: AbortSignal.timeout(12000) })
       .then((r) => r.json())
       .then((data) => {
@@ -81,7 +86,8 @@
           const text = $id("k4-status-text");
           if (text) text.textContent = "offline?";
         }
-      });
+      })
+      .finally(() => { statusBusy = false; });
   }
 
   // ---------- Pi health tiles (Home page) ----------
@@ -260,7 +266,7 @@
 
     if ($id("k4-status-pill") || $id("k4-tiles")) {
       updateStatus();
-      setInterval(() => { if (!document.hidden) updateStatus(); }, 15000);
+      setInterval(() => { if (!document.hidden) updateStatus(); }, 5000);
     }
   }
 
