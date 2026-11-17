@@ -59,6 +59,20 @@ def test_os_check_not_repeated_while_fresh():
     k4nza_updates._os["running"] = False
 
 
+def test_home_checks_os_updates_once_a_day():
+    # a 7-hour-old result is stale for the Updates page but fine for Home
+    k4nza_updates.os_forget()
+    with patch.object(k4nza_updates.subprocess, "run", side_effect=[_done(), _done("")]):
+        k4nza_updates._run_os_check()
+    k4nza_updates._os["t"] -= 7 * 3600
+    with patch.object(k4nza_updates.threading, "Thread") as thread:
+        k4nza_updates.os_status(max_age=k4nza_updates.OS_CHECK_MAX_AGE_HOME)
+        thread.assert_not_called()
+        k4nza_updates.os_status()
+        thread.assert_called_once()
+    k4nza_updates._os["running"] = False
+
+
 class _Resp:
     def __init__(self, code, data=None):
         self.status_code = code

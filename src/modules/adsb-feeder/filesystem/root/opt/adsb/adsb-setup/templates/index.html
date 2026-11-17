@@ -564,7 +564,7 @@
       }).catch(() => { $("k4-update-note").textContent = "unknown"; });
 
       function osStatus() {
-        fetch("/api/k4nza/os_status").then(r => r.json()).then(o => {
+        fetch("/api/k4nza/os_status?from=home").then(r => r.json()).then(o => {
           const note = $("k4-os-note");
           if (o.checking) {
             note.textContent = "checking…";
