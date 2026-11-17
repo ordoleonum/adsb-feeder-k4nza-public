@@ -1,197 +1,226 @@
 # K4NZA ADS-B Feeder
 
-A customized build of Dirk Hohndel's
-[adsb.im ADS-B Feeder Image](https://github.com/dirkhh/adsb-feeder-image) (v3.0.15).
-Same feeder underneath, with the differences below. What changed in each release is in the
-[CHANGELOG](CHANGELOG.md).
+**A Raspberry Pi ADS-B feeder image built to run for months without attention.** It's Dirk Hohndel's
+[adsb.im feeder](https://github.com/dirkhh/adsb-feeder-image) (v3.0.15) underneath, plus a
+searchable flight history, one-click updates you can undo, nightly backups to a NAS, and far fewer
+writes to the SD card.
 
+[![Latest release](https://img.shields.io/github/v/release/ordoleonum/adsb-feeder-k4nza-public?label=download&color=2ea44f)](https://github.com/ordoleonum/adsb-feeder-k4nza-public/releases/latest)
 [![Support me on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20this%20build-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ordoleonum)
+
+**[Install](#install)** · **[What's new](CHANGELOG.md)** · **[SkyStats-K4NZA](https://github.com/ordoleonum/skystats-k4nza)** · **[Everyday use](#everyday-use)**
+
+![Home dashboard](docs/screenshots/home.png)
 
 ---
 
-## How this build is different
+## Why this build
 
-Compared with stock adsb.im v3.0.15:
+| Feature | What it means for you |
+|---|---|
+| **Runs 24/7 on an SD card** | Logs live in memory, the flight database writes in small batches, and updates clean up after themselves. Your card lasts longer. |
+| **Every aircraft you've ever heard, searchable** | SkyStats-K4NZA keeps your history for months without freezing, and finds any aircraft by registration, callsign, type, operator or group. |
+| **Updates in one click, and back again** | Feeder and Raspberry Pi OS updates (kernels included) from one page. If a new version misbehaves, **Go back** reinstalls the old one. |
+| **Nightly backup to your NAS** | Settings, graphs and the whole SkyStats database, saved every night to a Synology or any SMB share. |
+| **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
+| **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
 
-### Redesigned interface
+## New in v3.0.15-24
 
-- Dashboard layout: top bar with the installed version and live receiver status, sidebar menu (bottom
-  tabs on phones), light/dark mode.
-- Home page: status tiles (aircraft now, messages/sec, positions/sec, aircraft today), an aircraft
-  search box, full-width aircraft-per-day chart, a one-line update status, and cards for the sites
-  you feed. Days run from midnight in the feeder's time zone.
-- **Pi health tiles** on Home: CPU temperature, power supply, free disk space and SkyStats history
-  size (and its growth per month). A tile's edge turns amber or red, with advice in its tooltip, when
-  something needs attention.
-- Plain-English help under every settings section, tooltips on buttons, and confirmation before
-  shutdown, reboot and similar actions.
-- Radio (SDR) page with a step-by-step guide to better reception.
-- *Help → Share diagnostics* downloads anonymized logs and opens a problem report on this GitHub
-  repository (stock adsb.im uploads them to public paste sites for its own forums).
-- Live map, graphs, SkyStats and logs open in a new tab.
+- **Kinder to the SD card:** container logs are kept in memory, the "Go back" copy of SkyStats is
+  stored compressed, and Pi OS updates remove what they no longer need.
+- **Pi OS updates now include kernels**, with a **Restart now** button when one is installed.
+- **WiFi power saving off**, which removes the delay spikes it caused on the Pi's WiFi.
+- **Search a whole group:** click Military, Government, Police or Civilian in Interesting Aircraft
+  to list every one you've ever seen, and sort any search by clicking a column heading.
+- **Tighter network:** only the ports something actually uses are open; the readsb API is closed.
 
-### SkyStats: stable for months, not weeks
+Every release is in the [CHANGELOG](CHANGELOG.md).
+
+---
+
+## Your flight history, searchable
 
 This build ships **[SkyStats-K4NZA](https://github.com/ordoleonum/skystats-k4nza)**, a modified
-SkyStats with its own public repository. Everything in the SkyStats sections below comes from it.
+SkyStats with its own public repository.
+
+**Find any aircraft.** Use the **Search** tab, or the search box on the feeder's Home page. Search by
+registration, hex code, callsign, type (`B739`, `C17`) or operator. You'll see every visit: when it
+came, its callsign and route, how close it got, how high it flew and how long it stayed in view.
+There's a photo from planespotters.net (credited to the photographer) and a FlightAware link, and you
+can download the visits as CSV.
+
+![SkyStats aircraft search](docs/screenshots/skystats-search.jpg)
+<sub>Sample data. Photo: U.S. Air Force photo by Heide Couch, public domain.</sub>
+
+**List a whole group.** Click **Military**, **Government**, **Police** or **Civilian** in
+Interesting Aircraft to see every aircraft of that group in your history, not just the latest few.
+Click any column heading to sort. A registration anywhere in Interesting Aircraft or Record Holders
+opens its full history too.
+
+![Every military aircraft seen, sorted by visits](docs/screenshots/skystats-group.jpg)
+<sub>Sample data.</sub>
+
+**Built to last for months.**
 
 - Every request to the decoder and to internet services has a timeout, so one hung request can't
   freeze recording.
-- Recording runs separately from the slower background jobs, and every job recovers from errors
-  instead of stopping SkyStats.
-- Reads the decoder's aircraft list tolerantly: one unexpected value no longer discards the whole list.
-- Memory use stays flat: old aircraft are dropped from the in-memory cache.
-- A failed plane-alert-db download is retried the next day instead of causing a restart loop.
-- The database is tuned for a Pi (enough shared memory, clean shutdown) and tidied weekly.
-- Optional history limit: *Setup → Advanced → SkyStats → Keep history (days)* (0 = keep forever).
-  All-time numbers (total aircraft and flights, all-time top types, the all-time range outline)
-  are kept in small summary tables, so they stay correct when old flights are removed.
+- Recording runs apart from the slower background jobs, and every job recovers from errors instead
+  of stopping SkyStats.
+- One odd value from the decoder no longer throws away the whole aircraft list.
+- Memory use stays flat, and a failed plane-alert-db download is retried the next day instead of
+  causing a restart loop.
+- The database is tuned for a Pi and tidied weekly.
+- You can limit the history (*Setup → Advanced → SkyStats → Keep history (days)*). All-time totals,
+  top types and the all-time range outline stay correct anyway.
 
-### SkyStats: aircraft search
+## See how well your station hears
 
-- **Search** tab (or the search box on the feeder's Home page): find an aircraft by registration,
-  hex code, callsign, type (for example `B739` or `C17`) or operator, and see every visit: when,
-  callsign, route, closest distance, highest altitude and time in view. Download the visits as CSV.
-- Shows a photo of the aircraft from planespotters.net (credited to the photographer) and links to
-  FlightAware, so aircraft that are out of range can still be looked up.
-- Click a registration in Interesting Aircraft or Record Holders to search your history for it.
-- SkyStats records how close each aircraft came (also in the Flights export).
+**Range by Direction** shows the farthest aircraft heard in each direction, with your all-time best
+as an outline; a dent shows where something blocks the antenna. **Signal vs Distance** plots signal
+strength against distance with the median and the overload level, for tuning gain and checking an
+antenna or filter change.
 
-### SkyStats: reception charts
+![SkyStats reception charts](docs/screenshots/skystats-activity.jpg)
+<sub>Sample data.</sub>
 
-- **Range by Direction**: the farthest aircraft heard in each direction around your antenna, with
-  your all-time best as an outline. A dent shows where something blocks the antenna.
-- **Signal vs Distance**: signal strength against distance, with the median and the overload level,
-  for tuning gain and checking antenna or filter changes.
-- The Activity tab drops the flight-count charts that duplicated the aircraft charts.
-- The Interesting Aircraft tab always shows its four categories (military, government, police,
-  civilian) with a short description of what to expect, even before any have been seen.
+Not sure what you're looking at? **How to read this chart**, under Signal vs Distance, explains what
+healthy looks like and what too much gain, too little gain, a blocked direction and gaps look like.
 
-### SkyStats: export and restore
+<details>
+<summary>Show the chart guide</summary>
 
-- **Export** page: download flights, interesting aircraft, records, registrations and routes as CSV
-  (opens in Excel or Google Sheets), one at a time or all together in a ZIP, with an optional date range.
-- SkyStats backups are streamed and compressed, and can be **restored** (*System → Restore*).
+![Signal vs Distance with its reading guide open](docs/screenshots/skystats-signal-notes.jpg)
+<sub>Sample data.</sub>
+</details>
 
-### Nightly backup to a NAS
+## One-click updates you can undo
 
-- *System → Backup → Network backup*: every night at the time you choose, the feeder saves your
-  settings, graphs and SkyStats database to a shared folder on a NAS (a Synology or any SMB share).
-- Keeps as many nightly backups as you ask for and deletes older ones automatically.
-- **Test connection** and **Back up now** check it straight away; the page shows whether the last
-  backup worked.
-- The feeder only connects while the backup runs. If the NAS is off, the feeder keeps working normally
-  and tries again an hour later. Nothing extra is written to the SD card.
-- The NAS password is stored in its own file on the feeder, readable only by the system, and is not
-  part of the configuration backup.
-- To restore, copy a backup folder from the NAS to your computer and use *System → Restore*.
+The **Updates** page shows what's installed, what's waiting and what's new.
 
-### Gentle on the SD card and CPU
+- **Update feeder software** installs the newest release from this repository, including a new
+  SkyStats when there is one. The SkyStats download is checked against a checksum first. Settings
+  and history are kept; an update takes 5-15 minutes and feeding pauses only briefly.
+- **Update Pi OS** installs Raspberry Pi OS updates, new kernels included, then removes what's no
+  longer needed. After a kernel update, **Restart now** appears.
+- **Go back to ...** reinstalls the version the feeder ran before, if something isn't right
+  (possible from v3.0.15-20 on).
+- No account or key is needed, and nothing updates on its own unless you turn on nightly OS updates
+  (*System → Management*).
 
-- SkyStats saves aircraft in view at most every 30 seconds (or when a record changes) and reads the
-  decoder every 5 seconds, instead of rewriting everything every 2 seconds.
-- Small database indexes so background jobs don't scan the whole flight history.
-- Container logs are limited to 3 × 10 MB each (Docker's default has no limit).
-- The feeder doesn't register with my.adsb.im; it is reached at `http://adsb-feeder.local/` (the
-  page footer also shows its IP address).
-
-### Live map
-
-- Modern dark (or light) panels for the buttons, aircraft list, selected-aircraft card, settings and legend.
-- The single-letter buttons are now icon-and-word buttons (Labels, Details, Tracks, Follow, Military, ...).
-  Keyboard shortcuts are unchanged and shown in each button's tooltip.
-- tar1090 itself is unmodified, so it keeps receiving its own updates.
-
-### Units
-
-- **Nautical, Imperial or Metric** for distances, speeds and altitudes in the live map and SkyStats.
-  Pick the default for every device under *Live map → Map options*; each browser can still switch on
-  its own (map *Settings*, or SkyStats *Settings → Display*).
-
-### Updates
-
-- **Updates** page with one-click feeder and Raspberry Pi OS updates, showing what's installed, what's
-  waiting and what's new. No account or key is needed.
-- **Go back a version**: after an update, the Updates page offers to reinstall the version the feeder
-  ran before (possible from v3.0.15-20 on).
-- Updates download only the release being installed, and the SkyStats container is checked against
-  a checksum before it is installed.
-- Pi OS updates only update packages already installed (like stock adsb.im). If a newer kernel is
-  ever installed, the page offers **Restart now**.
-- Nothing updates automatically unless you turn on nightly OS updates (*System → Management*).
-
-### Setup
-
-- WiFi can be set before the first boot by editing `k4nza-wifi.txt` on the card from Windows.
-- The setup hotspot connects reliably to home WiFi (waits for the network and uses a plain WPA2 profile).
-- Image built for Raspberry Pi (64-bit) only, with no maintainer SSH key built in.
-
-## Screenshots
-
-**Home dashboard**: live receiver status, Pi health tiles (CPU temperature, power supply, disk space,
-SkyStats size), aircraft search, aircraft per day and the sites you feed.
-![Home dashboard](docs/screenshots/home.png)
-
-**Live map**: modern panels, buttons with words instead of single letters, a tidy aircraft list and
-the selected-aircraft card. *(Sample aircraft, shown over Chicago.)*
-![Live map](docs/screenshots/map.jpg)
-
-**One-click updates** for the feeder software and Raspberry Pi OS, showing what's installed, what's
-waiting and what's new in the newest release.
 ![Updates page](docs/screenshots/updates.png)
 
-**Nightly backup to a NAS**: settings, graphs and the SkyStats database saved to a shared folder every
-night, with the result of the last backup at the top. *(Sample settings.)*
+## Nightly backup to your NAS
+
+Under *System → Backup → Network backup*, choose a time, and every night the feeder saves your
+settings, graphs and SkyStats database to a shared folder on a NAS (a Synology or any SMB share).
+
+- It keeps as many nightly backups as you ask for and deletes the oldest.
+- **Test connection** and **Back up now** check it straight away, and the page shows how the last
+  backup went.
+- The share is connected only while a backup runs. If the NAS is off, the feeder carries on and
+  tries again an hour later. Nothing extra is written to the SD card.
+- The NAS password sits in its own file, readable only by the system, and is never part of a
+  configuration backup.
+- To restore, copy a backup folder to your computer and use *System → Restore*.
+
 ![Network backup (NAS) settings](docs/screenshots/backup-nas.png)
+<sub>Sample settings.</sub>
 
-**SkyStats aircraft search**: every visit of an aircraft with its photo, route, closest distance,
-highest altitude and time in view, ready to download as CSV. *(Sample data; photo: U.S. Air Force
-photo by Heide Couch, public domain.)*
-![SkyStats aircraft search](docs/screenshots/skystats-search.jpg)
+## Built to run 24/7
 
-**SkyStats reception charts**: the farthest aircraft heard in each direction (a dent shows where the antenna
-is blocked), and signal strength against distance for tuning gain. *(Sample data.)*
-![SkyStats reception charts](docs/screenshots/skystats-activity.jpg)
+SD cards wear out from writes, and a feeder writes all day. This build cuts that down:
+
+- **Logs in memory:** container logs and the system log stay in RAM, as in stock adsb.im.
+- **Batched history:** SkyStats saves aircraft in view at most every 30 seconds (or when a record
+  changes) and reads the decoder every 5 seconds, instead of rewriting everything every 2 seconds.
+- **Lighter database jobs:** small indexes, so background jobs don't scan the whole flight history.
+- **Lean updates:** only the release being installed is downloaded, the "Go back" copy of SkyStats
+  is kept compressed, and downloaded OS packages are deleted after installing.
+- **Fewer background checks:** Home looks for Pi OS updates at most once a day (the Updates page
+  checks every 6 hours).
+
+It also stays reachable and quiet on your network:
+
+- **WiFi power saving is off**, so the Pi answers without delay spikes.
+- **Only the ports something uses are open:**
+  - 8080 for the map
+  - 30003 for SBS, used by tools like Planefence
+  - 30004 and 30104 for Beast in
+  - 30005 and 30006 for Beast out
+  - 31005 for MLAT results
+- **No my.adsb.im registration:** the feeder is reached at `http://adsb-feeder.local/`, and the page
+  footer shows its IP address.
+
+## A dashboard you can read at a glance
+
+- **Top bar** with the installed version and live receiver status; a sidebar menu (bottom tabs on a
+  phone); light and dark mode.
+- **Home** shows aircraft now, messages and positions per second, and aircraft today, all refreshing
+  every 5 seconds. Below them are an aircraft search box, aircraft per day, and the sites you feed.
+- **Pi health tiles** cover CPU temperature, power supply, free disk space and SkyStats history size
+  (with growth per month). Each tile turns amber or red, with advice in its tooltip.
+- **Plain-English help** under every settings section, tooltips on buttons, and a confirmation
+  before shutdown, reboot and similar actions.
+- **Radio (SDR)** page with a step-by-step guide to better reception.
+- **Help → Share diagnostics** downloads anonymized logs and opens a problem report on this GitHub
+  repository. Stock adsb.im uploads them to public paste sites instead.
 
 <table>
   <tr>
-    <td valign="top" width="60%"><b>SkyStats export</b>: download everything as a ZIP, or one dataset at a time as CSV for Excel or Google Sheets, with an optional date range.<br><br>
-      <img src="docs/screenshots/skystats-export.jpg" alt="SkyStats export" width="100%"></td>
     <td valign="top" width="40%"><b>On a phone</b>: bottom tabs, a slide-in menu and the status tiles.<br><br>
       <img src="docs/screenshots/phone.jpg" alt="Home page on a phone" width="100%"></td>
+    <td valign="top" width="60%"><b>SkyStats export</b>: everything as a ZIP, or one dataset at a time as CSV for Excel or Google Sheets, with an optional date range. SkyStats backups can be restored under <i>System → Restore</i>.<br><br>
+      <img src="docs/screenshots/skystats-export.jpg" alt="SkyStats export" width="100%"></td>
   </tr>
 </table>
+
+## A modern live map
+
+- Dark or light panels for the buttons, aircraft list, selected-aircraft card, settings and legend.
+- Icon-and-word buttons (Labels, Details, Tracks, Follow, Military, ...) instead of single letters.
+  The keyboard shortcuts are unchanged and shown in each button's tooltip.
+- **Nautical, Imperial or Metric** for distances, speeds and altitudes in the map and SkyStats. Set
+  the default under *Live map → Map options*; each browser can still switch on its own.
+- tar1090 itself is unmodified, so it keeps getting its own updates.
+
+![Live map](docs/screenshots/map.jpg)
+<sub>Sample aircraft, shown over Chicago.</sub>
+
+---
 
 ## What you need
 
 - **Raspberry Pi** 3, 4 or 5 (64-bit). A Pi 4 or 5 is recommended if you use SkyStats.
-- **A good power supply**: the official one for your Pi. Cheap chargers and powered hubs
-  are the most common cause of strange problems.
-- **An SDR (USB radio) and an antenna for 1090 MHz.** A generic RTL-SDR works; a 1090 MHz
-  filter and an outdoor antenna up high make the biggest difference.
+- **A good power supply**: the official one for your Pi. Cheap chargers and powered hubs are the most
+  common cause of strange problems.
+- **An SDR (USB radio) and an antenna for 1090 MHz.** A generic RTL-SDR works. A 1090 MHz filter and
+  an outdoor antenna up high make the biggest difference.
 - **A microSD card** (16 GB or more, a good brand) and a computer to write it.
 
 ## Install
 
 1. **Download** the newest `adsb-feeder-k4nza-v...img.xz` from
    [Releases](https://github.com/ordoleonum/adsb-feeder-k4nza-public/releases/latest).
-2. **Write it** with [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
-   *Choose OS → Use custom*, pick the file, pick your card. Skip Imager's "customisation"
-   (user, WiFi, hostname). This image doesn't use it.
-3. **WiFi (skip if you use a network cable):** after writing, unplug and replug the card.
-   Windows shows a small drive called `bootfs`. Open **`k4nza-wifi.txt`** in Notepad, fill in
-   `SSID=` and `PASSWORD=` (and `COUNTRY=`), save, and eject. On first boot the Pi joins that
-   WiFi and then erases the password from the file.
+2. **Write it** with [Raspberry Pi Imager](https://www.raspberrypi.com/software/): *Choose OS → Use
+   custom*, pick the file, pick your card. Skip Imager's "customisation" (user, WiFi, hostname),
+   because this image doesn't use it.
+3. **WiFi (skip if you use a network cable):** after writing, unplug and replug the card. Windows
+   shows a small drive called `bootfs`. Open **`k4nza-wifi.txt`** in Notepad, fill in `SSID=` and
+   `PASSWORD=` (and `COUNTRY=`), save, and eject. On first boot the Pi joins that WiFi and then erases
+   the password from the file.
 4. **Boot the Pi** with the radio plugged in. The first start takes 5-10 minutes.
-5. **Open [http://adsb-feeder.local](http://adsb-feeder.local)** in a browser on the same
-   network (or the Pi's IP address from your router's device list). There is no login.
-6. **Basic setup:** enter a name for your station, its latitude, longitude and height,
-   then choose which sites to share your data with. Click Submit and give it a few
-   minutes while everything starts.
+5. **Open [http://adsb-feeder.local](http://adsb-feeder.local)** in a browser on the same network (or
+   the Pi's IP address from your router's device list). There is no login.
+6. **Basic setup:** enter a name for your station, its latitude, longitude and height, then choose
+   which sites to share your data with. Click Submit and give it a few minutes while everything
+   starts.
 
-**Couldn't connect to WiFi?** If the Pi can't get online it creates its own open WiFi
-called **`adsb.im-feeder`**. Join it from your phone or laptop and open
-`http://192.168.199.1` to choose your home network.
+**Couldn't connect to WiFi?** If the Pi can't get online, it creates its own open WiFi called
+**`adsb.im-feeder`**. Join it from your phone or laptop and open `http://192.168.199.1` to choose
+your home network.
+
+The image is for Raspberry Pi (64-bit) only and has no maintainer SSH key built in.
 
 ## Everyday use
 
@@ -203,58 +232,41 @@ The menu on the left (or the **Menu** tab on a phone) has everything:
 | **Live map** | The aircraft you're receiving right now; Heatmap, Tracks and Replay are just below it |
 | **SkyStats** | Flight history, routes, records, interesting aircraft, **Search**, **Export** |
 | **Reception graphs** | How well your station is doing over hours, days and months |
-| **Radio (SDR)** | Check your radio, gain, and a step-by-step guide to better reception |
+| **Radio (SDR)** | Check your radio and gain, with a step-by-step guide to better reception |
 | **Data sharing** | Choose which flight-tracking sites receive your data |
-| **Updates** | Install feeder and Raspberry Pi OS updates with one click |
-| **Backup / Restore** | Save or bring back your settings and SkyStats history, with an optional nightly backup to a NAS |
+| **Updates** | Feeder and Raspberry Pi OS updates with one click, and **Go back** |
+| **Backup / Restore** | Save or bring back your settings and SkyStats history, plus the nightly NAS backup |
 
 The live map, graphs and SkyStats open in a new browser tab.
-
-## Updating
-
-Open **Updates** (or use the line at the bottom of Home):
-
-- **Update feeder software** installs the newest release from this repository, including
-  a new SkyStats when there is one. Your settings and SkyStats history are kept.
-  Could take 5-15 minutes; feeding is only briefly interrupted.
-- **Update Pi OS** installs Raspberry Pi OS security and bug-fix updates for the packages
-  already installed.
-- **Go back to ...** appears after an update: it reinstalls the version the feeder ran before,
-  if something isn't right. Settings and SkyStats history are kept.
-
-Nothing updates automatically unless you turn on nightly OS updates under
-*System → Management*. No account or key is needed.
-
-Reflashing a new image and then using **Restore** with a backup also works.
 
 ## Better reception
 
 Most of the improvement comes from the antenna, not from settings:
 
-- Put the antenna **as high as possible**, vertical, with a clear view of the sky. Outdoors
-  beats indoors; a window beats an inner room.
-- Use a short, good cable, or a USB extension to move the radio away from the Pi
-  (the Pi's USB 3 ports give off noise).
+- Put the antenna **as high as possible**, vertical, with a clear view of the sky. Outdoors beats
+  indoors; a window beats an inner room.
+- Use a short, good cable, or a USB extension to move the radio away from the Pi (the Pi's USB 3
+  ports give off noise).
 - A **1090 MHz SAW filter** helps a lot near phone towers and FM stations.
-- Leave gain on **autogain** unless you know you need something else.
+- Leave gain on **autogain** unless you know you need something else. **Signal vs Distance** in
+  SkyStats shows whether it's right.
 
 The **Radio (SDR)** page has the full guide.
 
 ## Good to know
 
-- **Security:** like the original, this image is meant for your home network only. Anyone
-  who can open its web page can change it. Don't expose it to the internet.
-- **SD card health:** logs, graphs and the SkyStats database are tuned to write as little
-  as possible, and container logs are size-limited. A good-quality card still matters.
-- **SkyStats history** is kept forever by default. To limit it, set
-  *Setup → Advanced → SkyStats → Keep history (days)*.
-- **Backups:** SD cards do wear out. Turn on the nightly NAS backup, or download a configuration
-  backup and a SkyStats data backup now and then (*System → Backup*).
+- **Security:** like the original, this image is meant for your home network only. Anyone who can
+  open its web page can change it, so don't expose it to the internet.
+- **Backups:** SD cards still wear out eventually. Turn on the nightly NAS backup, or download a
+  configuration backup and a SkyStats data backup now and then (*System → Backup*).
+- **SkyStats history** is kept forever by default. To limit it, set *Setup → Advanced → SkyStats →
+  Keep history (days)*.
+- **Updating by reflashing** also works: write a new image, then use **Restore** with a backup.
 
 ## Credits and license
 
-- **[adsb.im ADS-B Feeder Image](https://github.com/dirkhh/adsb-feeder-image)** by Dirk Hohndel
-  and contributors: the foundation of this project.
+- **[adsb.im ADS-B Feeder Image](https://github.com/dirkhh/adsb-feeder-image)** by Dirk Hohndel and
+  contributors: the foundation of this project.
 - **[SkyStats](https://github.com/tomcarman/skystats)** by Tom Carman (via
   [wiedehopf's fork](https://github.com/wiedehopf/skystats)). This feeder ships
   **[SkyStats-K4NZA](https://github.com/ordoleonum/skystats-k4nza)**, the modified build.
@@ -263,8 +275,8 @@ The **Radio (SDR)** page has the full guide.
 - Interesting-aircraft data from the community
   [plane-alert-db](https://github.com/sdr-enthusiasts/plane-alert-db).
 
-This project is licensed under the **GPL-3.0**, like the original (see [LICENSE](https://github.com/ordoleonum/adsb-feeder-k4nza-public/blob/main/LICENSE)).
-The original adsb.im documentation is in the
-[adsb.im repository](https://github.com/dirkhh/adsb-feeder-image#readme).
+This project is licensed under the **GPL-3.0**, like the original (see
+[LICENSE](https://github.com/ordoleonum/adsb-feeder-k4nza-public/blob/main/LICENSE)). The original
+adsb.im documentation is in the [adsb.im repository](https://github.com/dirkhh/adsb-feeder-image#readme).
 
 If this build is useful to you, you can [support it on Ko-fi](https://ko-fi.com/ordoleonum). 73, K4NZA
