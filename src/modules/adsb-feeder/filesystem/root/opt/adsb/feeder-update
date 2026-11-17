@@ -606,6 +606,9 @@ if [ -f /opt/adsb/os.adsb.feeder.image ] ; then
     # adsb-docker.service will set this as well but let's also do it on update so a reboot is not
     # required
     echo 128 > /sys/module/usbcore/parameters/usbfs_memory_mb
+
+    # K4NZA: WiFi power saving off
+    bash /opt/adsb/scripts/k4nza-wifi-powersave.sh || true
 fi
 
 # shellcheck disable=SC2164

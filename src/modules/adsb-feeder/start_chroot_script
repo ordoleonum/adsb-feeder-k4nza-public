@@ -122,6 +122,8 @@ fi
 
 # editable WiFi file on the FAT boot partition (fill in from Windows before first boot)
 chmod +x /opt/adsb/k4nza/k4nza-wifi.sh
+# WiFi power saving off (delay spikes on the Pi's WiFi)
+bash /opt/adsb/scripts/k4nza-wifi-powersave.sh
 if [ -f /boot/firmware/config.txt ] ; then
 	sed 's/$/\r/' /opt/adsb/k4nza/k4nza-wifi.txt > /boot/firmware/k4nza-wifi.txt
 elif [ -d /boot ] ; then
