@@ -49,11 +49,14 @@ docker_compose="docker compose"
 $docker_compose version &> /dev/null || docker_compose="docker-compose"
 
 # Container images that aren't on a public registry (the SkyStats build) ship
-# as tarballs. Load each one if docker doesn't have it (first boot, or after an
-# image prune). The tarball is kept so this also works after a factory reset.
-for tarball in /opt/adsb/preloaded-images/*.tar ; do
+# as tarballs (gzip compressed from -24 on). Load each one if docker doesn't
+# have it (first boot, or after an image prune). The tarball is kept so this
+# also works after a factory reset. *.prev.* copies are only for going back.
+for tarball in /opt/adsb/preloaded-images/*.tar /opt/adsb/preloaded-images/*.tar.gz ; do
     [ -f "$tarball" ] || continue
-    ref=$(cat "${tarball%.tar}.ref" 2> /dev/null)
+    [[ "$tarball" == *.prev.* ]] && continue
+    base=${tarball%.gz}
+    ref=$(cat "${base%.tar}.ref" 2> /dev/null)
     if [ -n "$ref" ] && docker image inspect "$ref" &> /dev/null ; then
         continue
     fi

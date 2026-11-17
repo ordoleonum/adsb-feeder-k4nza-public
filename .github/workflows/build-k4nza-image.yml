@@ -54,7 +54,8 @@ jobs:
         docker pull --platform linux/arm64 "$SKYSTATS"
         DEST=repository/src/modules/adsb-feeder/filesystem/root/opt/adsb/preloaded-images
         mkdir -p "$DEST"
-        docker save "$SKYSTATS" -o "$DEST/skystats.tar"
+        # kept compressed on the Pi (docker load reads .tar.gz directly)
+        docker save "$SKYSTATS" | gzip -6 > "$DEST/skystats.tar.gz"
         echo "$SKYSTATS" > "$DEST/skystats.ref"
         ls -lh "$DEST"
 
@@ -96,7 +97,7 @@ jobs:
         echo "${{ steps.tag.outputs.tag }}" > "$ADSB/k4nza.version"
         # the Pi's one-click updater downloads this when a release needs a new SkyStats container
         mkdir -p uploads
-        gzip -c "$ADSB/preloaded-images/skystats.tar" > uploads/skystats-image.tar.gz
+        cp "$ADSB/preloaded-images/skystats.tar.gz" uploads/skystats-image.tar.gz
         # the updater checks the download against this before installing it
         (cd uploads && sha256sum skystats-image.tar.gz > skystats-image.tar.gz.sha256)
         ls -lh uploads

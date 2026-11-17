@@ -24,16 +24,18 @@ if [ -f /opt/adsb/k4nza.build ] && [ "${K4NZA_ALLOW_UPSTREAM_UPDATE}" != "1" ] ;
 fi
 
 # Make sure the SkyStats container named in docker.image.versions is available
-# locally, and kept as /opt/adsb/preloaded-images/skystats.tar (docker-compose-adsb
-# reloads it from there if docker ever loses it). Sources, in order:
+# locally, and kept compressed as /opt/adsb/preloaded-images/skystats.tar.gz
+# (docker-compose-adsb reloads it from there if docker ever loses it). Sources,
+# in order:
 #   - the copy already there,
 #   - the previous copy, kept as skystats.prev.tar.gz (going back a version),
-#   - docker itself (saved to a tarball),
+#   - docker itself (saved and compressed),
 #   - the matching GitHub release (asset skystats-image.tar.gz), checked against
 #     its .sha256 asset.
-# The copy being replaced becomes the new skystats.prev.tar.gz.
+# The copy being replaced becomes the new skystats.prev.tar.gz. Only compressed
+# copies are kept: fewer SD card writes and about a third of the space.
 k4nza_fetch_skystats() {
-    local ref tag id sha_id dest cur_ref prev_ref want got assets
+    local ref tag id sha_id dest cur_ref prev_ref want got assets st
     ref=$(grep '^SKYSTATS_CONTAINER=' /opt/adsb/docker.image.versions | cut -d= -f2)
     [ -n "$ref" ] || return 0
     tag="$1"
@@ -43,23 +45,31 @@ k4nza_fetch_skystats() {
     cur_ref=$(cat "$dest/skystats.ref" 2> /dev/null)
     prev_ref=$(cat "$dest/skystats.prev.ref" 2> /dev/null)
 
-    if [ "$cur_ref" = "$ref" ] && [ -f "$dest/skystats.tar" ] ; then
+    # builds up to -23 kept the current copy uncompressed: compress it once
+    if [ -f "$dest/skystats.tar" ] ; then
+        if [ ! -f "$dest/skystats.tar.gz" ] && gzip -1 -c "$dest/skystats.tar" > "$dest/skystats.tar.gz.new" ; then
+            mv -f "$dest/skystats.tar.gz.new" "$dest/skystats.tar.gz"
+            echo "SkyStats container copy compressed"
+        fi
+        rm -f "$dest/skystats.tar" "$dest/skystats.tar.gz.new"
+    fi
+
+    if [ "$cur_ref" = "$ref" ] && [ -f "$dest/skystats.tar.gz" ] ; then
         echo "SkyStats container $ref already present"
-        docker image inspect "$ref" &> /dev/null || docker load -i "$dest/skystats.tar"
+        docker image inspect "$ref" &> /dev/null || docker load -i "$dest/skystats.tar.gz"
         return 0
     fi
 
     if [ "$prev_ref" = "$ref" ] && [ -f "$dest/skystats.prev.tar.gz" ] ; then
         echo "using the previous SkyStats container $ref kept on this feeder"
-        if ! gunzip -c "$dest/skystats.prev.tar.gz" > "$dest/skystats.tar.new" ; then
-            rm -f "$dest/skystats.tar.new"
-            echo "WARNING: could not unpack the previous SkyStats container"
-            return 1
-        fi
+        mv -f "$dest/skystats.prev.tar.gz" "$dest/skystats.tar.gz.new"
+        rm -f "$dest/skystats.prev.ref"
     elif docker image inspect "$ref" &> /dev/null ; then
         echo "saving SkyStats container $ref"
-        if ! docker save "$ref" -o "$dest/skystats.tar.new" ; then
-            rm -f "$dest/skystats.tar.new"
+        docker save "$ref" | gzip -1 > "$dest/skystats.tar.gz.new"
+        st="${PIPESTATUS[0]}${PIPESTATUS[1]}"
+        if [ "$st" != "00" ] ; then
+            rm -f "$dest/skystats.tar.gz.new"
             echo "WARNING: could not save SkyStats container $ref"
             return 1
         fi
@@ -95,27 +105,22 @@ k4nza_fetch_skystats() {
             echo "SkyStats download checksum OK"
         else
             echo "release $tag has no SkyStats checksum, skipping the check"
+            if ! gzip -t "$dest/skystats.tar.gz.new" ; then
+                rm -f "$dest/skystats.tar.gz.new"
+                echo "WARNING: the SkyStats download is damaged, not installing it"
+                return 1
+            fi
         fi
-        if ! gunzip -c "$dest/skystats.tar.gz.new" > "$dest/skystats.tar.new" ; then
-            rm -f "$dest/skystats.tar.new" "$dest/skystats.tar.gz.new"
-            echo "WARNING: could not unpack the SkyStats download"
-            return 1
-        fi
-        rm -f "$dest/skystats.tar.gz.new"
     fi
 
-    # keep the copy being replaced, compressed, so going back works offline
-    if [ -f "$dest/skystats.tar" ] && [ -n "$cur_ref" ] && [ "$cur_ref" != "$ref" ] ; then
-        if gzip -1 -c "$dest/skystats.tar" > "$dest/skystats.prev.tar.gz.new" ; then
-            mv -f "$dest/skystats.prev.tar.gz.new" "$dest/skystats.prev.tar.gz"
-            echo "$cur_ref" > "$dest/skystats.prev.ref"
-        else
-            rm -f "$dest/skystats.prev.tar.gz.new"
-        fi
+    # keep the copy being replaced so going back works offline
+    if [ -f "$dest/skystats.tar.gz" ] && [ -n "$cur_ref" ] && [ "$cur_ref" != "$ref" ] ; then
+        mv -f "$dest/skystats.tar.gz" "$dest/skystats.prev.tar.gz"
+        echo "$cur_ref" > "$dest/skystats.prev.ref"
     fi
-    mv -f "$dest/skystats.tar.new" "$dest/skystats.tar"
+    mv -f "$dest/skystats.tar.gz.new" "$dest/skystats.tar.gz"
     echo "$ref" > "$dest/skystats.ref"
-    docker image inspect "$ref" &> /dev/null || docker load -i "$dest/skystats.tar"
+    docker image inspect "$ref" &> /dev/null || docker load -i "$dest/skystats.tar.gz"
 }
 
 # if this gets downloaded to update an existing feeder from a version logging to /opt/adsb
