@@ -4,12 +4,6 @@ services:
     healthcheck:
       disable: true
     container_name: ultrafeeder
-    # cap this container's log on the SD card (Docker's default has no limit)
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
     hostname: ultrafeeder
     restart: unless-stopped
     networks:

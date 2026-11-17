@@ -122,7 +122,6 @@ fi
 
 # editable WiFi file on the FAT boot partition (fill in from Windows before first boot)
 chmod +x /opt/adsb/k4nza/k4nza-wifi.sh
-bash /opt/adsb/scripts/k4nza-docker-log-limits.sh
 if [ -f /boot/firmware/config.txt ] ; then
 	sed 's/$/\r/' /opt/adsb/k4nza/k4nza-wifi.txt > /boot/firmware/k4nza-wifi.txt
 elif [ -d /boot ] ; then
