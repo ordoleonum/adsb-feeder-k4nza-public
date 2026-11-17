@@ -3,7 +3,7 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-24 (not released yet)
+## v3.0.15-24 (2026-11-16)
 
 **New**
 - SkyStats Search: click a group heading in Interesting Aircraft (Military, Government, Police,
