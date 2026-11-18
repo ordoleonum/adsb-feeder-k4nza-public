@@ -3,6 +3,35 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-26 (unreleased)
+
+**Changed**
+- Live map: a new button layout.
+  - Top bar: Feeder (back to the feeder), Home, Labels, Details, Tracks, Military, Replay.
+  - Right column: List, Settings, Track labels, Dim, Isolate, Follow, and **More** for In view,
+    Multi, Persist, Random, Full screen and Wide list.
+  - Every button shows its keyboard shortcut, like "Labels (L)", and a plain-English tooltip on
+    hover (press and hold on a phone). Buttons that are on are clearly highlighted.
+  - Phones: icons only, the column keeps List, Settings and More, and the map opens without the
+    aircraft list covering it.
+- Live map: one search box finds an aircraft (callsign, hex, registration, type) or jumps to an
+  airport code or a latitude, longitude.
+- Live map: a route the route service couldn't confirm (shown with "??", often another leg of a
+  reused flight number) is replaced by the route SkyStats looked up when it fits where the aircraft
+  is; otherwise it shows "route unverified" and is looked up again a few minutes later.
+- SkyStats Search: an aircraft's details open right under its row in the list (click the row again
+  to close them).
+- SkyStats Signal vs Distance: the notes explain why aircraft passing nearly overhead read weaker.
+
+**Privacy**
+- The feeder no longer checks in with adsb.im. Stock adsb.im sent the image name, board, version and
+  the list of sites you feed to adsb.im every day and on page loads, only to learn the newest stock
+  release, which this build doesn't use. Lookups you start yourself (nearest airport, ACARS
+  frequencies) are unchanged.
+
+**Fixed**
+- The update no longer logs an error on Pi OS versions without `/etc/dhcp/dhclient.conf`.
+
 ## v3.0.15-25 (2026-11-17)
 
 **New**

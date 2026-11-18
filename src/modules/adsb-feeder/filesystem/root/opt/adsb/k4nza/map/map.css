@@ -432,3 +432,115 @@ html.k4m #settings_infoblock::-webkit-scrollbar-thumb {
   html.k4m .button[data-k4] { width: 52px !important; height: 44px !important; }
   html.k4m .k4m-word { font-size: 9.5px; }
 }
+
+/* ---------- -26 layout: top bar left, short column, More panel, tooltips ---------- */
+html.k4m #header_top {
+  right: auto !important;
+  left: 10px !important;
+}
+html.k4m #header_top .buttonContainer,
+html.k4m #header_side .buttonContainer {
+  display: flex !important;
+  gap: 2px;
+}
+html.k4m #header_top .buttonContainer { flex-direction: row; align-items: center; }
+html.k4m #header_side .buttonContainer { flex-direction: column; align-items: center; }
+html.k4m #header_side { height: auto !important; }
+
+/* every labelled control looks the same, whatever tar1090 element it is */
+html.k4m [data-k4] {
+  width: 64px !important;
+  min-height: 48px !important;
+  height: auto !important;
+  margin: 1px auto !important;
+  padding: 4px 2px !important;
+  display: inline-flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: transparent none !important;
+  color: var(--k4-text) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  font: inherit;
+}
+html.k4m #header_side [data-k4] { display: flex !important; }
+html.k4m [data-k4][style*="display: none"],
+html.k4m [data-k4].hidden { display: none !important; }
+html.k4m [data-k4]:hover { background: var(--k4-bg3) !important; }
+/* on: filled accent with a ring, so it reads as "switched on" at a glance */
+html.k4m [data-k4].activeButton,
+html.k4m #toggle_sidebar_button[data-k4].hide_sidebar {
+  background: var(--k4-accent) !important;
+  color: var(--k4-accent-text) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55) inset !important;
+}
+html.k4m .k4m-word { text-align: center; white-space: normal; }
+html.k4m .k4m-key { opacity: 0.75; font-weight: 500; }
+
+/* More panel: opens to the left of the column */
+html.k4m #k4m-more {
+  position: absolute;
+  right: calc(100% + 8px);
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 72px);
+  gap: 2px;
+  padding: 6px;
+  background: var(--k4-glass);
+  border: 1px solid var(--k4-accent);
+  border-radius: 14px;
+  box-shadow: var(--k4-shadow);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+}
+html.k4m #k4m-more[hidden] { display: none !important; }
+html.k4m #k4m-more > div { display: contents; }
+html.k4m #k4m-more [data-k4] { width: 70px !important; }
+
+/* tooltip */
+#k4m-tip {
+  position: fixed;
+  z-index: 100000;
+  display: none;
+  max-width: 240px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #0b1220;
+  color: #f1f5f9;
+  font: 12px/1.35 "Inter", "Segoe UI", system-ui, sans-serif;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* one search box: the separate airport form stays hidden (it still does the jumping) */
+html.k4m #jump_form { display: none !important; }
+html.k4m #search_input { width: 100%; box-sizing: border-box; }
+
+/* phones: icons only */
+@media (max-width: 700px) {
+  html.k4m #header_top { left: 6px !important; }
+  html.k4m [data-k4] { width: 40px !important; min-height: 40px !important; padding: 4px !important; }
+  html.k4m #header_top .k4m-word,
+  html.k4m #header_side .buttonContainer .k4m-word { display: none; }
+  html.k4m #header_side { width: 52px !important; }
+  html.k4m #k4m-more { grid-template-columns: repeat(2, 66px); }
+  html.k4m #k4m-more [data-k4] { width: 64px !important; min-height: 46px !important; }
+}
+html.k4m #header_side .buttonSpacer { display: none !important; }
+html.k4m #expand_sidebar_button[data-k4] { transform: none !important; }
+html.k4m #tab-search-table, html.k4m #tab-search-table tbody, html.k4m #tab-search-table tr, html.k4m #tab-search-table td { display: block; width: 100% !important; box-sizing: border-box; }
+html.k4m #search_form { display: block !important; width: 100% !important; text-align: left; }
+html.k4m #search_input { display: block; width: 100% !important; height: 34px !important; box-sizing: border-box; margin: 4px 0 6px; }
+html.k4m #search_form .formButton { display: inline-block; width: auto !important; margin: 0 6px 0 0; white-space: nowrap; }
+@media (max-width: 700px) {
+  /* the More panel opens below the short column, clear of the top bar */
+  html.k4m #k4m-more { top: calc(100% + 8px); bottom: auto; right: 0; }
+  html.k4m #header_top [data-k4] { width: 36px !important; }
+  html.k4m #header_top .buttonContainer { gap: 0; }
+}

@@ -396,6 +396,8 @@ class AdsbIm:
         self.app.add_url_rule("/api/k4nza/health", "k4nza_health", self.k4nza_health)
         # live-map styling, loaded by tar1090's config.js (see TAR1090_CONFIGJS_APPEND in docker-compose.yml)
         self.app.add_url_rule("/api/k4nza/map/<name>", "k4nza_map_file", self.k4nza_map_file)
+        # the route SkyStats looked up for a callsign (the live map uses it for "??" routes)
+        self.app.add_url_rule("/api/k4nza/route/<callsign>", "k4nza_route", self.k4nza_route)
         self.app.add_url_rule("/aggregators", "aggregators", self.aggregators, methods=["GET", "POST"])
         self.app.add_url_rule("/", "director", self.director, methods=["GET", "POST"])
         self.app.add_url_rule("/index", "index", self.index, methods=["GET", "POST"])
@@ -5392,6 +5394,32 @@ class AdsbIm:
         resp = make_response(send_file(path, mimetype=mimetypes[name], max_age=300))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp
+
+    def k4nza_route(self, callsign):
+        # the live map asks here (it may load from another port); SkyStats keeps the routes
+        def reply(body, code):
+            resp = make_response(json.dumps(body), code)
+            resp.mimetype = "application/json"
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Cache-Control"] = "max-age=60"
+            return resp
+
+        cs = (callsign or "").strip().upper()
+        if not re.fullmatch(r"[A-Z0-9]{2,8}", cs):
+            return reply({"error": "not a callsign"}, 400)
+        if not self._d.is_enabled("skystats"):
+            return reply({"error": "SkyStats is off"}, 404)
+        port = self._d.env_by_tags("skystatsport").value or 5173
+        try:
+            r = requests.get(f"http://127.0.0.1:{port}/api/route/{cs}", timeout=3)
+        except requests.RequestException:
+            return reply({"error": "SkyStats is not answering"}, 503)
+        if r.status_code != 200:
+            return reply({"error": "no route known"}, 404)
+        try:
+            return reply(r.json(), 200)
+        except ValueError:
+            return reply({"error": "bad answer from SkyStats"}, 502)
 
     def _nas_site_name(self):
         site_name = self._d.env_by_tags("site_name_sanitized").list_get(0) or "adsb-feeder"
