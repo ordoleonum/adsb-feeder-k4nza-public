@@ -12,6 +12,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 
 **Changed**
 - Menu: the Live map icon is a level plane (the old one looked like it had crash-landed).
+- SkyStats: clicking the SkyStats-K4NZA title goes back to the dashboard (Activity tab, top of
+  the page).
 - SkyStats Search: the aircraft you open shows right under the search box, above the list, instead
   of below a long list. The list shows the first 10 aircraft; **See more** shows the rest.
 - Home: the Updates line is gone (the Updates page shows the same, with more detail). Home still
