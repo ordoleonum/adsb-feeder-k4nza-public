@@ -11,6 +11,15 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   already seen are marked once after the update. Discord alerts from Planefence don't change.
 
 **Changed**
+- Home: tap (or click) any tile to read its advice; tooltips don't show on phones. Under the
+  aircraft tiles, "Updated ... ago" turns amber when the numbers are more than a minute old, so
+  frozen numbers never look current.
+- SkyStats Search: before you search, it shows Military, Government, Police and Civilian shortcuts
+  and the ten most recently seen interesting aircraft. On phones the results table fits the screen
+  (operator under the registration, type code only). Aircraft without a photo show a plane or
+  helicopter outline with the type, and Military aircraft tagged from the feeder's database say so.
+- SkyStats Interesting Aircraft cards list each aircraft once and show the registered owner when
+  the plane-alert list has no operator.
 - SkyStats Signal vs Distance shows each aircraft's signal at its closest approach, so the band
   now slopes down with distance and shows how well the gain and antenna do. Before, it showed the
   signal when an aircraft was first heard, which is nearly always the weakest the receiver can
