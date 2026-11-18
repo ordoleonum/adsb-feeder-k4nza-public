@@ -38,6 +38,64 @@
   // refreshed every 5 s; skip a round while the previous request is still
   // waiting so a slow link can't pile up requests
   let statusBusy = false;
+  let statusOkAt = 0;
+
+  // "Updated 10 s ago" under the aircraft tiles; amber when the numbers are
+  // more than a minute old (the feeder isn't answering), so frozen numbers
+  // never look current
+  function showUpdated() {
+    const tiles = $id("k4-tiles");
+    if (!tiles) return;
+    let el = $id("k4-tiles-updated");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "k4-tiles-updated";
+      el.className = "k4-tiles-updated";
+      el.setAttribute("aria-live", "polite");
+      tiles.insertAdjacentElement("afterend", el);
+    }
+    if (!statusOkAt) {
+      el.textContent = "";
+      return;
+    }
+    const s = Math.round((Date.now() - statusOkAt) / 1000);
+    const stale = s > 60;
+    el.classList.toggle("k4-stale", stale);
+    if (s < 10) el.textContent = "Updated just now";
+    else if (s < 120) el.textContent = `Updated ${s} s ago${stale ? " - the feeder isn't answering" : ""}`;
+    else el.textContent = `Updated ${Math.round(s / 60)} min ago - the feeder isn't answering`;
+  }
+
+  // tap (or click) a tile to read its advice: tooltips don't show on phones
+  function initTileNotes() {
+    document.querySelectorAll(".k4-tiles").forEach((group) => {
+      group.addEventListener("click", (e) => {
+        const tile = e.target.closest(".k4-tile");
+        if (!tile || !tile.title) return;
+        let note = group.nextElementSibling;
+        if (note && note.id === "k4-tiles-updated") note = note.nextElementSibling;
+        if (!note || !note.classList.contains("k4-tile-note")) {
+          note = document.createElement("div");
+          note.className = "k4-tile-note";
+          note.setAttribute("role", "status");
+          const after = group.nextElementSibling && group.nextElementSibling.id === "k4-tiles-updated"
+            ? group.nextElementSibling : group;
+          after.insertAdjacentElement("afterend", note);
+        }
+        const same = note.dataset.for === (tile.id || tile.title) && !note.hidden;
+        group.querySelectorAll(".k4-tile.k4-tile-open").forEach((t) => t.classList.remove("k4-tile-open"));
+        if (same) {
+          note.hidden = true;
+          return;
+        }
+        note.dataset.for = tile.id || tile.title;
+        note.textContent = tile.title;
+        note.hidden = false;
+        tile.classList.add("k4-tile-open");
+      });
+    });
+  }
+
   function updateStatus() {
     if (statusBusy) return;
     statusBusy = true;
@@ -69,6 +127,8 @@
           setTile("k4-tile-mps", fmt(d.mps));
           setTile("k4-tile-pps", fmt(d.pps));
           setTile("k4-tile-today", fmt(d.tplanes));
+          statusOkAt = Date.now();
+          showUpdated();
         }
         if (pill) {
           pill.dataset.state = state;
@@ -263,10 +323,12 @@
     }
 
     initSearch();
+    initTileNotes();
 
     if ($id("k4-status-pill") || $id("k4-tiles")) {
       updateStatus();
       setInterval(() => { if (!document.hidden) updateStatus(); }, 5000);
+      if ($id("k4-tiles")) setInterval(showUpdated, 5000);
     }
   }
 
