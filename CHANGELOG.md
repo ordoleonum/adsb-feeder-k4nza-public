@@ -11,6 +11,13 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   already seen are marked once after the update. Discord alerts from Planefence don't change.
 
 **Changed**
+- SkyStats Signal vs Distance shows each aircraft's signal at its closest approach, so the band
+  now slopes down with distance and shows how well the gain and antenna do. Before, it showed the
+  signal when an aircraft was first heard, which is nearly always the weakest the receiver can
+  decode, so it looked like a flat line. New readings start after the update; until there are
+  enough for the chosen period, the chart shows the old readings with a note saying so.
+- SkyStats Range by Direction has a "How to read this chart" section, and the Aircraft Seen and
+  Aircraft Type charts have a one-line note explaining what they count.
 - Menu: the Live map icon is a level plane (the old one looked like it had crash-landed).
 - SkyStats: clicking the SkyStats-K4NZA title goes back to the dashboard (Activity tab, top of
   the page).
