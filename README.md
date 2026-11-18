@@ -25,15 +25,19 @@ writes to the SD card.
 | **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
 | **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-24
+## New in v3.0.15-25
 
-- **Kinder to the SD card:** container logs are kept in memory, the "Go back" copy of SkyStats is
-  stored compressed, and Pi OS updates remove what they no longer need.
-- **Pi OS updates now include kernels**, with a **Restart now** button when one is installed.
-- **WiFi power saving off**, which removes the delay spikes it caused on the Pi's WiFi.
-- **Search a whole group:** click Military, Government, Police or Civilian in Interesting Aircraft
-  to list every one you've ever seen, and sort any search by clicking a column heading.
-- **Tighter network:** only the ports something actually uses are open; the readsb API is closed.
+- **A signal chart that shows your gain and antenna:** Signal vs Distance now plots each aircraft's
+  signal at its closest approach, so the band slopes down with distance the way it should.
+- **More military aircraft recognised:** aircraft the feeder's own database marks as military
+  count as Military in SkyStats even when the plane-alert list doesn't have them.
+- **Search that works before you type:** Military, Government, Police and Civilian shortcuts, the
+  ten most recently seen interesting aircraft, a colour for each group, and a results table that
+  fits a phone.
+- **Home you can trust at a glance:** tap a tile to read its advice, and "Updated ... ago" turns
+  amber if the numbers stop updating.
+- **Steadier SkyStats:** registration lookups no longer get stuck on TIS-B targets, and the
+  background jobs no longer trip over each other in the database.
 
 Every release is in the [CHANGELOG](CHANGELOG.md).
 
@@ -77,14 +81,14 @@ opens its full history too.
 ## See how well your station hears
 
 **Range by Direction** shows the farthest aircraft heard in each direction, with your all-time best
-as an outline; a dent shows where something blocks the antenna. **Signal vs Distance** plots signal
-strength against distance with the median and the overload level, for tuning gain and checking an
-antenna or filter change.
+as an outline; a dent shows where something blocks the antenna. **Signal vs Distance** plots each
+aircraft's signal at its closest approach against distance, with the median and the overload
+level, for tuning gain and checking an antenna or filter change.
 
 ![SkyStats reception charts](docs/screenshots/skystats-activity.jpg)
 <sub>Sample data.</sub>
 
-Not sure what you're looking at? **How to read this chart**, under Signal vs Distance, explains what
+Not sure what you're looking at? **How to read this chart**, under both charts, explains what
 healthy looks like and what too much gain, too little gain, a blocked direction and gaps look like.
 
 <details>
@@ -159,7 +163,7 @@ It also stays reachable and quiet on your network:
 - **Home** shows aircraft now, messages and positions per second, and aircraft today, all refreshing
   every 5 seconds. Below them are an aircraft search box, aircraft per day, and the sites you feed.
 - **Pi health tiles** cover CPU temperature, power supply, free disk space and SkyStats history size
-  (with growth per month). Each tile turns amber or red, with advice in its tooltip.
+  (with growth per month). Each tile turns amber or red; tap or hover over it for advice.
 - **Plain-English help** under every settings section, tooltips on buttons, and a confirmation
   before shutdown, reboot and similar actions.
 - **Radio (SDR)** page with a step-by-step guide to better reception.

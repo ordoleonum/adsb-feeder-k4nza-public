@@ -18,6 +18,9 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   and the ten most recently seen interesting aircraft. On phones the results table fits the screen
   (operator under the registration, type code only). Aircraft without a photo show a plane or
   helicopter outline with the type, and Military aircraft tagged from the feeder's database say so.
+- SkyStats: each interesting group has its own colour (Military olive, Government blue, Police red,
+  Civilian purple) on badges, shortcuts and card icons, and SkyStats uses the same blue as the
+  feeder's pages.
 - SkyStats Interesting Aircraft cards list each aircraft once and show the registered owner when
   the plane-alert list has no operator.
 - SkyStats Signal vs Distance shows each aircraft's signal at its closest approach, so the band
@@ -34,6 +37,15 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   of below a long list. The list shows the first 10 aircraft; **See more** shows the rest.
 - Home: the Updates line is gone (the Updates page shows the same, with more detail). Home still
   starts the once-a-day Pi OS update check in the background.
+
+**Fixed**
+- SkyStats stopped looking up registrations (owner, model, country, photo) as soon as it met a
+  TIS-B target (a code starting with "~"), so aircraft seen after that had none. Those codes are
+  now skipped, and the missed lookups catch up on their own after the update.
+- SkyStats database "deadlocks" (about 40 a day): the record-holder job and the live update could
+  block each other, and each time a round of position updates was thrown away. They now take turns.
+- SkyStats Interesting Aircraft cards could fail to load once a feeder-tagged military aircraft
+  without an operator was recorded (caught before release).
 
 ## v3.0.15-24 (2026-11-16)
 
