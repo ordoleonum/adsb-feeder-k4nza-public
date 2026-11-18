@@ -491,31 +491,17 @@ class ImStatus:
         self._cached: Optional[dict] = None
 
     def check(self, check=False):
+        # K4NZA: no check-in with adsb.im. Stock adsb.im sent the image name,
+        # board, versions and the list of aggregators fed to adsb.im/api/status
+        # here, only to learn the newest stock release, which this build never
+        # uses (it updates from its own repository). Answer locally with the
+        # same fields, and still clear the "previous version" marker after an
+        # update as the stock code did after a successful check.
         with self._lock:
-            if not self._cached or time.time() > self._next_check or check:
-                json_url = f"{self._d.adsbim_api_url}/status"
-                self._cached, status = generic_get_json(json_url, self._d.env_by_tags("pack").value)
-                if status == 200:
-                    # good result, no need to update this sooner than in a minute
-                    self._next_check = time.time() + 60
-                    if self._d.previous_version and not check:
-                        self._d.previous_version = ""
-                        PREVIOUS_VERSION_FILE.unlink(missing_ok=True)
-
-                elif status == 201:
-                    # successful check-in
-                    return {"latest_tag": "success", "latest_commit": "", "advice": ""}
-                else:
-                    # check again no earlier than 10 seconds from now
-                    self._next_check = time.time() + 10
-                    print_err(f"adsb.im returned {status}")
-                    self._cached = {
-                        "latest_tag": "unknown",
-                        "latest_commit": "",
-                        "advice": "there was an error obtaining the latest version information",
-                    }
-
-            return self._cached
+            if self._d.previous_version and not check:
+                self._d.previous_version = ""
+                PREVIOUS_VERSION_FILE.unlink(missing_ok=True)
+            return {"latest_tag": "", "latest_commit": "", "latest_date": "", "advice": ""}
 
 
 class LastSeen:

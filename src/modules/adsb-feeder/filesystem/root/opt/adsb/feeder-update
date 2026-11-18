@@ -459,7 +459,10 @@ timeout 30;
 retry 30;
 EOF
     fi
-    sed -i -e 's/^retry\s.*/retry 30;/' -e 's/^timeout\s.*/timeout 30;/' /etc/dhcp/dhclient.conf
+    # K4NZA: newer Pi OS (NetworkManager) has no dhclient.conf; don't log an error for it
+    if [[ -f /etc/dhcp/dhclient.conf ]]; then
+        sed -i -e 's/^retry\s.*/retry 30;/' -e 's/^timeout\s.*/timeout 30;/' /etc/dhcp/dhclient.conf
+    fi
 
     if [[ -d /boot/dietpi/ ]] && ! grep -qs -e '^metric' /etc/network/interfaces; then
         echo "adding metric lines to /etc/network/interfaces"
