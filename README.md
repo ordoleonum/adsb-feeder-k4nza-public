@@ -25,19 +25,16 @@ writes to the SD card.
 | **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
 | **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-25
+## New in v3.0.15-26
 
-- **A signal chart that shows your gain and antenna:** Signal vs Distance now plots each aircraft's
-  signal at its closest approach, so the band slopes down with distance the way it should.
-- **More military aircraft recognised:** aircraft the feeder's own database marks as military
-  count as Military in SkyStats even when the plane-alert list doesn't have them.
-- **Search that works before you type:** Military, Government, Police and Civilian shortcuts, the
-  ten most recently seen interesting aircraft, a colour for each group, and a results table that
-  fits a phone.
-- **Home you can trust at a glance:** tap a tile to read its advice, and "Updated ... ago" turns
-  amber if the numbers stop updating.
-- **Steadier SkyStats:** registration lookups no longer get stuck on TIS-B targets, and the
-  background jobs no longer trip over each other in the database.
+- **A cleaner live map:** the everyday buttons (Home, Labels, Details, Tracks, Military, Replay) in
+  one top bar, a short right column, and the rest under **More**. Every button shows its keyboard
+  shortcut and explains itself in a tooltip. On a phone the map gets the whole screen.
+- **One search box on the map:** find an aircraft, or type an airport code to jump there.
+- **Fewer wrong routes:** when the route service guesses the wrong leg of a reused flight number
+  (shown as "??"), the map uses the route SkyStats found, or says "route unverified".
+- **SkyStats Search:** an aircraft's details open right under its row.
+- **More private:** the feeder no longer checks in with adsb.im.
 
 Every release is in the [CHANGELOG](CHANGELOG.md).
 
@@ -182,8 +179,13 @@ It also stays reachable and quiet on your network:
 ## A modern live map
 
 - Dark or light panels for the buttons, aircraft list, selected-aircraft card, settings and legend.
-- Icon-and-word buttons (Labels, Details, Tracks, Follow, Military, ...) instead of single letters.
-  The keyboard shortcuts are unchanged and shown in each button's tooltip.
+- Icon-and-word buttons instead of single letters: Home, Labels, Details, Tracks, Military and
+  Replay in a top bar; List, Settings, Track labels, Dim, Isolate and Follow in a short column; the
+  rest under **More**. Each shows its keyboard shortcut, like "Labels (L)", and a tooltip on hover
+  (press and hold on a phone). A **Feeder** button goes back to the feeder's pages.
+- One search box: callsign, hex, registration or type, or an airport code to jump to.
+- Routes the route service can't confirm are checked against SkyStats instead of shown wrong.
+- On a phone: icons only, and the map opens without the aircraft list covering it.
 - **Nautical, Imperial or Metric** for distances, speeds and altitudes in the map and SkyStats. Set
   the default under *Live map → Map options*; each browser can still switch on its own.
 - tar1090 itself is unmodified, so it keeps getting its own updates.
