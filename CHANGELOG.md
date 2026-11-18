@@ -6,6 +6,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 ## v3.0.15-25 (unreleased)
 
 **Changed**
+- SkyStats Search: the aircraft you open shows right under the search box, above the list, instead
+  of below a long list. The list shows the first 10 aircraft; **See more** shows the rest.
 - Home: the Updates line is gone (the Updates page shows the same, with more detail). Home still
   starts the once-a-day Pi OS update check in the background.
 
