@@ -563,3 +563,10 @@ html.k4m #toggle_sidebar_button[data-k4] { transform: none !important; }
   /* phones: the settings panel opens below the top bar instead of over it */
   html.k4m #settings_infoblock { top: 76px !important; max-height: calc(100% - 84px) !important; }
 }
+/* the column starts below the bigger layers button (54px at top 13px) */
+html.k4m #header_side { top: 78px !important; }
+@media (max-width: 700px) {
+  html.k4m #header_side { top: 76px !important; }
+  /* line the layers button up with the column */
+  html.k4m .layer-switcher:not(.shown) { right: 3px !important; }
+}
