@@ -617,3 +617,29 @@ html.k4m [data-k4]:focus:not(:focus-visible) { outline: none; }
     overflow-y: auto !important;
   }
 }
+
+/* replay controls: themed like the rest of the map (tar1090 draws them plain white) */
+html.k4m #replayBar {
+  background: var(--k4-glass) !important;
+  color: var(--k4-text) !important;
+  border-top: 1px solid var(--k4-line);
+  backdrop-filter: blur(8px);
+}
+html.k4m #replayBar p { color: var(--k4-text) !important; }
+html.k4m #replayPlay {
+  background: var(--k4-accent) !important;
+  color: var(--k4-accent-text) !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  padding: 4px 14px !important;
+  font-weight: 600;
+  cursor: pointer;
+}
+html.k4m #replayDatepicker {
+  background: var(--k4-bg) !important;
+  color: var(--k4-text) !important;
+  border: 1px solid var(--k4-line) !important;
+  border-radius: 8px !important;
+  padding: 3px 8px !important;
+}
+html.k4m #replayBar .ui-slider { background: rgba(148, 163, 184, 0.38) !important; border: 0 !important; }

@@ -17,8 +17,8 @@
     {% endif %}
   </li>
   <li><span style="display: inline-block; width: 6em;"><strong>IPv6:</strong></span> {{ ipv6 }}</li>
-  <li><span style="display: inline-block; width: 6em;"><strong>Netdog reboots:</strong></span><br />
-    <pre>{{ netdog }}</pre>
+  <li><strong>Netdog reboots:</strong>
+    {% if netdog and netdog|trim %}<pre class="mt-1">{{ netdog }}</pre>{% else %}none{% endif %}
   </li>
   <li id="ip-mismatch" class="d-none"><span style="display: inline-block; width: 6em;"><strong>IP:</strong></span>
     Your browser and the feeder have different external IP addresses.

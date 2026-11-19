@@ -272,6 +272,15 @@
       window.open("/skystats/?q=" + encodeURIComponent(q), "_blank", "noopener");
     };
     button.addEventListener("click", go);
+    // narrow screens: a placeholder that fits instead of one cut off mid-word
+    const longPh = input.placeholder;
+    const shortPh = input.dataset.shortPlaceholder || "Search your history";
+    const fitPlaceholder = () => {
+      if (!shortPh) return;
+      input.placeholder = input.clientWidth && input.clientWidth < 420 ? shortPh : longPh;
+    };
+    fitPlaceholder();
+    window.addEventListener("resize", fitPlaceholder);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();

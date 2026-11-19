@@ -20,7 +20,7 @@
   <h5 class="mb-2">Getting better reception</h5>
   <p class="small mb-2">
     The decoder software is already very good at pulling weak signals out of noise, so the big gains come from the
-    antenna and its surroundings. Check the <strong>Receiver status</strong> on the home page (messages per second)
+    antenna and its surroundings. Check <strong>messages / sec</strong> on the home page
     before and after each change - give each change a few minutes.
   </p>
   <span onclick="$('#k4_reception').toggleClass('d-none'); $(this).find('.toggle-icon').text($('#k4_reception').hasClass('d-none') ? '▶' : '▼'); return false;"
@@ -92,7 +92,7 @@
               <th scope="col">Serial</th>
               <th scope="col" style="white-space: nowrap;">Use for</th>
               <th scope="col">Gain</th>
-              <th scope="col" class="text-center" >biastee</th>
+              <th scope="col" class="text-center" >Bias tee</th>
             </tr>
           </thead>
           <tbody>
@@ -141,7 +141,7 @@
            placeholder="IP-address[,port]" value="{{ env_value_by_tag("remote_sdr") }}" />
   </div>
   <button type="submit" class="btn btn-primary btn-rounded  btn-block btn-lg p-4 mb-3 mt-3" name="sdr_setup"
-          value="go" onclick="submit_sdr_changes(); return true;">apply settings</button>
+          value="go" onclick="submit_sdr_changes(); return true;">Save radio settings</button>
   <input type="hidden" id="sdr_setup_data" name="sdr_setup_data" value="" />
 </form>
 
@@ -263,7 +263,7 @@
       if (sdr['biastee']) {
         $(id + "-biastee").html("\u2713");
       } else {
-        $(id + "-biastee").html("");
+        $(id + "-biastee").html("off");
       }
       let purpose = sdr['purpose'];
       if (!force) {

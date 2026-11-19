@@ -15,6 +15,26 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - Live map: clicking a button no longer selects its label text.
 - Live map: the selected aircraft's details pane fits the window; its top was cut off.
 - Live map: the bigger layers button overlapped the top of the button column.
+- SkyStats: **Flights / aircraft seen today** read 0 every evening (from 7 PM in Kansas, when it's
+  already tomorrow in UTC) until local midnight.
+- SkyStats: the page scrolled sideways on a computer (hidden button tooltips stuck out past the edge).
+- Feeder pages: content lines up with the page title everywhere (the home page's feeding tables, the
+  Advanced page's extra-decoder boxes and help notes, and the Map options / Radio checkboxes sat
+  off to the side); the big full-width Apply bars are normal buttons.
+- Feeder menu: fits a 900 px high laptop window (Support info and Share diagnostics were below the edge).
+- Home page: the history search hint fits on a phone; your station name sits above the links in
+  the "Your feeds on other sites" cards instead of being squeezed beside them.
+- Corrected hints: SkyStats isn't under System; the temperature shows on the home page, not the top
+  bar; Radio's tip points at **messages / sec**. Support info shows "Netdog reboots: none".
+
+**Changed**
+- Live map: the Replay controls match the map's look (they were plain white).
+- SkyStats: Interesting lists show the type code when the full type is unknown and a dash instead of
+  a blank, times read like Search ("Today 7:24 PM"); chart period buttons move under the title on
+  narrow screens instead of wrapping into two rows.
+- Radio: the bias tee column says "off" instead of being blank; both save buttons say "Save radio
+  settings". Map options buttons: "Save and go to the home page" / "Save and open the map".
+- Phones: checkboxes are bigger and easier to tap.
 
 ## v3.0.15-27 (2026-11-18)
 
