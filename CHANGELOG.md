@@ -3,6 +3,29 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-27 (2026-11-18)
+
+**Changed**
+- Live map: button order. Top bar: Feeder, Home, Labels, Details, Track labels, Tracks, Military.
+  Right column: List, Settings, Dim, Isolate, Follow, More. **Replay** is now first under More.
+  On a phone, Dim, Isolate and Follow are under More.
+- Live map: the top bar sits in the middle of the map and moves aside so it never covers the
+  selected aircraft's details or the settings panel. On a phone the settings panel opens below it.
+- Live map: the **Feeder** button works like the browser's Back button. The map's own tab closes
+  (or the feeder opens at the address you're using, e.g. over Tailscale), instead of going to
+  adsb-feeder.local.
+- Live map: the layers button is half again as big.
+- SkyStats Search: **Last seen** shows the time as well as the day.
+- SkyStats Search: when there's no photo of the aircraft, a Wikipedia photo of its type is shown,
+  clearly labelled "Typical T38 - not this aircraft" and linked to the article.
+
+**Fixed**
+- Live map: the buttons inside the layers panel (the US / Europe group toggles) were huge.
+- Live map: **Full screen** did nothing on a computer. It now works, and is hidden on browsers that
+  can't do it.
+- Live map: the **Settings** button now lights up while its panel is open.
+- Live map: the **List** button's label was mirrored when the list was closed.
+
 ## v3.0.15-26 (2026-11-18)
 
 **Changed**

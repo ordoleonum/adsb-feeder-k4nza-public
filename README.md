@@ -25,16 +25,16 @@ writes to the SD card.
 | **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
 | **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-26
+## New in v3.0.15-27
 
-- **A cleaner live map:** the everyday buttons (Home, Labels, Details, Tracks, Military, Replay) in
-  one top bar, a short right column, and the rest under **More**. Every button shows its keyboard
-  shortcut and explains itself in a tooltip. On a phone the map gets the whole screen.
-- **One search box on the map:** find an aircraft, or type an airport code to jump there.
-- **Fewer wrong routes:** when the route service guesses the wrong leg of a reused flight number
-  (shown as "??"), the map uses the route SkyStats found, or says "route unverified".
-- **SkyStats Search:** an aircraft's details open right under its row.
-- **More private:** the feeder no longer checks in with adsb.im.
+- **Live map polish:** the top bar sits in the middle of the map and never covers the aircraft
+  details or settings; Full screen works on computers; the Feeder button works like Back; Settings
+  lights up while open; tidier layers panel.
+- **SkyStats Search:** Last seen shows the time, and aircraft with no photo show a labelled photo of
+  their type from Wikipedia.
+
+**v3.0.15-26:** a cleaner live map with labelled buttons, tooltips and one search box; "??" routes
+checked against SkyStats; SkyStats details open under their row; no more adsb.im check-in.
 
 Every release is in the [CHANGELOG](CHANGELOG.md).
 
@@ -179,10 +179,10 @@ It also stays reachable and quiet on your network:
 ## A modern live map
 
 - Dark or light panels for the buttons, aircraft list, selected-aircraft card, settings and legend.
-- Icon-and-word buttons instead of single letters: Home, Labels, Details, Tracks, Military and
-  Replay in a top bar; List, Settings, Track labels, Dim, Isolate and Follow in a short column; the
-  rest under **More**. Each shows its keyboard shortcut, like "Labels (L)", and a tooltip on hover
-  (press and hold on a phone). A **Feeder** button goes back to the feeder's pages.
+- Icon-and-word buttons instead of single letters: Home, Labels, Details, Track labels, Tracks and
+  Military in a top bar in the middle of the map; List, Settings, Dim, Isolate and Follow in a short
+  column; Replay and the rest under **More**. Each shows its keyboard shortcut, like "Labels (L)",
+  and a tooltip on hover (press and hold on a phone). A **Feeder** button goes back to the feeder.
 - One search box: callsign, hex, registration or type, or an airport code to jump to.
 - Routes the route service can't confirm are checked against SkyStats instead of shown wrong.
 - On a phone: icons only, and the map opens without the aircraft list covering it.
