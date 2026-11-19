@@ -3,6 +3,19 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-28 (unreleased)
+
+**Fixed**
+- Live map: the **Feeder** button now closes the map's tab and you're back on the feeder page you
+  opened it from (it went to adsb-feeder.local instead: browsers only let a page close a tab that a
+  script opened, so the feeder now opens the map that way). Opened from a bookmark, it goes back,
+  or opens the feeder at the address you're using.
+- Live map: **Settings** fills blue while its panel is open, like the other buttons (only a faint
+  ring showed). On a phone the panel leaves the button column uncovered, so Settings can close it.
+- Live map: clicking a button no longer selects its label text.
+- Live map: the selected aircraft's details pane fits the window; its top was cut off.
+- Live map: the bigger layers button overlapped the top of the button column.
+
 ## v3.0.15-27 (2026-11-18)
 
 **Changed**

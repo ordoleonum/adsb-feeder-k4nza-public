@@ -570,3 +570,50 @@ html.k4m #header_side { top: 78px !important; }
   /* line the layers button up with the column */
   html.k4m .layer-switcher:not(.shown) { right: 3px !important; }
 }
+
+/* ---------- -28 ---------- */
+/* "on" is the same filled accent everywhere: these selectors carry IDs so the
+   older #header_side rule that clears tar1090's icon backgrounds can't win */
+html.k4m #header_top [data-k4].activeButton,
+html.k4m #header_side [data-k4].activeButton,
+html.k4m #k4m-more [data-k4].activeButton,
+html.k4m #header_side #toggle_sidebar_button[data-k4].hide_sidebar {
+  background: var(--k4-accent) !important;
+  background-color: var(--k4-accent) !important;
+  color: var(--k4-accent-text) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55) inset !important;
+}
+/* clicking a button doesn't select its label (or flash on touch screens) */
+html.k4m [data-k4],
+html.k4m [data-k4] * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+html.k4m [data-k4]:focus:not(:focus-visible) { outline: none; }
+
+/* selected aircraft pane: fits the window (tar1090 puts it at -22px, full
+   height, so the top was cut off) and scrolls if its contents are taller */
+@media (min-width: 701px) {
+  html.k4m #selected_infoblock {
+    top: 10px !important;
+    bottom: 10px !important;
+    height: auto !important;
+    max-height: calc(100% - 20px) !important;
+    margin: 0 0 0 10px !important;
+    overflow-y: auto !important;
+    box-sizing: border-box;
+  }
+}
+@media (max-width: 700px) {
+  /* phones: the settings panel leaves the button column uncovered, so Settings
+     (lit while open) can close it again */
+  html.k4m #settings_infoblock {
+    left: 4px !important;
+    right: 64px !important;
+    width: auto !important;
+    max-width: none !important;
+    box-sizing: border-box;
+    overflow-y: auto !important;
+  }
+}

@@ -315,6 +315,21 @@
       }
     });
 
+    // the live map opens in a tab this page opens itself, so the map's Feeder
+    // button can close that tab and land back here (browsers only let a page
+    // close a tab that a script opened). Ctrl/middle click still opens normally.
+    const mapPath = /^\/map(_\d+)?(\/|\?|$)/;
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest && e.target.closest("a[href]");
+      if (!a || a.target !== "_blank" || e.defaultPrevented) return;
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      let url;
+      try { url = new URL(a.href, location.href); } catch (err) { return; }
+      if (url.host !== location.host || !mapPath.test(url.pathname)) return;
+      const w = window.open(url.href, "_blank");
+      if (w) e.preventDefault(); // blocked: let the link open the usual way
+    });
+
     if ($id("k4-health-tiles")) {
       updateHealth();
       updateTemperatures();

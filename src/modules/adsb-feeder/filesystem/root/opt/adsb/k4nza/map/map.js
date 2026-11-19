@@ -166,19 +166,25 @@
     more.classList.toggle("inActiveButton", !open);
   }
 
-  // Feeder button = the browser's Back button: back to the feeder page this map
-  // was opened from. The map usually opens in its own tab, which has nothing to
-  // go back to, so that tab is closed (like Back does on a phone); if the
-  // browser won't close it, the feeder opens at the address used for the map.
+  // Feeder button = the browser's Back button: back to the feeder page the map
+  // was opened from. The feeder opens the map in a tab of its own (by script, so
+  // this tab may close itself): close it and the feeder's tab is showing again.
+  // Opened some other way (bookmark, typed address): go back if there's a page
+  // to go back to, else open the feeder here, at the address used for the map.
   function backToFeeder(e) {
     if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return; // new tab / window: follow the link
     e.preventDefault();
-    if (history.length > 1) {
+    let opener = null;
+    try { opener = window.opener && !window.opener.closed ? window.opener : null; } catch (err) { /* cross-origin */ }
+    if (opener) {
+      try { opener.focus(); } catch (err) { /* not allowed: closing still returns to it */ }
+      window.close();
+    } else if (history.length > 1) {
       history.back();
       return;
     }
-    window.close();
-    setTimeout(() => { location.href = FEEDER; }, 250);
+    // still here (the browser wouldn't close the tab): open the feeder in it
+    setTimeout(() => { if (!window.closed) location.href = FEEDER; }, 300);
   }
 
   // Full screen: tar1090 only wires this up on phones and hides it elsewhere
