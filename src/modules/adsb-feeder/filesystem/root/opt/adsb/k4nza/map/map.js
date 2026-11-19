@@ -3,10 +3,11 @@
  * tar1090's own buttons are kept (same ids, same click handlers) and only
  * moved, labelled and given a tooltip; nothing in tar1090 is replaced.
  *
- *   top bar      Feeder, Home (H), Labels (L), Details (O), Tracks (T), Military (U), Replay (Y)
- *   right column List, Settings, Track lbl (K), Dim (B), Isolate (I), Follow (F), More
- *   More panel   In view (V), Multi (M), Persist (P), Random (R), Full screen, Wide list
- *   phones       icons only; Track lbl, Dim, Isolate and Follow move into More;
+ *   top bar      Feeder, Home (H), Labels (L), Details (O), Track lbl (K), Tracks (T), Military (U)
+ *                (centred over the map, clear of the panels on the left)
+ *   right column List, Settings, Dim (B), Isolate (I), Follow (F), More
+ *   More panel   Replay (Y), In view (V), Multi (M), Persist (P), Random (R), Full screen, Wide list
+ *   phones       icons only; Dim, Isolate and Follow move into More;
  *                the aircraft list starts hidden
  */
 (function () {
@@ -47,7 +48,7 @@
 
   // id: [label, icon, shortcut key or "", tooltip]
   const BUTTONS = {
-    k4feeder: ["Feeder", "feeder", "", "Back to the feeder home page"],
+    k4feeder: ["Feeder", "feeder", "", "Back to the feeder"],
     H: ["Home", "home", "H", "Center the map on your station"],
     L: ["Labels", "tag", "L", "Show callsigns next to aircraft"],
     O: ["Details", "tagplus", "O", "Add altitude and speed to the labels"],
@@ -68,13 +69,16 @@
     fullscreenButton: ["Full screen", "full", "", "Use the whole screen for the map"],
     expand_sidebar_button: ["Wide list", "wide", "", "Make the aircraft list wider"],
   };
-  const TOP = ["k4feeder", "H", "L", "O", "T", "U", "RP"];
-  const SIDE = ["toggle_sidebar_control", "settingsCog", "K", "B", "I", "F", "k4more"];
-  const SIDE_ON_PHONE_IN_MORE = ["K", "B", "I", "F"];
-  const MORE = ["V", "M", "P", "R", "fullscreenButton", "expand_sidebar_control"];
+  const TOP = ["k4feeder", "H", "L", "O", "K", "T", "U"];
+  const SIDE = ["toggle_sidebar_control", "settingsCog", "B", "I", "F", "k4more"];
+  const SIDE_ON_PHONE_IN_MORE = ["B", "I", "F"];
+  const MORE = ["RP", "V", "M", "P", "R", "fullscreenButton", "expand_sidebar_control"];
   const PHONE = window.matchMedia("(max-width: 700px)");
 
   const $ = (id) => document.getElementById(id);
+  // on screen (offsetParent is null for fixed panels, so it can't be used)
+  const shown = (el) => !!el && el.getClientRects().length > 0 && getComputedStyle(el).display !== "none" &&
+    getComputedStyle(el).visibility !== "hidden";
 
   function label(el, id) {
     const [word, icon, key, tip] = BUTTONS[id];
@@ -107,6 +111,7 @@
 
     const feeder = makeButton("k4feeder", "a");
     feeder.href = FEEDER;
+    feeder.addEventListener("click", backToFeeder);
     const more = makeButton("k4more");
     more.setAttribute("aria-expanded", "false");
     morePanel = document.createElement("div");
@@ -132,6 +137,19 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") setMore(false); });
 
     document.documentElement.classList.add("k4m-built");
+    initFullscreen();
+    watchSettings();
+    placeTopBar();
+    window.addEventListener("resize", placeTopBar);
+    // the map area changes size when the list opens or closes
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => placeTopBar());
+      for (const el of [$("header_top").offsetParent, $("map_canvas"), $("sidebar_container"), $("selected_infoblock")]) if (el) ro.observe(el);
+    }
+    for (const id of ["toggle_sidebar_button", "expand_sidebar_button"]) {
+      const b = $(id);
+      if (b) b.addEventListener("click", () => { setTimeout(placeTopBar, 60); setTimeout(placeTopBar, 400); });
+    }
     layoutForWidth();
     PHONE.addEventListener("change", layoutForWidth);
     hideListOnPhone();
@@ -148,19 +166,99 @@
     more.classList.toggle("inActiveButton", !open);
   }
 
-  // phones: Track lbl, Dim, Isolate and Follow go into More; back on wide screens
+  // Feeder button = the browser's Back button: back to the feeder page this map
+  // was opened from. The map usually opens in its own tab, which has nothing to
+  // go back to, so that tab is closed (like Back does on a phone); if the
+  // browser won't close it, the feeder opens at the address used for the map.
+  function backToFeeder(e) {
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return; // new tab / window: follow the link
+    e.preventDefault();
+    if (history.length > 1) {
+      history.back();
+      return;
+    }
+    window.close();
+    setTimeout(() => { location.href = FEEDER; }, 250);
+  }
+
+  // Full screen: tar1090 only wires this up on phones and hides it elsewhere
+  function initFullscreen() {
+    const btn = $("fullscreenButton");
+    if (!btn) return;
+    const root = document.documentElement;
+    if (!document.fullscreenEnabled || !root.requestFullscreen) {
+      btn.classList.add("hidden");
+      return;
+    }
+    btn.classList.remove("hidden");
+    btn.style.removeProperty("display");
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (document.fullscreenElement) document.exitFullscreen();
+      else root.requestFullscreen().catch(() => {});
+      setMore(false);
+    }, true);
+    document.addEventListener("fullscreenchange", () => {
+      const on = !!document.fullscreenElement;
+      btn.classList.toggle("activeButton", on);
+      btn.classList.toggle("inActiveButton", !on);
+    });
+  }
+
+  // Settings button lit while the settings panel is open
+  function watchSettings() {
+    const panel = $("settings_infoblock");
+    const btn = $("settingsCog");
+    if (!panel || !btn) return;
+    const sync = () => {
+      const open = shown(panel);
+      btn.classList.toggle("activeButton", open);
+      btn.classList.toggle("inActiveButton", !open);
+      placeTopBar();
+    };
+    new MutationObserver(sync).observe(panel, { attributes: true, attributeFilter: ["style", "class"] });
+    sync();
+  }
+
+  // top bar: centred over the map, but never over the panels on the left
+  // (selected aircraft, settings) or the button column on the right
+  function placeTopBar() {
+    const bar = $("header_top");
+    const side = $("header_side");
+    if (!bar || !side || !bar.offsetParent) return;
+    const host = bar.offsetParent.getBoundingClientRect();
+    const w = bar.offsetWidth;
+    const barBottom = bar.getBoundingClientRect().bottom;
+    let left = 8;
+    for (const id of ["selected_infoblock", "settings_infoblock"]) {
+      const el = $(id);
+      if (!shown(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.top < barBottom) left = Math.max(left, r.right - host.left + 8);
+    }
+    const right = side.getBoundingClientRect().left - host.left - 8;
+    const centred = (right + 8) / 2 - w / 2;
+    let x = Math.max(left, centred);
+    if (x + w > right) x = Math.max(8, right - w); // narrow: stay clear of the column
+    bar.style.setProperty("left", Math.round(x) + "px", "important");
+  }
+
+  // phones: Dim, Isolate and Follow go into More (after Replay); back on wide screens
   function layoutForWidth() {
     const side = document.querySelector("#header_side .buttonContainer");
     const more = $("k4more");
     if (!side || !morePanel || !more) return;
-    // same order in both places: Track lbl, Dim, Isolate, Follow
-    const first = morePanel.firstChild;
+    // same order in both places: Dim, Isolate, Follow
+    const rp = $("RP");
+    const first = rp && rp.parentNode === morePanel ? rp.nextSibling : morePanel.firstChild;
     for (const id of SIDE_ON_PHONE_IN_MORE) {
       const el = $(id);
       if (!el) continue;
       if (PHONE.matches) morePanel.insertBefore(el, first);
       else side.insertBefore(el, more);
     }
+    placeTopBar();
   }
 
   // phones start with the map, not the list (only once, when the page opens)

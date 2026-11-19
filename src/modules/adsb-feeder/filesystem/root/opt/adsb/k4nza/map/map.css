@@ -139,7 +139,7 @@ html.k4m #header_side .sidebar_button:hover { background-color: var(--k4-bg3) !i
 /* map controls */
 html.k4m .ol-zoom { background: transparent !important; }
 html.k4m .ol-zoom button,
-html.k4m .layer-switcher button {
+html.k4m .layer-switcher > button {
   width: 36px !important;
   height: 36px !important;
   margin: 3px !important;
@@ -151,7 +151,14 @@ html.k4m .layer-switcher button {
   font-size: 20px !important;
 }
 html.k4m .ol-zoom button:hover,
-html.k4m .layer-switcher button:hover { background-color: var(--k4-bg3) !important; }
+html.k4m .layer-switcher > button:hover { background-color: var(--k4-bg3) !important; }
+/* the layers button: half again as big as the zoom buttons */
+html.k4m .layer-switcher > button {
+  width: 54px !important;
+  height: 54px !important;
+  background-size: 34px 34px !important;
+  background-position: center !important;
+}
 html.k4m .layer-switcher {
   top: 10px !important;
   right: 15px !important;
@@ -543,4 +550,16 @@ html.k4m #search_form .formButton { display: inline-block; width: auto !importan
   html.k4m #k4m-more { top: calc(100% + 8px); bottom: auto; right: 0; }
   html.k4m #header_top [data-k4] { width: 36px !important; }
   html.k4m #header_top .buttonContainer { gap: 0; }
+}
+
+/* ---------- -27 ---------- */
+/* hidden buttons stay hidden in the column and the More panel too */
+html.k4m #header_side [data-k4].hidden { display: none !important; }
+/* the top bar is placed by map.js (centred over the map, clear of the left panels) */
+html.k4m #header_top { transform: none !important; }
+/* tar1090 mirrors the list button when the list is closed */
+html.k4m #toggle_sidebar_button[data-k4] { transform: none !important; }
+@media (max-width: 700px) {
+  /* phones: the settings panel opens below the top bar instead of over it */
+  html.k4m #settings_infoblock { top: 76px !important; max-height: calc(100% - 84px) !important; }
 }
