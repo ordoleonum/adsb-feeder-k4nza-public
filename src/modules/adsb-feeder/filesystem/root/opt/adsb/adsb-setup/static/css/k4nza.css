@@ -654,3 +654,17 @@ footer { color: var(--k4-muted); }
   /* scaled, not resized, so the label stays beside the box */
   .form-check-input[type="checkbox"] { transform: scale(1.3); transform-origin: center; }
 }
+/* Basic setup: the feeder type choices sit on one line under the ADS-B button */
+.k4-feeder-type:not(.d-none) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1.25rem;
+  margin: 0.6rem 0.25rem 0.25rem;
+}
+.k4-feeder-type-title { color: var(--k4-muted); font-size: 0.9rem; flex-basis: 100%; }
+@media (min-width: 768px) { .k4-feeder-type-title { flex-basis: auto; } }
+/* Data sharing: the ID boxes fit beside their "UUID" label on a phone */
+.uuid-fields .form-control { max-width: calc(100% - 3.25rem); }
+/* the small privacy-policy shields get a finger-sized tap area */
+a[title="Privacy Policy"] { display: inline-block; padding: 0.3rem 0.4rem; margin: -0.3rem -0.2rem; }

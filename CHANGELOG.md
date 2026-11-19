@@ -35,6 +35,12 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - Radio: the bias tee column says "off" instead of being blank; both save buttons say "Save radio
   settings". Map options buttons: "Save and go to the home page" / "Save and open the map".
 - Phones: checkboxes are bigger and easier to tap.
+- Basic setup: ADS-B gets its own row with the feeder type (Default, Micro, Nano, Stage 2) on one
+  line under it; ACARS / VDL2, HFDL, AIS and Sonde share the next row.
+- Data sharing: lines up with the other pages (it was indented), the ID boxes fit on a phone, and
+  the privacy-policy shields are easier to tap.
+- Management: the "Update Feeder Software" card is gone (Updates has its own page), and the Web
+  Authentication button just says "Enable Authentication".
 
 ## v3.0.15-27 (2026-11-18)
 

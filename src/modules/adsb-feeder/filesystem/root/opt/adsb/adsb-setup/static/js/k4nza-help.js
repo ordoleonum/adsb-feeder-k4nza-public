@@ -24,7 +24,6 @@
     "shutdown/reboot": "Shut down before unplugging power (prevents SD-card corruption), or reboot to recover from a problem. Feeding stops while the Pi restarts.",
     "system log persistence toggle": "Keep system logs on the SD card across reboots. Helpful for diagnosing crashes, but adds SD card writes. Off by default.",
     "system update settings": "Operating-system security updates for the Pi (Raspberry Pi OS packages). The quickest way is the Updates page.",
-    "update feeder software": "Feeder and Pi OS updates now have their own page: System > Updates.",
     "restart / recreate containers": "Each feeder program (decoder, map, SkyStats, data-sharing clients) runs in its own container. Restart if something looks stuck; recreate if a setting doesn't take effect.",
     "add zerotier": "ZeroTier is a free private network so you can reach your feeder from anywhere without opening router ports.",
     "add tailscale": "Tailscale is a free private network so you can reach your feeder from anywhere without opening router ports.",
