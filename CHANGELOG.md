@@ -3,7 +3,10 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-28 (unreleased)
+## v3.0.15-28 (2026-11-18)
+
+Mostly UI fixes: a page-by-page review of the feeder, the live map and SkyStats on a computer and a
+phone. Plus one SkyStats data fix: "today" counts no longer read 0 in the evening.
 
 **Fixed**
 - Live map: the **Feeder** button now closes the map's tab and you're back on the feeder page you

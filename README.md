@@ -25,16 +25,19 @@ writes to the SD card.
 | **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
 | **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-27
+## New in v3.0.15-28
 
-- **Live map polish:** the top bar sits in the middle of the map and never covers the aircraft
-  details or settings; Full screen works on computers; the Feeder button works like Back; Settings
-  lights up while open; tidier layers panel.
-- **SkyStats Search:** Last seen shows the time, and aircraft with no photo show a labelled photo of
-  their type from Wikipedia.
+Mostly UI fixes, from a page-by-page review on a computer and a phone:
 
-**v3.0.15-26:** a cleaner live map with labelled buttons, tooltips and one search box; "??" routes
-checked against SkyStats; SkyStats details open under their row; no more adsb.im check-in.
+- **Live map:** the Feeder button closes the map tab and you're back on the feeder; Settings lights
+  up while open; the aircraft details pane fits the window; themed Replay controls.
+- **Feeder pages:** everything lines up, normal-size Apply buttons, a menu that fits a laptop
+  screen, tidier Basic setup, Data sharing and Management pages, bigger checkboxes on phones.
+- **SkyStats:** "today" counts no longer read 0 in the evening; no more sideways scrolling; cleaner
+  Interesting lists and chart headers.
+
+**v3.0.15-27:** centred map top bar, working Full screen, Last seen with times, and type photos from
+Wikipedia when an aircraft has no photo of its own.
 
 Every release is in the [CHANGELOG](CHANGELOG.md).
 
