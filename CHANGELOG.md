@@ -3,6 +3,11 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-33 (unreleased)
+
+- The top bar under the station name just says **k4nza-build** (the version is in the page footer
+  and on the Updates page).
+
 ## v3.0.15-32 (2026-11-21)
 
 **Clearly this build**
