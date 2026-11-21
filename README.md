@@ -11,6 +11,7 @@ writes to the SD card.
 **[Install](#install)** · **[What's new](CHANGELOG.md)** · **[SkyStats-K4NZA](https://github.com/ordoleonum/skystats-k4nza)** · **[Everyday use](#everyday-use)**
 
 ![Home dashboard](docs/screenshots/home.png)
+<sub>Sample data.</sub>
 
 ---
 
@@ -22,24 +23,25 @@ writes to the SD card.
 | **Every aircraft you've ever heard, searchable** | SkyStats-K4NZA keeps your history for months without freezing, and finds any aircraft by registration, callsign, type, operator or group. |
 | **Updates in one click, and back again** | Feeder and Raspberry Pi OS updates (kernels included) from one page. If a new version misbehaves, **Go back** reinstalls the old one. |
 | **Nightly backup to your NAS** | Settings, graphs and the whole SkyStats database, saved every night to a Synology or any SMB share. |
-| **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
-| **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
+| **A dashboard, not a status page** | Aircraft overhead and today, the closest aircraft right now, today's highlights with photos, busy hours by day, week or month, and Pi health that turns amber or red with advice. |
+| **A modern live map** | Light or dark, buttons with words, replay links that follow the aircraft, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-29
+## New in v3.0.15-30
 
-**Daylight**, a new look across the feeder, the live map and SkyStats, in light and dark:
+- **Dashboard:** the highlight cards (military, highest, rarest type, farthest) show a photo and open
+  the aircraft in SkyStats; the busy-hours card switches between Day, Week and Month; numbers refresh
+  faster and catch up as soon as you come back to the tab.
+- **Live map:** Layers, List, Settings and light/dark in one column at the top right; the search box
+  back in the aircraft list; replay links from SkyStats follow and isolate the aircraft; nothing
+  covers the replay bar; round zoom buttons and a bigger altitude key; photos that don't arrive are
+  asked for again.
+- **SkyStats:** clean type names ("Boeing 737-800"), ADSBExchange links, type photos when an aircraft
+  has none of its own, and operator and type for military aircraft only the feeder's own database
+  knows.
+- A new antenna mark in the top bar and as the tab icon.
 
-- **Feeder home** is a dashboard: aircraft overhead and today, today hour by hour, the closest
-  aircraft right now, today's highlights (farthest, highest, latest military, rarest type), the sites
-  you share with and station health. A top menu on a computer.
-- **Live map:** reorganised buttons around the edges, selected aircraft on the left, altitude key
-  bottom right, and a light/dark switch that follows the feeder.
-- **SkyStats:** a report for Today, Week, Month or All time (busiest hours, range, signal, airlines,
-  types, routes, notable visitors), a Feeder button, and visit times that open the live map's
-  **replay** of that moment.
-- **Updates** show the SkyStats download's progress and retry it if it stalls.
-
-**v3.0.15-28:** a page-by-page UI review; "today" counts no longer read 0 in the evening.
+**v3.0.15-29:** **Daylight**, the new look across the feeder, the live map and SkyStats, in light and
+dark, with the dashboard home page and the SkyStats report.
 
 Every release is in the [CHANGELOG](CHANGELOG.md).
 
@@ -53,16 +55,19 @@ SkyStats with its own public repository.
 **Find any aircraft.** Use the **Search** tab, or the search box on the feeder's Home page. Search by
 registration, hex code, callsign, type (`B739`, `C17`) or operator. You'll see every visit: when it
 came, its callsign and route, how close it got, how high it flew and how long it stayed in view.
-There's a photo from planespotters.net (credited to the photographer) and a FlightAware link, and you
-can download the visits as CSV.
+There's a photo from planespotters.net (credited to the photographer), or a photo of the type from
+Wikipedia, clearly marked as not this aircraft, when there's none of the aircraft itself. An
+**ADSBExchange** link shows where it is now, a click on any visit opens the live map's **replay** of
+it, and you can download the visits as CSV.
 
 ![SkyStats aircraft search](docs/screenshots/skystats-search.jpg)
-<sub>Sample data. Photo: U.S. Air Force photo by Heide Couch, public domain.</sub>
+<sub>Sample data. Type photo from Wikipedia.</sub>
 
-**List a whole group.** Click **Military**, **Government**, **Police** or **Civilian** in
-Interesting Aircraft to see every aircraft of that group in your history, not just the latest few.
-Click any column heading to sort. A registration anywhere in Interesting Aircraft or Record Holders
-opens its full history too.
+**List a whole group.** Click **Military**, **Government**, **Police** or **Civilian** on the
+Search tab or in Interesting Aircraft to see every aircraft of that group in your history, not just
+the latest few. Click any column heading to sort. A registration anywhere in SkyStats opens its full
+history too. Military aircraft that only the feeder's own aircraft database knows (not the
+plane-alert list) count as Military, with the operator and type that database has.
 
 ![Every military aircraft seen, sorted by visits](docs/screenshots/skystats-group.jpg)
 <sub>Sample data.</sub>
@@ -80,33 +85,39 @@ opens its full history too.
 - You can limit the history (*Setup → Advanced → SkyStats → Keep history (days)*). All-time totals,
   top types and the all-time range outline stay correct anyway.
 
+## A report on your sky
+
+SkyStats opens on a report for **Today**, **Week**, **Month** or **All time**: how many flights
+crossed your sky compared with the period before, how many different aircraft and types, the
+farthest one, the military ones, and when your sky is busiest, hour by hour for each day of the week.
+
+![SkyStats report](docs/screenshots/skystats-report.jpg)
+<sub>Sample data.</sub>
+
+Further down: **Aircraft types** and **Who flew over most**, **Where they were going** (the
+commonest routes) and **Notable visitors** with photos and a **Replay** link for each.
+
 ## See how well your station hears
 
-**Range by Direction** shows the farthest aircraft heard in each direction, with your all-time best
-as an outline; a dent shows where something blocks the antenna. **Signal vs Distance** plots each
+**How far you can hear** shows the farthest aircraft heard in each direction, with your all-time best
+as an outline; a dent shows where something blocks the antenna. **Signal vs distance** plots each
 aircraft's signal at its closest approach against distance, with the median and the overload
 level, for tuning gain and checking an antenna or filter change.
 
-![SkyStats reception charts](docs/screenshots/skystats-activity.jpg)
+![SkyStats reception charts](docs/screenshots/skystats-charts.jpg)
 <sub>Sample data.</sub>
 
 Not sure what you're looking at? **How to read this chart**, under both charts, explains what
 healthy looks like and what too much gain, too little gain, a blocked direction and gaps look like.
-
-<details>
-<summary>Show the chart guide</summary>
-
-![Signal vs Distance with its reading guide open](docs/screenshots/skystats-signal-notes.jpg)
-<sub>Sample data.</sub>
-</details>
 
 ## One-click updates you can undo
 
 The **Updates** page shows what's installed, what's waiting and what's new.
 
 - **Update feeder software** installs the newest release from this repository, including a new
-  SkyStats when there is one. The SkyStats download is checked against a checksum first. Settings
-  and history are kept; an update takes 5-15 minutes and feeding pauses only briefly.
+  SkyStats when there is one. The SkyStats download shows its progress, is retried if it stalls, and
+  is checked against a checksum first. Settings and history are kept; an update takes 5-15 minutes
+  and feeding pauses only briefly. **What's new** shows the release notes before you update.
 - **Update Pi OS** installs Raspberry Pi OS updates, new kernels included, then removes what's no
   longer needed. After a kernel update, **Restart now** appears.
 - **Go back to ...** reinstalls the version the feeder ran before, if something isn't right
@@ -160,35 +171,48 @@ It also stays reachable and quiet on your network:
 
 ## A dashboard you can read at a glance
 
-- **Top menu** on a computer with the installed version and live receiver status (a slide-in menu
-  and bottom tabs on a phone); light and dark mode.
-- **Home** shows aircraft now, messages and positions per second, and aircraft today, all refreshing
-  every 5 seconds. Below them are an aircraft search box, aircraft per day, and the sites you feed.
-- **Pi health tiles** cover CPU temperature, power supply, free disk space and SkyStats history size
-  (with growth per month). Each tile turns amber or red; tap or hover over it for advice.
+- **A top menu** on a computer (Overview, Live map, SkyStats, Graphs, Setup, System) with your
+  station name, the installed version and live receiver status; a slide-in menu and bottom tabs on a
+  phone. Light and dark, with a sun/moon switch that the live map and SkyStats follow.
+- **Overview** says it in one sentence ("42 aircraft overhead right now, 1,604 since midnight"), with
+  a search box for your history. Four numbers follow: messages and positions per second (every 5
+  seconds), the farthest aircraft today and how many were never seen before.
+- **Busy hours:** today hour by hour, or aircraft per day for the last week or month, with the busiest
+  and quietest hour or day.
+- **Closest right now:** the four nearest aircraft with type, distance and altitude.
+- **Today's highlights:** the latest military aircraft, the highest, the rarest type and the farthest,
+  each with a photo; click one to open it in SkyStats.
+- **Sharing with** shows each site you feed and whether MLAT is on; **Station health** covers CPU
+  temperature, power supply, free disk space and SkyStats history size. Each turns amber or red; tap
+  or hover over it for advice.
 - **Plain-English help** under every settings section, tooltips on buttons, and a confirmation
-  before shutdown, reboot and similar actions.
-- **Radio (SDR)** page with a step-by-step guide to better reception.
-- **Help → Share diagnostics** downloads anonymized logs and opens a problem report on this GitHub
+  before shutdown, reboot and similar actions. The **Radio (SDR)** page has a step-by-step guide to
+  better reception.
+- **System → Share diagnostics** downloads anonymized logs and opens a problem report on this GitHub
   repository. Stock adsb.im uploads them to public paste sites instead.
 
 <table>
   <tr>
-    <td valign="top" width="40%"><b>On a phone</b>: bottom tabs, a slide-in menu and the status tiles.<br><br>
+    <td valign="top" width="40%"><b>On a phone</b>: the same dashboard in one column, bottom tabs and a slide-in menu (dark mode shown).<br><br>
       <img src="docs/screenshots/phone.jpg" alt="Home page on a phone" width="100%"></td>
     <td valign="top" width="60%"><b>SkyStats export</b>: everything as a ZIP, or one dataset at a time as CSV for Excel or Google Sheets, with an optional date range. SkyStats backups can be restored under <i>System → Restore</i>.<br><br>
       <img src="docs/screenshots/skystats-export.jpg" alt="SkyStats export" width="100%"></td>
   </tr>
 </table>
 
-## A modern live map
-
-- Dark or light panels for the buttons, aircraft list, selected-aircraft card, settings and legend.
-- Icon-and-word buttons instead of single letters: Home, Labels, Details, Track labels, Tracks and
-  Military in a top bar in the middle of the map; List, Settings, Dim, Isolate and Follow in a short
-  column; Replay and the rest under **More**. Each shows its keyboard shortcut, like "Labels (L)",
-  and a tooltip on hover (press and hold on a phone). A **Feeder** button goes back to the feeder.
-- One search box: callsign, hex, registration or type, or an airport code to jump to.
+- Light or dark panels for the buttons, aircraft list, selected aircraft, settings and legend, in the
+  same look as the feeder.
+- Icon-and-word buttons instead of single letters, each with its keyboard shortcut, like
+  "Labels (L)", and a tooltip on hover (press and hold on a phone):
+  - top bar: Home, Labels, Details, Track labels, Tracks and Military
+  - right column: Layers, List, Settings and light/dark
+  - bottom: Follow, Isolate, Dim, Replay and **More** (In view, Multi-select, Persist, Random, Full
+    screen, Wide list)
+  - top left: **Feeder**, back to the feeder.
+- The selected aircraft on the left with its photo (asked for again if it doesn't arrive).
+- The search box in the aircraft list also jumps to an airport code or coordinates.
+- **Replay** links from SkyStats open the map at that moment with the aircraft selected, followed and
+  shown on its own; the buttons move up above the replay controls.
 - Routes the route service can't confirm are checked against SkyStats instead of shown wrong.
 - On a phone: icons only, and the map opens without the aircraft list covering it.
 - **Nautical, Imperial or Metric** for distances, speeds and altitudes in the map and SkyStats. Set
@@ -235,18 +259,16 @@ The image is for Raspberry Pi (64-bit) only and has no maintainer SSH key built 
 
 ## Everyday use
 
-The menu on the left (or the **Menu** tab on a phone) has everything:
+The menu at the top (or the **Menu** tab on a phone) has everything:
 
 | Page | What it's for |
 |---|---|
-| **Home** | Receiver status, Pi health, aircraft search, aircraft per day |
-| **Live map** | The aircraft you're receiving right now; Heatmap, Tracks and Replay are just below it |
-| **SkyStats** | Flight history, routes, records, interesting aircraft, **Search**, **Export** |
-| **Reception graphs** | How well your station is doing over hours, days and months |
-| **Radio (SDR)** | Check your radio and gain, with a step-by-step guide to better reception |
-| **Data sharing** | Choose which flight-tracking sites receive your data |
-| **Updates** | Feeder and Raspberry Pi OS updates with one click, and **Go back** |
-| **Backup / Restore** | Save or bring back your settings and SkyStats history, plus the nightly NAS backup |
+| **Overview** | The dashboard: what's overhead, today's highlights, history search, station health |
+| **Live map** | The aircraft you're receiving right now; Heatmap, Tracks, Replay and Map options are in its menu |
+| **SkyStats** | The report, routes, interesting aircraft, records, **Search** and **Export** |
+| **Graphs** | How well your station is doing over hours, days and months |
+| **Setup** | Basic setup, Advanced, Radio (SDR) with a reception guide, and Data sharing (which sites get your data) |
+| **System** | Updates (with **Go back**), Management, Backup and Restore (with the nightly NAS backup), logs and diagnostics |
 
 The live map, graphs and SkyStats open in a new browser tab.
 

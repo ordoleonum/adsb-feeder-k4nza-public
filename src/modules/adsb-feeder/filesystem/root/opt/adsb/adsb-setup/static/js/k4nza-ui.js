@@ -465,7 +465,8 @@
   const photoCache = new Map(); // hex -> {src, link, credit, typical} or null
   const photoWait = new Map(); // hex -> promise while asking
   const WIKI_AIRCRAFT = /aircraft|airliner|trainer|fighter|helicopter|bomber|tanker|airlifter|airplane|aeroplane|jet|plane|glider|gunship/i;
-  const WIKI_NOT = /engine|list of|family of|disambiguation|airport|airline|company|manufacturer|ship|car|vehicle/i;
+  // whole words only: "airline" must not match "Airliner"
+  const WIKI_NOT = /\b(engine|list of|family of|disambiguation|airport|airline|company|manufacturer|ship|car|vehicle|facility|factory|plant|assembly|museum|base|squadron)\b/i;
   async function spottersPhoto(hex) {
     const r = await fetch("https://api.planespotters.net/pub/photos/hex/" + encodeURIComponent(hex.toUpperCase()), { signal: AbortSignal.timeout(10000) });
     if (!r.ok) return null;

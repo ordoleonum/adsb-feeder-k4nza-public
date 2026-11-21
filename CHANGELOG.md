@@ -17,6 +17,14 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - The hour-by-hour card has Day, Week and Month views (aircraft per day, busiest and quietest day).
 - Aircraft types are named from the ICAO type list ("Boeing 737-800", not "Boeing 737NG 823/W").
 
+**SkyStats**
+- The report shows **Aircraft types** before **Who flew over most**, with clean type names.
+- Search: **View on ADSBExchange** instead of FlightAware; an aircraft opened from the list of
+  recently seen interesting aircraft opens under its row with **Close**, like other results.
+- Military aircraft that only the feeder's own aircraft database knows get its operator and type.
+- Aircraft without a photo of their own (Search, Notable visitors, the dashboard) show a photo of
+  their type from Wikipedia, marked "not this aircraft". Airliner photos were wrongly skipped before.
+
 **Live map**
 - Layers, List, Settings and light/dark are one column at the top right again, with Layers at the
   top; the layer list opens beside the column.
