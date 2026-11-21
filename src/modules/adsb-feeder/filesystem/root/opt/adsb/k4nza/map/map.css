@@ -884,3 +884,11 @@ html.k4m #replayBar { left: 0 !important; }
   html.k4m .ol-zoom .ol-zoom-in,
   html.k4m .ol-zoom .ol-zoom-out { width: 36px !important; height: 36px !important; }
 }
+
+/* -31: phones: the selected aircraft sits above the replay bar too */
+@media (max-width: 700px) {
+  html.k4m #selected_infoblock { transform: translateY(calc(-1 * var(--k4m-lift, 0px))); }
+}
+
+/* -31: photo pane messages ("Photo service is slow, trying again...") */
+html.k4m #selected_photo .k4m-photo-msg { margin: 10px 0; font-size: 13px; color: var(--k4-muted); }

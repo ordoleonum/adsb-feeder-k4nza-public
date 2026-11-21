@@ -15,6 +15,10 @@
 (function () {
   "use strict";
 
+  // read now: in a replay tar1090 soon rewrites the address (adding lat, lon
+  // and zoom) and drops parameters it doesn't know, such as k4theme
+  const START = new URLSearchParams(location.search);
+
   // the feeder's address: this script is served by its setup app
   const FEEDER = (() => {
     try {
@@ -195,7 +199,7 @@
     hideListOnPhone();
     initSearch();
     replayFocus();
-    setInterval(checkPhoto, 2000);
+    setInterval(() => { photoOnSelect(); checkPhoto(); }, 1000);
     return true;
   }
 
@@ -228,7 +232,7 @@
   // aircraft but leaves Follow and Isolate off in replays. Switch both on once
   // the aircraft has a position, so the replay shows just that aircraft.
   function replayFocus() {
-    const q = new URLSearchParams(location.search);
+    const q = START;
     if (!q.has("replay") || !q.has("icao") || q.has("noIsolation")) return;
     const hex = q.get("icao").toLowerCase().split(",")[0];
     let tries = 0;
@@ -247,32 +251,126 @@
     }, 500);
   }
 
-  // Aircraft photo: tar1090 asks planespotters.net once and has no error
-  // handling, so a failed or slow request leaves "Loading image..." for good.
-  // After 8 s, ask again ourselves; if that fails too, show the outline.
-  let photoWait = null; // {hex, since, asked}
+  // ---------- aircraft photo in the selected-aircraft pane ----------
+  // tar1090 asks planespotters.net once per aircraft and has no error handling
+  // (and its "try again after 10 s" check never fires), so a slow or failed
+  // answer leaves "Loading image..." for good, and an aircraft planespotters
+  // has no photo of leaves the pane blank. Here:
+  //  - no answer after 8 s: ask again ourselves, then again after 15, 30 and
+  //    60 s while the aircraft stays selected (and when it is selected again);
+  //  - a photo file that doesn't load is tried once more;
+  //  - no photo of this aircraft: a Wikipedia photo of its TYPE, labelled
+  //    "typical ..., not this aircraft" (as on the dashboard and SkyStats).
+  const PHOTO_WAIT = [8000, 15000, 30000, 60000];
+  const photoState = new Map(); // hex -> {since, tries, asking, typeDone}
+  const WIKI_AIRCRAFT = /aircraft|airliner|trainer|fighter|helicopter|bomber|tanker|airlifter|airplane|aeroplane|jet|plane|glider|gunship/i;
+  const WIKI_NOT = /\b(engine|list of|family of|disambiguation|airport|airline|company|manufacturer|ship|car|vehicle|facility|factory|plant|assembly|museum|base|squadron)\b/i;
+  const wikiCache = new Map(); // type name -> photo or null
+
+  function photoMsg(text) {
+    if (typeof setPhotoHtml === "function") setPhotoHtml('<p class="k4m-photo-msg">' + text + "</p>");
+  }
+  function niceType(s) {
+    // "BOEING 737 MAX 8" -> "Boeing 737 MAX 8" (codes with digits stay as they are)
+    return String(s || "").split(" ").map((w) => (/[0-9]/.test(w) || w.length <= 3 || w !== w.toUpperCase() ? w : w[0] + w.slice(1).toLowerCase())).join(" ");
+  }
+  async function wikiTypePhoto(names) {
+    for (const name of names) {
+      if (wikiCache.has(name)) { if (wikiCache.get(name)) return wikiCache.get(name); continue; }
+      const r = await fetch("https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrlimit=5" +
+        "&prop=pageimages|description&piprop=thumbnail&pithumbsize=400&format=json&origin=*&gsrsearch=" +
+        encodeURIComponent(name + " aircraft"), { signal: AbortSignal.timeout(15000) });
+      if (!r.ok) return null;
+      const pages = Object.values(((await r.json()).query || {}).pages || {}).sort((x, y) => x.index - y.index);
+      // photos only (JPEG): drawings and silhouettes are PNG or SVG
+      const page = pages.find((pg) => pg.thumbnail && /\.jpe?g/i.test(pg.thumbnail.source) && WIKI_AIRCRAFT.test(pg.description || "") &&
+        !WIKI_NOT.test((pg.description || "") + " " + pg.title));
+      const found = page ? { src: page.thumbnail.source, link: "https://en.wikipedia.org/wiki/" + encodeURIComponent(page.title.replace(/ /g, "_")) } : null;
+      wikiCache.set(name, found);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function askPhoto(plane, st) {
+    st.asking = true;
+    st.tries++;
+    const base = typeof planespottersAPIurl !== "undefined" ? planespottersAPIurl : "https://api.planespotters.net/pub/photos/";
+    fetch(base.replace(/\/$/, "") + "/hex/" + plane.icao.toUpperCase(), { signal: AbortSignal.timeout(20000) })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((data) => {
+        plane.psAPIresponse = data && (data.photos || data.images) ? data : { photos: [] };
+        if (SelectedPlane === plane && typeof displayPhoto === "function") displayPhoto();
+      })
+      .catch(() => {
+        // no answer: keep tar1090 waiting (no empty answer stored) and try again later
+        st.since = Date.now();
+        if (SelectedPlane === plane) {
+          photoMsg(st.tries < PHOTO_WAIT.length ? "Photo service is slow, trying again…" : "No photo: planespotters.net isn't answering right now.");
+        }
+      })
+      .finally(() => { st.asking = false; });
+  }
+
+  function typePhotoFor(plane, st) {
+    st.typeDone = true;
+    const names = [...new Set([niceType(plane.typeLong), plane.icaoType].filter(Boolean))];
+    if (!names.length) return;
+    wikiTypePhoto(names).catch(() => null).then((ph) => {
+      if (!ph) return;
+      const label = niceType(plane.typeLong) || plane.icaoType;
+      // shown by tar1090 itself, as if planespotters had sent it
+      plane.psAPIresponse = { photos: [{ thumbnail: { src: ph.src }, link: ph.link, photographer: "Wikipedia · typical " + label + ", not this aircraft" }], k4type: true };
+      if (SelectedPlane === plane && typeof displayPhoto === "function") displayPhoto();
+    });
+  }
+
   function checkPhoto() {
     try {
       const box = $("selected_photo");
       const sel = typeof SelectedPlane !== "undefined" ? SelectedPlane : null;
-      if (!box || !sel || !/Loading image/i.test(box.textContent)) { photoWait = null; return; }
-      if (!photoWait || photoWait.hex !== sel.icao) { photoWait = { hex: sel.icao, since: Date.now(), asked: false }; return; }
-      if (photoWait.asked || Date.now() - photoWait.since < 8000) return;
-      photoWait.asked = true;
-      const plane = sel;
-      const base = typeof planespottersAPIurl !== "undefined" ? planespottersAPIurl : "https://api.planespotters.net/pub/photos/";
-      const ctl = window.AbortController ? new AbortController() : null;
-      const timer = setTimeout(() => ctl && ctl.abort(), 10000);
-      fetch(base + "hex/" + plane.icao.toUpperCase(), ctl ? { signal: ctl.signal } : {})
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null)
-        .then((data) => {
-          clearTimeout(timer);
-          plane.psAPIresponse = data && (data.photos || data.images) ? data : { photos: [] };
-          if (SelectedPlane === plane && typeof displayPhoto === "function") displayPhoto();
-        });
+      if (!box || !sel || !sel.icao || sel.icao[0] === "~" || typeof showPictures === "undefined" || !showPictures) return;
+      let st = photoState.get(sel.icao);
+      if (!st) { st = { since: Date.now(), tries: 0, asking: false, typeDone: false }; photoState.set(sel.icao, st); }
+      const resp = sel.psAPIresponse;
+      if (resp) {
+        const photos = resp.photos || resp.images || [];
+        if (!photos.length && !st.typeDone) typePhotoFor(sel, st);
+        return;
+      }
+      if (st.asking || st.tries >= PHOTO_WAIT.length) return;
+      if (Date.now() - st.since >= PHOTO_WAIT[st.tries]) askPhoto(sel, st);
     } catch (e) { /* never break the map */ }
   }
+  // selected again later: a lookup that gave up gets a fresh start
+  let lastSelected = null;
+  function photoOnSelect() {
+    const sel = typeof SelectedPlane !== "undefined" ? SelectedPlane : null;
+    if (sel === lastSelected) return;
+    lastSelected = sel;
+    if (!sel) return;
+    const st = photoState.get(sel.icao);
+    if (st && !sel.psAPIresponse && !st.asking && st.tries >= PHOTO_WAIT.length) photoState.delete(sel.icao);
+  }
+  // a photo file that fails to load: once more after 3 s, then as "no photo"
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (!img || img.id !== "airplanePhoto") return;
+    if (!img.dataset.k4retry) {
+      img.dataset.k4retry = "1";
+      const src = img.src;
+      setTimeout(() => { img.src = src + (src.includes("?") ? "&" : "?") + "r=1"; }, 3000);
+    } else {
+      // treat it as "no photo": tar1090 clears the pane, and a type photo is
+      // looked for (unless this already was the type photo)
+      const sel = typeof SelectedPlane !== "undefined" ? SelectedPlane : null;
+      if (!sel) return;
+      const st = photoState.get(sel.icao);
+      if (st && sel.psAPIresponse && sel.psAPIresponse.k4type) st.typeDone = true;
+      sel.psAPIresponse = { photos: [] };
+      if (typeof displayPhoto === "function") displayPhoto();
+    }
+  }, true);
 
   // light / dark: tar1090's own Dark Mode setting (kept in the browser like its other settings)
   function darkOn() {
@@ -295,7 +393,7 @@
   }
   // the feeder passes its own choice when it opens the map (?k4theme=dark|light)
   function themeFromFeeder() {
-    const want = new URLSearchParams(location.search).get("k4theme");
+    const want = START.get("k4theme");
     if ((want === "dark" || want === "light") && (want === "dark") !== darkOn()) toggleTheme();
   }
 
@@ -426,12 +524,13 @@
     if (dock) {
       // phones: the selected aircraft sits at the bottom, so the dock goes above it
       const info = $("selected_infoblock");
-      let bottom = 14;
+      let bottom = 14 + lift;
       if (PHONE.matches && shown(info) && dock.offsetParent) {
+        // (the pane is already lifted above the replay bar)
         const host = dock.offsetParent.getBoundingClientRect();
-        bottom = Math.max(14, Math.round(host.bottom - info.getBoundingClientRect().top + 8));
+        bottom = Math.max(14 + lift, Math.round(host.bottom - info.getBoundingClientRect().top + 8));
       }
-      dock.style.setProperty("bottom", bottom + lift + "px", "important");
+      dock.style.setProperty("bottom", bottom + "px", "important");
       centreBar(dock, [$("altitude_chart"), document.querySelector(".ol-zoom")]);
     }
     // tar1090 puts the distance scale beside its own (narrower) aircraft pane
