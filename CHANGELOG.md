@@ -3,7 +3,7 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-29 (unreleased)
+## v3.0.15-29 (2026-11-20)
 
 A new look: **Daylight**, across the feeder, the live map and SkyStats, in light and dark.
 

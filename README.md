@@ -25,19 +25,21 @@ writes to the SD card.
 | **Health at a glance** | Home shows receiver status, CPU temperature, power supply, disk space and history size, and turns amber or red with advice when something needs attention. |
 | **A modern live map** | Clean dark or light panels and buttons with words, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-28
+## New in v3.0.15-29
 
-Mostly UI fixes, from a page-by-page review on a computer and a phone:
+**Daylight**, a new look across the feeder, the live map and SkyStats, in light and dark:
 
-- **Live map:** the Feeder button closes the map tab and you're back on the feeder; Settings lights
-  up while open; the aircraft details pane fits the window; themed Replay controls.
-- **Feeder pages:** everything lines up, normal-size Apply buttons, a menu that fits a laptop
-  screen, tidier Basic setup, Data sharing and Management pages, bigger checkboxes on phones.
-- **SkyStats:** "today" counts no longer read 0 in the evening; no more sideways scrolling; cleaner
-  Interesting lists and chart headers.
+- **Feeder home** is a dashboard: aircraft overhead and today, today hour by hour, the closest
+  aircraft right now, today's highlights (farthest, highest, latest military, rarest type), the sites
+  you share with and station health. A top menu on a computer.
+- **Live map:** reorganised buttons around the edges, selected aircraft on the left, altitude key
+  bottom right, and a light/dark switch that follows the feeder.
+- **SkyStats:** a report for Today, Week, Month or All time (busiest hours, range, signal, airlines,
+  types, routes, notable visitors), a Feeder button, and visit times that open the live map's
+  **replay** of that moment.
+- **Updates** show the SkyStats download's progress and retry it if it stalls.
 
-**v3.0.15-27:** centred map top bar, working Full screen, Last seen with times, and type photos from
-Wikipedia when an aircraft has no photo of its own.
+**v3.0.15-28:** a page-by-page UI review; "today" counts no longer read 0 in the evening.
 
 Every release is in the [CHANGELOG](CHANGELOG.md).
 
@@ -158,8 +160,8 @@ It also stays reachable and quiet on your network:
 
 ## A dashboard you can read at a glance
 
-- **Top bar** with the installed version and live receiver status; a sidebar menu (bottom tabs on a
-  phone); light and dark mode.
+- **Top menu** on a computer with the installed version and live receiver status (a slide-in menu
+  and bottom tabs on a phone); light and dark mode.
 - **Home** shows aircraft now, messages and positions per second, and aircraft today, all refreshing
   every 5 seconds. Below them are an aircraft search box, aircraft per day, and the sites you feed.
 - **Pi health tiles** cover CPU temperature, power supply, free disk space and SkyStats history size
