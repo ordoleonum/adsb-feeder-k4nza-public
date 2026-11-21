@@ -43,15 +43,14 @@ updates you can undo, nightly backups to a NAS, and far fewer writes to the SD c
 
 Need WiFi or more detail? See the full [Install](#install) steps.
 
-## What's new in v3.0.15-32
+## What's new in v3.0.15-33
 
-- 🏷️ **Clearly this build:** the feeder's pages and WiFi setup say it's the unofficial K4NZA build,
-  and problem reports come here, not to adsb.im.
-- 📶 **New setup hotspot name:** if the Pi can't join your WiFi, look for **K4NZA-Feeder-Setup**.
+- ✂️ **Tidier header:** the feeder's top bar and SkyStats just say **k4nza-build** under the station
+  name; the version is in the page footer and on the Updates page.
 
-Earlier releases: **-31** map photos that keep trying and type photos, replay fixes · **-30** photo
-highlights, Day/Week/Month and a reorganised map · **-29** the **Daylight** look and the SkyStats
-report. Everything is in the [CHANGELOG](CHANGELOG.md).
+Earlier releases: **-32** clearly labelled as this build, new setup hotspot name
+**K4NZA-Feeder-Setup** · **-31** map photos that keep trying, replay fixes · **-30** photo highlights,
+Day/Week/Month and a reorganised map · **-29** the **Daylight** look and the SkyStats report. Everything is in the [CHANGELOG](CHANGELOG.md).
 
 ---
 
