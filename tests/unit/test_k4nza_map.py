@@ -91,12 +91,12 @@ def test_serves_the_bundled_fonts_with_cors(tmp_path):
     assert _call(tmp_path, "LICENSE.txt")[0] == 404
 
 
-def _home(skystats=True, get=None):
+def _home(skystats=True, get=None, query=""):
     from types import SimpleNamespace
 
     me = SimpleNamespace(_d=_D(skystats), k4_feeder_tz=lambda: "America/Chicago")
     flask_app = Flask(__name__)
-    with flask_app.test_request_context(), patch.object(app_module.requests, "get", get or (lambda *a, **k: _Resp(500, {}))):
+    with flask_app.test_request_context("/api/k4nza/home" + query), patch.object(app_module.requests, "get", get or (lambda *a, **k: _Resp(500, {}))):
         resp = app_module.AdsbIm.k4nza_home(me)
         return resp.status_code, resp.get_json()
 
@@ -111,6 +111,20 @@ def test_home_summary_comes_from_skystats_in_the_feeder_timezone():
     code, body = _home(get=get)
     assert code == 200 and body["new_today"] == 2
     assert seen["url"] == "http://127.0.0.1:5173/api/k4nza/home"
+    assert seen["params"] == {"tz": "America/Chicago"}
+
+
+def test_home_week_and_month_pass_the_days_through():
+    seen = {}
+
+    def get(url, params, timeout):
+        seen["params"] = params
+        return _Resp(200, {"daily": []})
+
+    assert _home(get=get, query="?days=30")[0] == 200
+    assert seen["params"] == {"tz": "America/Chicago", "days": "30"}
+    # anything else is the normal "today" summary
+    _home(get=get, query="?days=9999")
     assert seen["params"] == {"tz": "America/Chicago"}
 
 

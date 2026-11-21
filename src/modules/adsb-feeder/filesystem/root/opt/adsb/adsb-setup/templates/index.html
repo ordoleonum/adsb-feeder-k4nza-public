@@ -131,9 +131,17 @@
     <div class="k4-grid-3">
       {% if k4sky %}
       <section class="k4-card k4-span-2" id="k4-hours-card">
-        <div class="k4-card-head"><h2>Today, hour by hour</h2><span class="k4-muted" id="k4-hours-note"></span></div>
+        <div class="k4-card-head">
+          <h2 id="k4-hours-title">Today, hour by hour</h2>
+          <div class="k4-seg" role="group" aria-label="Show">
+            <button type="button" class="k4-seg-btn" data-k4-view="day" aria-pressed="true">Day</button>
+            <button type="button" class="k4-seg-btn" data-k4-view="week" aria-pressed="false">Week</button>
+            <button type="button" class="k4-seg-btn" data-k4-view="month" aria-pressed="false">Month</button>
+          </div>
+        </div>
         <div class="k4-hours" id="k4-hours" role="img" aria-label="Aircraft heard each hour today"></div>
-        <div class="k4-hours-axis"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
+        <div class="k4-hours-axis" id="k4-hours-axis"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
+        <div class="k4-muted k4-hours-note" id="k4-hours-note"></div>
       </section>
       {% endif %}
       {# the stock daily chart: shown when SkyStats is off, kept (hidden) otherwise for its script #}

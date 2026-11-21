@@ -348,7 +348,97 @@
       d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   }
 
+  // ---------- the busy / quiet card: Day (hour by hour today), Week, Month ----------
+  const VIEW_KEY = "k4-hours-view";
+  let hoursView = "day";
+  try { hoursView = localStorage.getItem(VIEW_KEY) || "day"; } catch (e) { /* private mode */ }
+  if (!["day", "week", "month"].includes(hoursView)) hoursView = "day";
+  let lastHours = null;
+  const dailyCache = {}; // days -> {t, list}
+
+  function setAxis(labels) {
+    const axis = $id("k4-hours-axis");
+    if (!axis) return;
+    axis.textContent = "";
+    labels.forEach((t) => axis.appendChild(el("span", "", t)));
+  }
+  function initHoursViews() {
+    const card = $id("k4-hours-card");
+    if (!card) return;
+    card.querySelectorAll("[data-k4-view]").forEach((b) => b.addEventListener("click", () => {
+      hoursView = b.dataset.k4View;
+      try { localStorage.setItem(VIEW_KEY, hoursView); } catch (e) { /* private mode */ }
+      showHoursView();
+    }));
+    showHoursView();
+  }
+  function showHoursView() {
+    const card = $id("k4-hours-card");
+    if (!card) return;
+    card.querySelectorAll("[data-k4-view]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k4View === hoursView ? "true" : "false"));
+    const title = $id("k4-hours-title");
+    if (hoursView === "day") {
+      if (title) title.textContent = "Today, hour by hour";
+      setAxis(["12 AM", "6 AM", "12 PM", "6 PM", "11 PM"]);
+      if (lastHours) drawHours(lastHours);
+      return;
+    }
+    const days = hoursView === "week" ? 7 : 30;
+    if (title) title.textContent = hoursView === "week" ? "Last 7 days" : "Last 30 days";
+    const c = dailyCache[days];
+    if (c && Date.now() - c.t < 5 * 60 * 1000) {
+      drawDaily(c.list);
+      return;
+    }
+    if (c) drawDaily(c.list); // older numbers until the new ones arrive
+    // only fetched when asked for: Week and Month cost the Pi nothing otherwise
+    fetch("/api/k4nza/home?days=" + days, { signal: AbortSignal.timeout(20000) })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((d) => {
+        dailyCache[days] = { t: Date.now(), list: d.daily || [] };
+        if (hoursView === (days === 7 ? "week" : "month")) drawDaily(dailyCache[days].list);
+      })
+      .catch(() => { /* SkyStats starting or off */ });
+  }
+  function dayName(iso, long) {
+    const [y, m, d] = iso.split("-").map(Number);
+    const dt = new Date(y, m - 1, d, 12);
+    return long ? dt.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
+      : dt.toLocaleDateString(undefined, { weekday: "short" });
+  }
+  function drawDaily(list) {
+    const box = $id("k4-hours");
+    if (!box || !Array.isArray(list) || !list.length) return;
+    const max = Math.max(1, ...list.map((x) => x.aircraft));
+    box.textContent = "";
+    let busiest = 0, quiet = 0;
+    list.forEach((x, i) => {
+      if (x.aircraft > list[busiest].aircraft) busiest = i;
+      // today isn't over yet, so it's never "the quietest"
+      if (i < list.length - 1 && x.aircraft < list[quiet].aircraft) quiet = i;
+    });
+    list.forEach((x, i) => {
+      const today = i === list.length - 1;
+      const bar = el("span", "k4-hour" + (today ? " k4-hour-now" : "") + (i === busiest ? " k4-hour-max" : ""));
+      bar.style.height = Math.max(2, Math.round((x.aircraft / max) * 100)) + "%";
+      bar.title = dayName(x.date, true) + (today ? " (today so far)" : "") + ": " + x.aircraft.toLocaleString() + " aircraft";
+      box.appendChild(bar);
+    });
+    if (list.length <= 7) {
+      setAxis(list.map((x, i) => (i === list.length - 1 ? "Today" : dayName(x.date))));
+    } else {
+      const md = (x) => { const [y, m, d] = x.date.split("-").map(Number); return new Date(y, m - 1, d, 12).toLocaleDateString(undefined, { month: "short", day: "numeric" }); };
+      setAxis([md(list[0]), md(list[Math.floor(list.length / 2)]), "Today"]);
+    }
+    const note = $id("k4-hours-note");
+    if (note) note.textContent = "Busiest " + dayName(list[busiest].date, true) + " (" + list[busiest].aircraft.toLocaleString() + " aircraft)" +
+      (list.length > 1 ? " · quietest " + dayName(list[quiet].date, true) : "");
+    box.setAttribute("aria-label", "Different aircraft heard each day, last " + list.length + " days; busiest " + dayName(list[busiest].date, true));
+  }
+
   function drawHours(hours) {
+    lastHours = hours;
+    if (hoursView !== "day") return;
     const box = $id("k4-hours");
     if (!box || !Array.isArray(hours)) return;
     const now = new Date().getHours();
@@ -368,8 +458,95 @@
     box.setAttribute("aria-label", "Aircraft heard each hour today; busiest at " + fmtHour(busiest));
   }
 
-  function highlightCard(kind, tag, title, body) {
-    const card = el("div", "k4-card k4-highlight");
+  // ---------- aircraft photos for the highlight cards ----------
+  // planespotters.net by hex code (credited to the photographer), else a photo
+  // of the aircraft TYPE from Wikipedia, clearly marked as not this aircraft
+  // (the same sources SkyStats uses). Asked from the browser, once per aircraft.
+  const photoCache = new Map(); // hex -> {src, link, credit, typical} or null
+  const photoWait = new Map(); // hex -> promise while asking
+  const WIKI_AIRCRAFT = /aircraft|airliner|trainer|fighter|helicopter|bomber|tanker|airlifter|airplane|aeroplane|jet|plane|glider|gunship/i;
+  const WIKI_NOT = /engine|list of|family of|disambiguation|airport|airline|company|manufacturer|ship|car|vehicle/i;
+  async function spottersPhoto(hex) {
+    const r = await fetch("https://api.planespotters.net/pub/photos/hex/" + encodeURIComponent(hex.toUpperCase()), { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return null;
+    const p = ((await r.json()).photos || [])[0];
+    const src = p && ((p.thumbnail_large && p.thumbnail_large.src) || (p.thumbnail && p.thumbnail.src));
+    return src ? { src, link: p.link, credit: p.photographer || "planespotters.net" } : null;
+  }
+  async function typePhoto(a) {
+    for (const name of [...new Set([a.model, a.type].filter(Boolean))]) {
+      const r = await fetch("https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrlimit=5" +
+        "&prop=pageimages|description&piprop=thumbnail&pithumbsize=400&format=json&origin=*&gsrsearch=" +
+        encodeURIComponent(name + " aircraft"), { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) return null;
+      const pages = Object.values(((await r.json()).query || {}).pages || {}).sort((x, y) => x.index - y.index);
+      // photos only (JPEG): drawings and silhouettes are PNG or SVG
+      const page = pages.find((pg) => pg.thumbnail && /\.jpe?g/i.test(pg.thumbnail.source) && WIKI_AIRCRAFT.test(pg.description || "") &&
+        !WIKI_NOT.test((pg.description || "") + " " + pg.title));
+      if (page) {
+        return { src: page.thumbnail.source, link: "https://en.wikipedia.org/wiki/" + encodeURIComponent(page.title.replace(/ /g, "_")),
+          credit: "Wikipedia", typical: a.type || a.model };
+      }
+    }
+    return null;
+  }
+  function aircraftPhoto(a) {
+    const hex = (a.hex || "").toLowerCase();
+    if (photoCache.has(hex)) return Promise.resolve(photoCache.get(hex));
+    if (photoWait.has(hex)) return photoWait.get(hex);
+    const p = (hex && !hex.startsWith("~") ? spottersPhoto(hex) : Promise.resolve(null))
+      .catch(() => null)
+      .then((found) => found || typePhoto(a).catch(() => null))
+      .then((found) => { photoCache.set(hex, found); photoWait.delete(hex); return found; });
+    photoWait.set(hex, p);
+    return p;
+  }
+  const PLANE_SVG = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M16 10h4a2 2 0 0 1 0 4h-4l-4 7h-3l2-7h-4l-2 2h-3l2-4-2-4h3l2 2h4l-2-7h3z"/></svg>';
+  function photoBox(a) {
+    const box = el("div", "k4-hl-photo");
+    const show = (ph) => {
+      box.textContent = "";
+      if (!ph) {
+        box.dataset.state = "none";
+        box.innerHTML = PLANE_SVG;
+        if (a && a.type) box.appendChild(el("span", "k4-hl-type", a.type));
+        return;
+      }
+      box.dataset.state = "photo";
+      const img = el("img");
+      img.src = ph.src;
+      img.alt = ph.typical ? "Typical " + ph.typical + " (not this aircraft)" : "Photo of " + (a.registration || a.hex.toUpperCase());
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", () => show(null));
+      box.appendChild(img);
+      if (ph.typical) box.appendChild(el("span", "k4-hl-typical", "Typical " + ph.typical + ", not this aircraft"));
+      box.appendChild(el("span", "k4-hl-credit", "\u00a9 " + ph.credit));
+    };
+    if (!a || !a.hex) {
+      show(null);
+    } else if (photoCache.has(a.hex.toLowerCase())) {
+      show(photoCache.get(a.hex.toLowerCase()));
+    } else {
+      box.dataset.state = "loading";
+      aircraftPhoto(a).then(show);
+    }
+    return box;
+  }
+
+  // A highlight card; with an aircraft, the whole card opens it in SkyStats
+  // Search (in a tab of its own, like the other SkyStats links on this page).
+  function highlightCard(kind, tag, title, body, a) {
+    const linked = a && a.hex;
+    const card = el(linked ? "a" : "div", "k4-card k4-highlight" + (linked ? " k4-highlight-link" : ""));
+    if (linked) {
+      const q = a.registration || a.hex.toUpperCase();
+      card.href = "/skystats/?q=" + encodeURIComponent(q);
+      card.target = "_blank";
+      card.title = "Open " + q + " in SkyStats";
+    }
+    card.appendChild(photoBox(a));
     card.appendChild(el("span", "k4-tag k4-tag-" + kind, tag));
     card.appendChild(el("div", "k4-highlight-title", title));
     card.appendChild(el("div", "k4-highlight-body", body));
@@ -388,25 +565,25 @@
       if (m.altitude_ft) bits.push("at " + fmtAlt(m.altitude_ft));
       cards.push(highlightCard("mil", "Military", name(m),
         [m.operator ? titleCase(m.operator) : who(m), bits.join(" "), m.when ? fmtLocal(m.when) : ""].filter(Boolean).join(", ") + "." +
-        (d.military_today > 1 ? " " + d.military_today + " military aircraft today." : "")));
+        (d.military_today > 1 ? " " + d.military_today + " military aircraft today." : ""), m));
     } else {
       cards.push(highlightCard("mil", "Military", "None yet today", "Military aircraft show up here as soon as one is heard."));
     }
     if (d.highest) {
       const h = d.highest;
       cards.push(highlightCard("accent", "Highest", name(h) + " at " + fmtAlt(h.altitude_ft),
-        [who(h), h.operator ? titleCase(h.operator) : "", h.when ? fmtLocal(h.when) : ""].filter(Boolean).join(", ") + "."));
+        [who(h), h.operator ? titleCase(h.operator) : "", h.when ? fmtLocal(h.when) : ""].filter(Boolean).join(", ") + ".", h));
     }
     if (d.rarest) {
       const r = d.rarest;
       const n = r.times_ever || 0;
       cards.push(highlightCard("civ", "Rarest type", name(r) + (r.model && r.type ? " (" + r.type + ")" : ""),
-        n <= 1 ? "The first one your station has ever recorded: " + who(r) + "." : "Only " + n + " of these ever recorded at your station."));
+        n <= 1 ? "The first one your station has ever recorded: " + who(r) + "." : "Only " + n + " of these ever recorded at your station.", r));
     }
     if (d.farthest) {
       const f = d.farthest;
       cards.push(highlightCard("neu", "Farthest", fmtDist(f.distance_nm) + " away",
-        who(f) + (f.model || f.type ? " (" + (titleCase(f.model) || f.type) + ")" : "") + " to the " + (DIRS[f.direction] || f.direction) + "."));
+        who(f) + (f.model || f.type ? " (" + (titleCase(f.model) || f.type) + ")" : "") + " to the " + (DIRS[f.direction] || f.direction) + ".", f));
     }
     box.textContent = "";
     cards.forEach((c) => box.appendChild(c));
@@ -463,14 +640,25 @@
       .catch(() => { /* map not answering: keep the last list */ });
   }
 
+  // Each call takes the Pi a few milliseconds (SkyStats' summary ~50 ms), so
+  // the home page can refresh often: today's summary every 20 s, the closest
+  // aircraft every 5 s (as the live numbers), and all of it at once when the
+  // tab is shown again.
   function initHome() {
     if (!$id("k4-hero-when") && !$id("k4-closest")) return;
     heroWhen();
     setInterval(heroWhen, 30000);
+    initHoursViews();
     updateHome();
-    setInterval(() => { if (!document.hidden) updateHome(); }, 60000);
+    setInterval(() => { if (!document.hidden) updateHome(); }, 20000);
     updateClosest();
-    setInterval(() => { if (!document.hidden) updateClosest(); }, 10000);
+    setInterval(() => { if (!document.hidden) updateClosest(); }, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) return;
+      heroWhen();
+      updateHome();
+      updateClosest();
+    });
   }
 
   // ---------- init ----------
@@ -552,6 +740,7 @@
     if ($id("k4-status-pill") || $id("k4-tiles")) {
       updateStatus();
       setInterval(() => { if (!document.hidden) updateStatus(); }, 5000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) updateStatus(); });
       if ($id("k4-tiles")) setInterval(showUpdated, 5000);
     }
   }

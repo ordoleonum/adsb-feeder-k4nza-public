@@ -5,6 +5,14 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 
 ## v3.0.15-30 (unreleased)
 
+**Dashboard**
+- Numbers refresh faster: today's summary every 20 seconds (was a minute), the closest aircraft every
+  5 seconds, and everything at once when you come back to the tab.
+- Highlights (Military, Highest, Rarest type, Farthest) show a photo of the aircraft (or of its type,
+  marked as such) and open it in SkyStats Search.
+- The hour-by-hour card has Day, Week and Month views (aircraft per day, busiest and quietest day).
+- Aircraft types are named from the ICAO type list ("Boeing 737-800", not "Boeing 737NG 823/W").
+
 **Live map**
 - Layers, List, Settings and light/dark are one column at the top right again, with Layers at the
   top; the layer list opens beside the column.

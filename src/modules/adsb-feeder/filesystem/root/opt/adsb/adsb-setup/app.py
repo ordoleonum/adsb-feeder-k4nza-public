@@ -5437,18 +5437,27 @@ class AdsbIm:
             return reply({"error": "bad answer from SkyStats"}, 502)
 
     def k4nza_home(self):
-        # the home page's "today" summary; SkyStats keeps the data
+        # the home page's "today" summary; SkyStats keeps the data.
+        # ?days=7 or 30: only the aircraft per day for that many days (the
+        # hour-by-hour card's Week and Month views)
+        days = request.args.get("days", "")
+        if days not in ("7", "30"):
+            days = ""
+
         def reply(body, code):
             resp = make_response(json.dumps(body), code)
             resp.mimetype = "application/json"
-            resp.headers["Cache-Control"] = "max-age=30"
+            resp.headers["Cache-Control"] = "max-age=300" if days else "max-age=10"
             return resp
 
         if not self._d.is_enabled("skystats"):
             return reply({"error": "SkyStats is off"}, 404)
         port = self._d.env_by_tags("skystatsport").value or 5173
+        params = {"tz": str(self.k4_feeder_tz())}
+        if days:
+            params["days"] = days
         try:
-            r = requests.get(f"http://127.0.0.1:{port}/api/k4nza/home", params={"tz": str(self.k4_feeder_tz())}, timeout=10)
+            r = requests.get(f"http://127.0.0.1:{port}/api/k4nza/home", params=params, timeout=10)
         except requests.RequestException:
             return reply({"error": "SkyStats is not answering"}, 503)
         if r.status_code != 200:

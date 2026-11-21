@@ -861,6 +861,13 @@ code, pre, kbd, .k4-mono { font-family: var(--k4-mono); }
 .k4-hour-max { background: var(--k4-accent); }
 .k4-hour-now:not(.k4-hour-max) { background: rgba(var(--k4-accent-rgb), 0.55); }
 .k4-hours-axis { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: var(--k4-mono); font-size: 0.75rem; color: var(--k4-muted); }
+.k4-hours-note { margin-top: 0.35rem; font-size: 0.85rem; min-height: 1.3em; }
+/* Day / Week / Month switch */
+.k4-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--k4-surface-2); border: 1px solid var(--k4-border); }
+.k4-seg-btn { border: 0; background: transparent; color: var(--k4-text-2); font: 600 0.8rem/1 var(--k4-font); padding: 0.4rem 0.8rem; border-radius: 999px; cursor: pointer; }
+.k4-seg-btn:hover { color: var(--k4-text); }
+.k4-seg-btn[aria-pressed="true"] { background: var(--k4-accent); color: var(--k4-on-accent); }
+.k4-seg-btn:focus-visible { outline: 2px solid var(--k4-accent); outline-offset: 1px; }
 
 /* closest right now */
 .k4-closest { display: flex; flex-direction: column; }
@@ -945,3 +952,45 @@ code, pre, kbd, .k4-mono { font-family: var(--k4-mono); }
   .k4-tile-sub { font-size: 0.75rem; }
   .k4-hero { margin-top: 0.25rem; }
 }
+
+/* -30: highlight cards open the aircraft in SkyStats and show its photo */
+.k4-highlight { overflow: hidden; }
+a.k4-highlight-link { color: inherit; text-decoration: none; transition: border-color 0.15s ease, transform 0.15s ease; }
+a.k4-highlight-link:hover { border-color: var(--k4-accent); transform: translateY(-1px); }
+a.k4-highlight-link:focus-visible { outline: 2px solid var(--k4-accent); outline-offset: 2px; }
+.k4-hl-photo {
+  position: relative;
+  margin: -1.15rem -1.25rem 0.55rem;
+  aspect-ratio: 16 / 9;
+  background: var(--k4-surface-2);
+  color: var(--k4-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+.k4-hl-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.k4-hl-photo[data-state="loading"] { animation: k4-hl-pulse 1.4s ease-in-out infinite; }
+@keyframes k4-hl-pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .k4-hl-photo[data-state="loading"] { animation: none; } }
+.k4-hl-type { font-family: var(--k4-mono); font-size: 0.8rem; }
+.k4-hl-credit,
+.k4-hl-typical {
+  position: absolute;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  max-width: calc(100% - 1rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.k4-hl-credit { right: 0.5rem; bottom: 0.5rem; }
+.k4-hl-typical { left: 0.5rem; top: 0.5rem; }
+
+@media (max-width: 600px) { .k4-hl-photo { aspect-ratio: 2.4 / 1; } }
