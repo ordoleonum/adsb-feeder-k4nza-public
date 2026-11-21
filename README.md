@@ -6,6 +6,12 @@ It's Dirk Hohndel's [adsb.im feeder](https://github.com/dirkhh/adsb-feeder-image
 plus a searchable history of every aircraft you've heard, a dashboard you can read at a glance,
 updates you can undo, nightly backups to a NAS, and far fewer writes to the SD card.
 
+> [!IMPORTANT]
+> **Unofficial build.** This is an independent project, not made or supported by adsb.im, Dirk Hohndel
+> or the SkyStats authors. Please report problems with this build
+> [here on GitHub](https://github.com/ordoleonum/adsb-feeder-k4nza-public/issues), not in the adsb.im
+> or SkyStats channels.
+
 [![Latest release](https://img.shields.io/github/v/release/ordoleonum/adsb-feeder-k4nza-public?label=download&color=2ea44f)](https://github.com/ordoleonum/adsb-feeder-k4nza-public/releases/latest)
 [![Support me on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20this%20build-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ordoleonum)
 
@@ -281,7 +287,7 @@ confirmation before shutdown, reboot and similar actions.
    starts.
 
 > **Couldn't connect to WiFi?** If the Pi can't get online, it creates its own open WiFi called
-> **`adsb.im-feeder`**. Join it from your phone or laptop and open `http://192.168.199.1` to choose
+> **`K4NZA-Feeder-Setup`**. Join it from your phone or laptop and open `http://192.168.199.1` to choose
 > your home network.
 
 The image is for Raspberry Pi (64-bit) only and has no maintainer SSH key built in.

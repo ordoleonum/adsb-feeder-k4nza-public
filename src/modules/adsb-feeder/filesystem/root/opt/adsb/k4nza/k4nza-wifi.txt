@@ -13,7 +13,7 @@
 # this file in again, or use System > Management in the web interface.
 #
 # If nothing is filled in (or the WiFi can't be joined) the Pi still starts
-# its "adsb.im-feeder" setup hotspot, as usual.
+# its own open "K4NZA-Feeder-Setup" WiFi: join it and open http://192.168.199.1
 
 SSID=
 PASSWORD=

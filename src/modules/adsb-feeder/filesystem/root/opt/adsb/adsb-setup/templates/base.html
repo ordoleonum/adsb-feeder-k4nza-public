@@ -705,11 +705,15 @@
         <div class="mb-3">
           <div class="d-flex align-items-center mb-2">
             {% if env_value_by_tag('aggregator_choice') == 'nonadsb' %}
-            <a href="https://github.com/ordoleonum/adsb-feeder-k4nza-public" target="_blank" rel="noopener" class="fw-semibold text-decoration-none">SDR Feeder Image</a>
+            <a href="https://github.com/ordoleonum/adsb-feeder-k4nza-public" target="_blank" rel="noopener" class="fw-semibold text-decoration-none">K4NZA SDR Feeder</a>
             {% else %}
-            <a href="https://github.com/ordoleonum/adsb-feeder-k4nza-public" target="_blank" rel="noopener" class="fw-semibold text-decoration-none">ADS-B Feeder Image</a>
+            <a href="https://github.com/ordoleonum/adsb-feeder-k4nza-public" target="_blank" rel="noopener" class="fw-semibold text-decoration-none">K4NZA ADS-B Feeder</a>
             {% endif %}
             <span class="version-badge ms-2">{{ env_value_by_tag("base_version") }}</span>
+          </div>
+          <div class="text-muted small d-block">
+            An unofficial build of the <a href="https://adsb.im" target="_blank" rel="noopener">adsb.im</a> feeder image, not supported by adsb.im.
+            Problems? <a href="https://github.com/ordoleonum/adsb-feeder-k4nza-public/issues" target="_blank" rel="noopener">Report them on GitHub</a>.
           </div>
           <div class="text-muted small d-none d-md-block">
             Running on {{ env_value_by_tag("board_name") }} • originally installed from {{ env_value_by_tag("image_name") }}

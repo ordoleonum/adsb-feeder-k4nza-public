@@ -157,7 +157,7 @@
       <div class="row align-items-center">
         <div class="col-8">
           <label for="no_config_link">If you want to share ONLY the map / statistics with others, but don't want to show
-            them the link to the adsb.im feeder image home page (which allows them to change the configuration), you can
+            them the link to the feeder's settings pages (which allows them to change the configuration), you can
             disable it here. Please note that the user still can simply access that page by changing the port that they
             access your feeder on from {{ env_value_by_tag('tar1090port') }} to {{ env_value_by_tag('webport') }},
             unless you filter this out through some firewall settings (which isn't something this image supports).
@@ -175,7 +175,7 @@
     <form method="POST" onsubmit="show_spinner(); return true;">
       <div class="row align-items-center">
         <div class="col-8">
-          <label for="allow_config_link">Reenable the link to the adsb.im feeder image home page on the map page.
+          <label for="allow_config_link">Reenable the link to the feeder's settings pages on the map page.
             Please make sure that both the map port {{ env_value_by_tag('tar1090port') }} and the feeder UI port
             {{ env_value_by_tag('webport') }} are accessible to users.
           </label>
@@ -325,10 +325,9 @@
           Influx needs to be configured via the respective environment variables:
           https://github.com/sdr-enthusiasts/docker-telegraf-adsb
           <br>
-          Please understand this is only meant for expert users, if you ask about this features
-          just know that we are reluctant to fully support this.  If you have questions about
-          influx / grafana / prometheus, try and use one of the non-adsb.im channels on the
-          SDR-E discord, they are better suited there.
+          This is meant for expert users and isn't something this build supports. For questions about
+          influx / grafana / prometheus, the SDR Enthusiasts Discord is the best place (please don't
+          ask in the adsb.im channels: this is an unofficial build).
         </div>
       </div>
     </form>
