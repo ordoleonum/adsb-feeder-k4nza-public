@@ -43,18 +43,15 @@ updates you can undo, nightly backups to a NAS, and far fewer writes to the SD c
 
 Need WiFi or more detail? See the full [Install](#install) steps.
 
-## What's new in v3.0.15-31
+## What's new in v3.0.15-32
 
-Polish from a full review on a computer and a phone, in light and dark:
+- 🏷️ **Clearly this build:** the feeder's pages and WiFi setup say it's the unofficial K4NZA build,
+  and problem reports come here, not to adsb.im.
+- 📶 **New setup hotspot name:** if the Pi can't join your WiFi, look for **K4NZA-Feeder-Setup**.
 
-- 📷 **Map photos keep trying** when the photo service is slow, and aircraft without a photo of their
-  own show a (clearly marked) photo of their type instead of an empty space.
-- ⏪ **Replay links** open in your light or dark choice; on a phone the aircraft panel no longer
-  covers the replay controls.
-- ✨ Cleaner names and numbers across the dashboard and SkyStats.
-
-Earlier releases: **-30** photo highlights, Day/Week/Month and a reorganised map · **-29** the
-**Daylight** look and the SkyStats report. Everything is in the [CHANGELOG](CHANGELOG.md).
+Earlier releases: **-31** map photos that keep trying and type photos, replay fixes · **-30** photo
+highlights, Day/Week/Month and a reorganised map · **-29** the **Daylight** look and the SkyStats
+report. Everything is in the [CHANGELOG](CHANGELOG.md).
 
 ---
 
