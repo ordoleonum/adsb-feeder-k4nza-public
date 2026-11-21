@@ -78,3 +78,55 @@ def test_route_without_skystats_or_bad_callsign():
     assert _route("SWA2039", skystats=False)[0] == 404
     assert _route("bad!")[0] == 400
     assert _route("AAL1")[0] == 404
+
+
+def test_serves_the_bundled_fonts_with_cors(tmp_path):
+    fonts = tmp_path / "adsb-setup" / "static" / "fonts"
+    fonts.mkdir(parents=True)
+    (fonts / "plus-jakarta-sans-latin-wght.woff2").write_bytes(b"wOF2")
+    code, mimetype, cors, _ = _call(tmp_path, "plus-jakarta-sans-latin-wght.woff2")
+    assert (code, mimetype, cors) == (200, "font/woff2", "*")
+    # only the listed fonts, nothing else from static/
+    (fonts / "LICENSE.txt").write_text("x")
+    assert _call(tmp_path, "LICENSE.txt")[0] == 404
+
+
+def _home(skystats=True, get=None):
+    from types import SimpleNamespace
+
+    me = SimpleNamespace(_d=_D(skystats), k4_feeder_tz=lambda: "America/Chicago")
+    flask_app = Flask(__name__)
+    with flask_app.test_request_context(), patch.object(app_module.requests, "get", get or (lambda *a, **k: _Resp(500, {}))):
+        resp = app_module.AdsbIm.k4nza_home(me)
+        return resp.status_code, resp.get_json()
+
+
+def test_home_summary_comes_from_skystats_in_the_feeder_timezone():
+    seen = {}
+
+    def get(url, params, timeout):
+        seen["url"], seen["params"] = url, params
+        return _Resp(200, {"aircraft_today": 3, "new_today": 2})
+
+    code, body = _home(get=get)
+    assert code == 200 and body["new_today"] == 2
+    assert seen["url"] == "http://127.0.0.1:5173/api/k4nza/home"
+    assert seen["params"] == {"tz": "America/Chicago"}
+
+
+def test_home_summary_without_skystats():
+    assert _home(skystats=False)[0] == 404
+    assert _home()[0] == 502
+
+
+def test_closest_aircraft_for_the_home_page():
+    aircraft = [
+        {"hex": "a1", "r_dst": 40.0, "seen_pos": 2, "alt_baro": 30000, "flight": "SWA1  ", "extra": 1},
+        {"hex": "a2", "r_dst": 5.0, "seen_pos": 1, "alt_baro": "ground"},
+        {"hex": "a3", "r_dst": 1.0, "seen_pos": 120},   # position too old
+        {"hex": "a4", "seen_pos": 1},                    # no distance
+        {"hex": "a5", "r_dst": 12.0, "seen_pos": 5},
+    ]
+    got = app_module.AdsbIm.k4nza_pick_closest(aircraft)
+    assert [a["hex"] for a in got] == ["a2", "a5", "a1"]
+    assert "extra" not in got[2] and got[2]["flight"] == "SWA1  "

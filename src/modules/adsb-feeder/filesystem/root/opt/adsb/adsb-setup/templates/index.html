@@ -15,7 +15,9 @@
 {% endif %}
 {% set num_micro_sites = (ns.site_indices | length) %}
 {% if not widget_mode %}
-<div class="k4-page-header mt-3">
+{% set k4home = adsb and not is_enabled('stage2') and not widget_mode %}
+{% set k4sky = k4home and is_enabled('skystats') and is_enabled('base_config') %}
+<div class="k4-page-header mt-3 {% if k4home %}d-none{% endif %}">
   <h1 class="k4-page-title">
     {% block title %}{{ list_value_by_tag("site_name", 0) }}{% endblock %}
   </h1>
@@ -84,48 +86,106 @@
       {{ zerotier_address}}{% endif %} will work as the IP address for this {{ env_value_by_tag('aggregator_choice') }} feeder.
     </div>
   </div>
+  {# ---------- Daylight home: hero, numbers, today, highlights, sharing, health ---------- #}
   <div class="col-12 mb-3 {% if not adsb or is_enabled('stage2') %} d-none {% endif %}">
-    <div id="k4-tiles" class="k4-tiles">
-      <div class="k4-tile" title="Aircraft your radio is hearing right now">
-        <div class="k4-tile-value" id="k4-tile-planes">&ndash;</div><div class="k4-tile-label">aircraft now</div></div>
+    <section class="k4-hero">
+      <div class="k4-hero-text">
+        <div class="k4-hero-when" id="k4-hero-when"></div>
+        <h1 class="k4-hero-title"><span id="k4-tile-planes">&ndash;</span> aircraft overhead right now,
+          <span class="k4-accent-text" id="k4-tile-today">&ndash;</span> since midnight.</h1>
+      </div>
+      {% if k4sky %}
+      {# aircraft search: opens the SkyStats Search tab in a new tab; not a <form>, so the
+         page stays as it is and more searches can follow #}
+      <div class="k4-card k4-search" role="search">
+        <input class="form-control" type="search" id="k4-search-input" autocomplete="off" spellcheck="false"
+               placeholder="Search your history: N812DN, A1B2C3, DAL1423, B739 or Delta"
+               data-short-placeholder="Search your history"
+               aria-label="Search SkyStats for a registration, hex code, callsign, type or operator">
+        <button class="btn btn-primary" type="button" id="k4-search-btn" title="Opens SkyStats in a new tab">Search</button>
+      </div>
+      {% endif %}
+    </section>
+    <div id="k4-tiles" class="k4-tiles k4-numbers">
       <div class="k4-tile" title="Radio messages decoded per second. Higher means better reception - antenna height and placement matter most.">
-        <div class="k4-tile-value" id="k4-tile-mps">&ndash;</div><div class="k4-tile-label">messages / sec</div></div>
+        <div class="k4-tile-label">Messages a second</div><div class="k4-tile-value" id="k4-tile-mps">&ndash;</div>
+        <div class="k4-tile-sub">Higher is better reception</div></div>
       <div class="k4-tile" title="Aircraft position reports decoded per second">
-        <div class="k4-tile-value" id="k4-tile-pps">&ndash;</div><div class="k4-tile-label">positions / sec</div></div>
-      <div class="k4-tile" title="Different aircraft seen since midnight ({{ k4_feeder_tz }} time)">
-        <div class="k4-tile-value" id="k4-tile-today">&ndash;</div><div class="k4-tile-label">aircraft today</div></div>
+        <div class="k4-tile-label">With a position</div><div class="k4-tile-value"><span id="k4-tile-pps">&ndash;</span><span class="k4-tile-unit"> / s</span></div>
+        <div class="k4-tile-sub">Position reports a second</div></div>
+      {% if k4sky %}
+      <div class="k4-tile" title="The farthest aircraft heard since midnight">
+        <div class="k4-tile-label">Farthest today</div><div class="k4-tile-value" id="k4-n-far">&ndash;</div>
+        <div class="k4-tile-sub" id="k4-n-far-sub">&nbsp;</div></div>
+      <div class="k4-tile" title="Aircraft heard today that your station had never heard before">
+        <div class="k4-tile-label">Never seen before</div><div class="k4-tile-value" id="k4-n-new">&ndash;</div>
+        <div class="k4-tile-sub" id="k4-n-new-sub">&nbsp;</div></div>
+      {% endif %}
     </div>
     {# kept for the stock status script #}
     <div class="d-none">Status: <span id="{% if not is_enabled('stage2') %}mf_status_0{% endif %}"></span>
       &middot; <span id="{% if not is_enabled('stage2') %}mf_stats_0{% endif %}"></span></div>
   </div>
-  {% if not widget_mode %}
-  {# Pi health, filled in by k4nza-ui.js; each tile's edge shows its own state #}
+  {% if not is_enabled('stage2') and adsb %}
   <div class="col-12 mb-3">
-    <div id="k4-health-tiles" class="k4-tiles" data-freedom-units="{{ 1 if is_enabled('freedom_units') else 0 }}">
-      <div class="k4-tile d-none" id="k4-t-cpu" title="Temperature of the Pi's processor">
-        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">CPU temperature</div></div>
-      <div class="k4-tile d-none" id="k4-t-ext" title="Temperature from the external sensor">
-        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">outside temperature</div></div>
-      <div class="k4-tile d-none" id="k4-t-pwr" title="Power supply">
-        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">power supply</div></div>
-      <div class="k4-tile d-none" id="k4-t-sd" title="Free disk space">
-        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">Disk space free</div></div>
-      <div class="k4-tile d-none" id="k4-t-data" title="Size of the SkyStats history">
-        <div class="k4-tile-value">&ndash;</div><div class="k4-tile-label">SkyStats data</div></div>
+    <div class="k4-grid-3">
+      {% if k4sky %}
+      <section class="k4-card k4-span-2" id="k4-hours-card">
+        <div class="k4-card-head"><h2>Today, hour by hour</h2><span class="k4-muted" id="k4-hours-note"></span></div>
+        <div class="k4-hours" id="k4-hours" role="img" aria-label="Aircraft heard each hour today"></div>
+        <div class="k4-hours-axis"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
+      </section>
+      {% endif %}
+      {# the stock daily chart: shown when SkyStats is off, kept (hidden) otherwise for its script #}
+      <div class="k4-card k4-chart-card {% if k4sky %}d-none{% else %}k4-span-2{% endif %}" style="position: relative;" id="chart-wrapper">
+        <canvas id="plane-history-chart"></canvas>
+      </div>
+      {% if not widget_mode %}
+      <section class="k4-card" id="k4-closest-card">
+        <div class="k4-card-head"><h2>Closest right now</h2></div>
+        <div id="k4-closest" class="k4-closest" data-units="{{ env_value_by_tag('display_units') }}"><div class="k4-muted">Looking&hellip;</div></div>
+        <a class="k4-soft-btn" href="/map/{{ env_value_by_tag('tar1090_query_params') }}" target="_blank" rel="noopener">Open the live map</a>
+      </section>
+      {% endif %}
     </div>
   </div>
   {% endif %}
-  {% if not widget_mode and is_enabled('base_config') and is_enabled('skystats') %}
-  <div class="col-12 mb-4">
-    {# aircraft search: opens the SkyStats Search tab in a new tab; not a <form>, so the
-       page stays as it is and more searches can follow #}
-    <div class="k4-card k4-search" role="search">
-      <input class="form-control" type="search" id="k4-search-input" autocomplete="off" spellcheck="false"
-             placeholder="Search your history: N812DN, A1B2C3, DAL1423, B739 or Delta"
-             data-short-placeholder="Search your history"
-             aria-label="Search SkyStats for a registration, hex code, callsign, type or operator">
-      <button class="btn btn-primary" type="button" id="k4-search-btn" title="Opens SkyStats in a new tab">Search &#8599;</button>
+  {% if k4sky %}
+  <div class="col-12 mb-3">
+    <div class="k4-highlights" id="k4-highlights" hidden></div>
+  </div>
+  {% endif %}
+  {% if not widget_mode %}
+  <div class="col-12 mb-3">
+    <div class="k4-grid-2">
+      {% if k4home and (aggregators | length) > 0 %}
+      <section class="k4-card">
+        <div class="k4-card-head"><h2>Sharing with</h2><a href="/aggregators">Manage</a></div>
+        <div class="k4-chips">
+          {% for agg, name, map, status, table in aggregators %}
+          <a class="k4-chip" data-k4-chip="{{ agg }}" href="{{ status[0] or map }}" target="_blank" rel="noopener" title="{{ name }} feed status (opens in a new tab)">
+            <span class="k4-chip-state" aria-hidden="true"></span>{{ name }}<span class="k4-chip-note" id="k4-chip-note-{{ agg }}"></span>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+      {# Pi health, filled in by k4nza-ui.js #}
+      <section class="k4-card">
+        <div class="k4-card-head"><h2>Station health</h2></div>
+        <div id="k4-health-tiles" class="k4-tiles k4-health" data-freedom-units="{{ 1 if is_enabled('freedom_units') else 0 }}">
+          <div class="k4-tile d-none" id="k4-t-cpu" title="Temperature of the Pi's processor"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">CPU temperature</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-ext" title="Temperature from the external sensor"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">Outside temperature</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-pwr" title="Power supply"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">Power supply</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-sd" title="Free disk space"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">Disk free</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-data" title="Size of the SkyStats history"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">SkyStats data</div><div class="k4-tile-value">&ndash;</div></div></div>
+        </div>
+      </section>
     </div>
   </div>
   {% endif %}
@@ -172,13 +232,7 @@
       </div>{% endif %}
     </div>
   </div>
-  {% if not is_enabled('stage2') and adsb %}
-  <div class="col-12 mb-4">
-    <div class="k4-card k4-chart-card" style="position: relative;" id="chart-wrapper">
-      <canvas id="plane-history-chart"></canvas>
-    </div>
-  </div>
-  {% endif %}
+  {% if k4home %}<details class="col-12 mb-3 k4-details"><summary>Feed status details and links</summary><div class="row">{% endif %}
   <div class="col-12 {% if (aggregators | length) == 0 %} d-none {% endif %}">
     <h4>You are feeding</h4>
     <div class="row small">
@@ -531,6 +585,7 @@
       {% endfor %}
     </div>
   </div>
+  {% if k4home %}</div></details>{% endif %}
   <script>
     // no Updates line on Home, but opening Home still starts the Pi OS update check
     // (at most once a day) so the Updates page has a recent answer
@@ -862,6 +917,20 @@
     updateChart();
   }
 
+  // "Sharing with" chips on the home page mirror the feeding table's summary column
+  function k4ChipState(agg, idx, color, data) {
+    if (String(idx) !== "0") return;
+    const chip = document.querySelector('[data-k4-chip="' + CSS.escape(agg) + '"]');
+    if (!chip) return;
+    chip.dataset.state = { "text-success": "good", "text-warning": "warn", "text-danger": "bad" }[color] || "unknown";
+    const note = document.getElementById("k4-chip-note-" + agg);
+    if (note) {
+      const mlat = data["mlat"];
+      note.textContent = mlat === "good" ? "MLAT" : (mlat === "bad" || mlat === "warning") ? "MLAT degraded"
+        : mlat === "disconnected" ? "MLAT down" : "";
+    }
+  }
+
   function setIcon(agg, cat, idx, icon, color) {
     // look the element up by id rather than building a selector: aggregator
     // identifiers can contain characters that are special in CSS selectors
@@ -937,6 +1006,7 @@
           }
 
           setIcon(agg, "span", idx, sumIcon, sumColor);
+          k4ChipState(agg, idx, sumColor, data);
 
           if (agg == "adsblol") {
             // console.log("set adsblol-link" + idx + " to " + data["adsblollink"])

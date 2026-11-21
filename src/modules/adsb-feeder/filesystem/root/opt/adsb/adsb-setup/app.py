@@ -398,6 +398,9 @@ class AdsbIm:
         self.app.add_url_rule("/api/k4nza/map/<name>", "k4nza_map_file", self.k4nza_map_file)
         # the route SkyStats looked up for a callsign (the live map uses it for "??" routes)
         self.app.add_url_rule("/api/k4nza/route/<callsign>", "k4nza_route", self.k4nza_route)
+        # today's summary from SkyStats for the home page
+        self.app.add_url_rule("/api/k4nza/home", "k4nza_home", self.k4nza_home)
+        self.app.add_url_rule("/api/k4nza/closest", "k4nza_closest", self.k4nza_closest)
         self.app.add_url_rule("/aggregators", "aggregators", self.aggregators, methods=["GET", "POST"])
         self.app.add_url_rule("/", "director", self.director, methods=["GET", "POST"])
         self.app.add_url_rule("/index", "index", self.index, methods=["GET", "POST"])
@@ -5384,11 +5387,19 @@ class AdsbIm:
         }
 
     def k4nza_map_file(self, name):
-        # fixed names only: these files sit outside static/ so cachebust.sh doesn't rename them
+        # fixed names only: these files sit outside static/ so cachebust.sh doesn't rename them.
+        # The fonts are the feeder's own (static/fonts, never renamed), served here as well
+        # because the map loads from another port and fonts need a CORS header.
         mimetypes = {"map.css": "text/css", "map.js": "application/javascript"}
-        if name not in mimetypes:
+        fonts = ("plus-jakarta-sans-latin-wght.woff2", "ibm-plex-mono-latin-400.woff2",
+                 "ibm-plex-mono-latin-500.woff2", "ibm-plex-mono-latin-600.woff2")
+        if name in fonts:
+            mimetypes[name] = "font/woff2"
+            path = pathlib.Path(get_adsb_base_dir()) / "adsb-setup" / "static" / "fonts" / name
+        elif name in mimetypes:
+            path = pathlib.Path(get_adsb_base_dir()) / "k4nza" / "map" / name
+        else:
             return make_response("not found", 404)
-        path = pathlib.Path(get_adsb_base_dir()) / "k4nza" / "map" / name
         if not path.is_file():
             return make_response("not found", 404)
         resp = make_response(send_file(path, mimetype=mimetypes[name], max_age=300))
@@ -5420,6 +5431,49 @@ class AdsbIm:
             return reply(r.json(), 200)
         except ValueError:
             return reply({"error": "bad answer from SkyStats"}, 502)
+
+    def k4nza_home(self):
+        # the home page's "today" summary; SkyStats keeps the data
+        def reply(body, code):
+            resp = make_response(json.dumps(body), code)
+            resp.mimetype = "application/json"
+            resp.headers["Cache-Control"] = "max-age=30"
+            return resp
+
+        if not self._d.is_enabled("skystats"):
+            return reply({"error": "SkyStats is off"}, 404)
+        port = self._d.env_by_tags("skystatsport").value or 5173
+        try:
+            r = requests.get(f"http://127.0.0.1:{port}/api/k4nza/home", params={"tz": str(self.k4_feeder_tz())}, timeout=10)
+        except requests.RequestException:
+            return reply({"error": "SkyStats is not answering"}, 503)
+        if r.status_code != 200:
+            return reply({"error": "SkyStats could not answer"}, 502)
+        try:
+            return reply(r.json(), 200)
+        except ValueError:
+            return reply({"error": "bad answer from SkyStats"}, 502)
+
+    @staticmethod
+    def k4nza_pick_closest(aircraft, n=4):
+        # the aircraft nearest the station that have a recent position, with only
+        # the fields the home page shows
+        keep = ("hex", "flight", "r", "t", "desc", "dbFlags", "alt_baro", "r_dst")
+        near = [a for a in aircraft if isinstance(a.get("r_dst"), (int, float)) and a.get("seen_pos", 999) < 60]
+        near.sort(key=lambda a: a["r_dst"])
+        return [{k: a[k] for k in keep if k in a} for a in near[:n]]
+
+    def k4nza_closest(self):
+        path = "/run/adsb-feeder-" + self.uf_suffix(0) + "/readsb/aircraft.json"
+        try:
+            with open(path) as f:
+                aircraft = json.load(f).get("aircraft", [])
+        except Exception:
+            aircraft = []
+        resp = make_response(json.dumps({"aircraft": self.k4nza_pick_closest(aircraft)}))
+        resp.mimetype = "application/json"
+        resp.headers["Cache-Control"] = "no-store"
+        return resp
 
     def _nas_site_name(self):
         site_name = self._d.env_by_tags("site_name_sanitized").list_get(0) or "adsb-feeder"

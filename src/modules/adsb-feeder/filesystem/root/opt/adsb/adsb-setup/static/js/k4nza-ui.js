@@ -289,6 +289,189 @@
     });
   }
 
+  // ---------- Daylight home: hero line, today's hours, highlights, closest aircraft ----------
+  const UNIT = () => (($id("k4-closest") || {}).dataset || {}).units || "imperial";
+  function fmtDist(nm) {
+    if (nm === null || nm === undefined) return "–";
+    const u = UNIT();
+    if (u === "metric") return Math.round(nm * 1.852) + " km";
+    if (u === "nautical") return (nm < 10 ? Math.round(nm * 10) / 10 : Math.round(nm)) + " nm";
+    const mi = nm * 1.15078;
+    return (mi < 10 ? Math.round(mi * 10) / 10 : Math.round(mi)) + " mi";
+  }
+  function fmtAlt(ft) {
+    if (ft === "ground") return "on the ground";
+    if (ft === null || ft === undefined || isNaN(ft)) return "";
+    return UNIT() === "metric" ? Math.round(ft * 0.3048).toLocaleString() + " m" : Math.round(ft).toLocaleString() + " ft";
+  }
+  function fmtHour(h) {
+    return (h % 12 || 12) + (h < 12 ? " AM" : " PM");
+  }
+  function fmtLocal(s) { // "2026-11-20T13:12" (station time) -> "1:12 PM"
+    const m = /T(\d\d):(\d\d)/.exec(s || "");
+    if (!m) return "";
+    const h = Number(m[1]);
+    return (h % 12 || 12) + ":" + m[2] + (h < 12 ? " AM" : " PM");
+  }
+  const DIRS = { N: "north", NNE: "north-northeast", NE: "northeast", ENE: "east-northeast", E: "east", ESE: "east-southeast",
+    SE: "southeast", SSE: "south-southeast", S: "south", SSW: "south-southwest", SW: "southwest", WSW: "west-southwest",
+    W: "west", WNW: "west-northwest", NW: "northwest", NNW: "north-northwest" };
+  // the aircraft databases shout ("BOEING 737 MAX 8", "CESSNA 172 Skyhawk"): every
+  // all-capitals word gets title case. Words with lower case, digits (E-6B, PA-28)
+  // and short abbreviations (USAF, FAA) are left as they are.
+  const SMALL = new Set(["of", "and", "the", "for", "de", "du"]);
+  const KEEP = new Set(["USAF", "USN", "USMC", "USCG", "FAA", "NASA", "UPS", "LLC", "INC", "US", "UK", "DHL", "PHI", "MAX", "II", "III", "IV"]);
+  function titleCase(s) {
+    s = String(s || "").trim();
+    if (!s) return s;
+    return s.split(/(\s+|\/)/).map((w, i) => {
+      if (/[a-z]/.test(w) || /\d/.test(w) || KEEP.has(w) || !/[A-Z]/.test(w)) return w;
+      const lw = w.toLowerCase();
+      return i > 0 && SMALL.has(lw) ? lw : lw.charAt(0).toUpperCase() + lw.slice(1);
+    }).join("");
+  }
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function heroWhen() {
+    const out = $id("k4-hero-when");
+    if (!out) return;
+    const d = new Date();
+    const h = d.getHours();
+    const part = h < 5 ? "night" : h < 12 ? "morning" : h < 17 ? "afternoon" : h < 21 ? "evening" : "night";
+    out.textContent = d.toLocaleDateString(undefined, { weekday: "long" }) + " " + part + ", " +
+      d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  function drawHours(hours) {
+    const box = $id("k4-hours");
+    if (!box || !Array.isArray(hours)) return;
+    const now = new Date().getHours();
+    const shown = hours.slice(0, now + 1);
+    const max = Math.max(1, ...shown);
+    box.textContent = "";
+    hours.forEach((n, h) => {
+      const bar = el("span", "k4-hour" + (h === now ? " k4-hour-now" : "") + (n === max && h <= now ? " k4-hour-max" : "") + (h > now ? " k4-hour-later" : ""));
+      bar.style.height = h > now ? "0" : Math.max(2, Math.round((n / max) * 100)) + "%";
+      bar.title = fmtHour(h) + ": " + n.toLocaleString() + " aircraft";
+      box.appendChild(bar);
+    });
+    let busiest = 0, quiet = 0;
+    shown.forEach((n, h) => { if (n > shown[busiest]) busiest = h; if (n < shown[quiet]) quiet = h; });
+    const note = $id("k4-hours-note");
+    if (note && shown.some((n) => n > 0)) note.textContent = "Busiest at " + fmtHour(busiest) + (now >= 3 ? " · quietest at " + fmtHour(quiet) : "");
+    box.setAttribute("aria-label", "Aircraft heard each hour today; busiest at " + fmtHour(busiest));
+  }
+
+  function highlightCard(kind, tag, title, body) {
+    const card = el("div", "k4-card k4-highlight");
+    card.appendChild(el("span", "k4-tag k4-tag-" + kind, tag));
+    card.appendChild(el("div", "k4-highlight-title", title));
+    card.appendChild(el("div", "k4-highlight-body", body));
+    return card;
+  }
+  function drawHighlights(d) {
+    const box = $id("k4-highlights");
+    if (!box) return;
+    const cards = [];
+    const name = (a) => titleCase(a.model) || a.type || a.registration || a.callsign || a.hex.toUpperCase();
+    const who = (a) => a.registration || a.callsign || a.hex.toUpperCase();
+    if (d.military) {
+      const m = d.military;
+      const bits = [];
+      if (m.distance_nm !== undefined) bits.push("passed " + fmtDist(m.distance_nm) + " away");
+      if (m.altitude_ft) bits.push("at " + fmtAlt(m.altitude_ft));
+      cards.push(highlightCard("mil", "Military", name(m),
+        [m.operator ? titleCase(m.operator) : who(m), bits.join(" "), m.when ? fmtLocal(m.when) : ""].filter(Boolean).join(", ") + "." +
+        (d.military_today > 1 ? " " + d.military_today + " military aircraft today." : "")));
+    } else {
+      cards.push(highlightCard("mil", "Military", "None yet today", "Military aircraft show up here as soon as one is heard."));
+    }
+    if (d.highest) {
+      const h = d.highest;
+      cards.push(highlightCard("accent", "Highest", name(h) + " at " + fmtAlt(h.altitude_ft),
+        [who(h), h.operator ? titleCase(h.operator) : "", h.when ? fmtLocal(h.when) : ""].filter(Boolean).join(", ") + "."));
+    }
+    if (d.rarest) {
+      const r = d.rarest;
+      const n = r.times_ever || 0;
+      cards.push(highlightCard("civ", "Rarest type", name(r) + (r.model && r.type ? " (" + r.type + ")" : ""),
+        n <= 1 ? "The first one your station has ever recorded: " + who(r) + "." : "Only " + n + " of these ever recorded at your station."));
+    }
+    if (d.farthest) {
+      const f = d.farthest;
+      cards.push(highlightCard("neu", "Farthest", fmtDist(f.distance_nm) + " away",
+        who(f) + (f.model || f.type ? " (" + (titleCase(f.model) || f.type) + ")" : "") + " to the " + (DIRS[f.direction] || f.direction) + "."));
+    }
+    box.textContent = "";
+    cards.forEach((c) => box.appendChild(c));
+    box.hidden = cards.length === 0;
+  }
+
+  function updateHome() {
+    if (!$id("k4-highlights") && !$id("k4-hours")) return;
+    fetch("/api/k4nza/home", { signal: AbortSignal.timeout(20000) })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((d) => {
+        drawHours(d.hours);
+        drawHighlights(d);
+        if (d.farthest) {
+          setTile("k4-n-far", fmtDist(d.farthest.distance_nm));
+          setTile("k4-n-far-sub", "To the " + (DIRS[d.farthest.direction] || d.farthest.direction));
+        }
+        if (d.new_today !== undefined) {
+          setTile("k4-n-new", fmt(d.new_today));
+          setTile("k4-n-new-sub", "Out of " + fmt(d.aircraft_today) + " today");
+        }
+      })
+      .catch(() => { /* SkyStats starting or off: the cards keep their last values */ });
+  }
+
+  const ALT_COLORS = [[5000, "#f59e0b"], [12000, "#84cc16"], [20000, "#10b981"], [30000, "#0ea5e9"], [Infinity, "#6366f1"]];
+  function updateClosest() {
+    const box = $id("k4-closest");
+    if (!box) return;
+    fetch("/api/k4nza/closest", { signal: AbortSignal.timeout(8000) })
+      .then((r) => r.json())
+      .then((data) => {
+        const list = data.aircraft || []; // already the nearest few, closest first
+        box.textContent = "";
+        if (!list.length) {
+          box.appendChild(el("div", "k4-muted", "No aircraft with a position right now."));
+          return;
+        }
+        list.forEach((a) => {
+          const row = el("div", "k4-closest-row");
+          const alt = a.alt_baro;
+          const dot = el("span", "k4-dot-alt");
+          dot.style.background = alt === "ground" ? "#94a3b8" : (ALT_COLORS.find((c) => (alt || 0) < c[0]) || ALT_COLORS[4])[1];
+          const mid = el("div", "k4-closest-main");
+          mid.appendChild(el("div", "k4-closest-name", (a.flight || "").trim() || a.r || a.hex.toUpperCase()));
+          const what = [titleCase(a.desc) || a.t, (a.dbFlags & 1) ? "military" : ""].filter(Boolean).join(" · ");
+          mid.appendChild(el("div", "k4-closest-what", what || "Unknown type"));
+          const right = el("div", "k4-closest-num", fmtDist(a.r_dst));
+          right.appendChild(el("div", "k4-closest-alt", fmtAlt(alt)));
+          row.append(dot, mid, right);
+          box.appendChild(row);
+        });
+      })
+      .catch(() => { /* map not answering: keep the last list */ });
+  }
+
+  function initHome() {
+    if (!$id("k4-hero-when") && !$id("k4-closest")) return;
+    heroWhen();
+    setInterval(heroWhen, 30000);
+    updateHome();
+    setInterval(() => { if (!document.hidden) updateHome(); }, 60000);
+    updateClosest();
+    setInterval(() => { if (!document.hidden) updateClosest(); }, 10000);
+  }
+
   // ---------- init ----------
   function init() {
     const toggle = $id("k4-theme-toggle");
@@ -299,6 +482,18 @@
         try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private mode */ }
       });
     }
+
+    // top menu: one dropdown open at a time; a click elsewhere or Escape closes it
+    const menus = Array.from(document.querySelectorAll(".k4-tn-menu"));
+    menus.forEach((m) => m.addEventListener("toggle", () => {
+      if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; });
+    }));
+    document.addEventListener("click", (e) => {
+      menus.forEach((m) => { if (m.open && !m.contains(e.target)) m.open = false; });
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") menus.forEach((m) => { m.open = false; });
+    });
 
     const sidebar = $id("k4-sidebar");
     const backdrop = $id("k4-backdrop");
@@ -348,6 +543,7 @@
 
     initSearch();
     initTileNotes();
+    initHome();
 
     if ($id("k4-status-pill") || $id("k4-tiles")) {
       updateStatus();
