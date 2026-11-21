@@ -127,6 +127,8 @@
           setTile("k4-tile-mps", fmt(d.mps));
           setTile("k4-tile-pps", fmt(d.pps));
           setTile("k4-tile-today", fmt(d.tplanes));
+          todayPlanes = d.tplanes;
+          showNewSub();
           statusOkAt = Date.now();
           showUpdated();
         }
@@ -300,10 +302,18 @@
     const mi = nm * 1.15078;
     return (mi < 10 ? Math.round(mi * 10) / 10 : Math.round(mi)) + " mi";
   }
+  // "Never seen before: 98, out of 466 since midnight": the same count as the
+  // headline (the receiver's own), so the page shows one number for today;
+  // SkyStats' count only until the receiver's first answer
+  let todayPlanes = null, skyToday = null;
+  function showNewSub() {
+    const n = todayPlanes !== null && todayPlanes !== undefined && !isNaN(todayPlanes) ? todayPlanes : skyToday;
+    if (n !== null && n !== undefined && $id("k4-n-new-sub")) setTile("k4-n-new-sub", "Out of " + fmt(n) + " since midnight");
+  }
   function fmtAlt(ft) {
     if (ft === "ground") return "on the ground";
     if (ft === null || ft === undefined || isNaN(ft)) return "";
-    return UNIT() === "metric" ? Math.round(ft * 0.3048).toLocaleString() + " m" : Math.round(ft).toLocaleString() + " ft";
+    return UNIT() === "metric" ? Math.round(ft * 0.3048).toLocaleString() + " m" : Math.round(ft).toLocaleString() + " ft";
   }
   function fmtHour(h) {
     return (h % 12 || 12) + (h < 12 ? " AM" : " PM");
@@ -409,13 +419,21 @@
   function drawDaily(list) {
     const box = $id("k4-hours");
     if (!box || !Array.isArray(list) || !list.length) return;
+    // a young station: leave out the days before SkyStats had anything
+    const first = list.findIndex((x) => x.aircraft > 0);
+    const trimmed = first > 0;
+    if (trimmed) list = list.slice(first);
+    const title = $id("k4-hours-title");
+    if (title && trimmed) title.textContent = "Since " + dayName(list[0].date, true);
     const max = Math.max(1, ...list.map((x) => x.aircraft));
     box.textContent = "";
-    let busiest = 0, quiet = 0;
+    // today isn't over yet, and a station's first day started part way
+    // through, so neither is ever "the quietest"
+    const q0 = trimmed && list.length > 2 ? 1 : 0;
+    let busiest = 0, quiet = q0;
     list.forEach((x, i) => {
       if (x.aircraft > list[busiest].aircraft) busiest = i;
-      // today isn't over yet, so it's never "the quietest"
-      if (i < list.length - 1 && x.aircraft < list[quiet].aircraft) quiet = i;
+      if (i > q0 && i < list.length - 1 && x.aircraft < list[quiet].aircraft) quiet = i;
     });
     list.forEach((x, i) => {
       const today = i === list.length - 1;
@@ -486,7 +504,7 @@
         !WIKI_NOT.test((pg.description || "") + " " + pg.title));
       if (page) {
         return { src: page.thumbnail.source, link: "https://en.wikipedia.org/wiki/" + encodeURIComponent(page.title.replace(/ /g, "_")),
-          credit: "Wikipedia", typical: a.type || a.model };
+          credit: "Wikipedia", typical: a.model || a.type };
       }
     }
     return null;
@@ -604,7 +622,8 @@
         }
         if (d.new_today !== undefined) {
           setTile("k4-n-new", fmt(d.new_today));
-          setTile("k4-n-new-sub", "Out of " + fmt(d.aircraft_today) + " today");
+          skyToday = d.aircraft_today;
+          showNewSub();
         }
       })
       .catch(() => { /* SkyStats starting or off: the cards keep their last values */ });

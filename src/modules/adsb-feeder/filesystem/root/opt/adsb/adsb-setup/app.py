@@ -5447,7 +5447,8 @@ class AdsbIm:
         def reply(body, code):
             resp = make_response(json.dumps(body), code)
             resp.mimetype = "application/json"
-            resp.headers["Cache-Control"] = "max-age=300" if days else "max-age=10"
+            # errors (SkyStats starting) aren't kept, so the next try asks again
+            resp.headers["Cache-Control"] = ("max-age=300" if days else "max-age=10") if code == 200 else "no-store"
             return resp
 
         if not self._d.is_enabled("skystats"):

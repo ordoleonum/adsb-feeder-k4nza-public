@@ -994,3 +994,9 @@ a.k4-highlight-link:focus-visible { outline: 2px solid var(--k4-accent); outline
 .k4-hl-typical { left: 0.5rem; top: 0.5rem; }
 
 @media (max-width: 600px) { .k4-hl-photo { aspect-ratio: 2.4 / 1; } }
+
+/* -31: phones: tighter top bar so the station name fits ("adsb-k4nza", not "adsb-…") */
+@media (max-width: 575px) {
+  #k4-topbar { column-gap: 0.5rem; }
+  #k4-topbar #k4-status-pill { padding: 0.4rem 0.7rem; }
+}

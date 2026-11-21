@@ -3,6 +3,34 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-31 (unreleased)
+
+Fixes from a full review of -30 on a computer and a phone, in light and dark.
+
+**Live map**
+- Aircraft photos: when the photo service is slow or doesn't answer, the map asks again (after 8, 15,
+  30 and 60 seconds) instead of showing "Loading image..." for good, and a photo that fails to
+  download is tried again. Aircraft with no photo of their own show a photo of their type from
+  Wikipedia, marked "typical ..., not this aircraft", instead of an empty space.
+- Replay links from SkyStats open in the light or dark look you chose (they always used the map's last
+  look before).
+- Phones: the selected aircraft sits above the replay bar instead of covering its Play button.
+
+**Dashboard**
+- One count for today: "Never seen before" now says "out of N since midnight" with the same number as
+  the headline.
+- Week and Month start at the station's first day of data instead of showing empty days, and the
+  first (partial) day is never called the quietest.
+- Photos of an aircraft's type are named in words ("Typical Gulfstream G650", not "Typical GLF6").
+- "47,025 ft" no longer breaks across two lines; the station name fits in the phone's top bar.
+
+**SkyStats**
+- Who flew over most: airline names are no longer cut short.
+- Aircraft only known by a type code ("E6", "H60") show the type in words ("Boeing E-6 Mercury") in
+  the report, the Interesting lists and on the dashboard.
+- Operator names from the feeder's database read better ("Department of the Navy", "McDonnell").
+- Notable visitors: when planespotters.net is busy, a photo of the type is shown instead of none.
+
 ## v3.0.15-30 (2026-11-21)
 
 **New look**
