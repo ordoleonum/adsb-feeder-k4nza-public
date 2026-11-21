@@ -3,10 +3,11 @@
  * tar1090's own buttons are kept (same ids, same click handlers) and only
  * moved, labelled and given a tooltip; nothing in tar1090 is replaced.
  *
- *   top left     Feeder (back) and the search box; the selected aircraft below them
+ *   top left     Feeder (back); the selected aircraft below it
  *   top bar      Home (H), Labels (L), Details (O), Track lbl (K), Tracks (T), Military (U)
  *                (centred over the map, clear of the panels on the left)
- *   top right    List, Settings, light / dark
+ *   right column Layers, List, Settings, light / dark
+ *   search       tar1090's own search box, in the aircraft list
  *   bottom dock  Follow (F), Isolate (I), Dim (B), Replay (Y), More
  *   More panel   In view (V), Multi (M), Persist (P), Random (R), Full screen, Wide list
  *   phones       icons only; the aircraft list starts hidden
@@ -26,6 +27,7 @@
   const P = 'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"';
   const ICONS = {
     feeder: '<path d="M15 6l-6 6 6 6"/><path d="M9 12h12"/>',
+    layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
     home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
     tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',
     tagplus: '<path d="M3 12V4h8l10 10-8 8z"/><path d="M8 6v5M5.5 8.5h5"/>',
@@ -52,6 +54,7 @@
   // id: [label, icon, shortcut key or "", tooltip]
   const BUTTONS = {
     k4feeder: ["Feeder", "feeder", "", "Back to the feeder"],
+    k4layers: ["Layers", "layers", "", "Choose the map background and overlays"],
     H: ["Home", "home", "H", "Center the map on your station"],
     L: ["Labels", "tag", "L", "Show callsigns next to aircraft"],
     O: ["Details", "tagplus", "O", "Add altitude and speed to the labels"],
@@ -74,7 +77,7 @@
     expand_sidebar_button: ["Wide list", "wide", "", "Make the aircraft list wider"],
   };
   const TOP = ["H", "L", "O", "K", "T", "U"];
-  const RIGHT = ["toggle_sidebar_control", "settingsCog", "k4theme"];
+  const RIGHT = ["k4layers", "toggle_sidebar_control", "settingsCog", "k4theme"];
   const DOCK = ["F", "I", "B", "RP", "k4more"];
   const MORE = ["V", "M", "P", "R", "fullscreenButton", "expand_sidebar_control"];
   const PHONE = window.matchMedia("(max-width: 700px)");
@@ -122,12 +125,15 @@
     const theme = makeButton("k4theme", "button");
     theme.type = "button";
     theme.addEventListener("click", toggleTheme);
+    const layers = makeButton("k4layers", "button");
+    layers.type = "button";
+    layers.setAttribute("aria-expanded", "false");
+    layers.addEventListener("click", toggleLayers);
 
-    // top left: Feeder and the search box (tar1090's own form, moved out of the list)
+    // top left: Feeder (the search box stays in the aircraft list, where tar1090 has it)
     topLeft = document.createElement("div");
     topLeft.id = "k4m-topleft";
     topLeft.appendChild(feeder);
-    if ($("search_form")) topLeft.appendChild($("search_form"));
     host.appendChild(topLeft);
 
     // bottom dock with the More panel above it
@@ -145,7 +151,7 @@
 
     for (const id of TOP) if ($(id)) top.appendChild($(id));
     for (const id of RIGHT) {
-      const el = id === "k4theme" ? theme : $(id);
+      const el = id === "k4theme" ? theme : id === "k4layers" ? layers : $(id);
       if (el) side.appendChild(el);
     }
     for (const id of DOCK) {
@@ -154,7 +160,7 @@
     }
     for (const id of MORE) if ($(id)) morePanel.appendChild($(id));
     // leftovers tar1090 put in the column (spacers, the old wide-list wrapper) stay out of sight
-    for (const id of Object.keys(BUTTONS)) label($(id) || (id === "k4feeder" ? feeder : id === "k4more" ? more : id === "k4theme" ? theme : null), id);
+    for (const id of Object.keys(BUTTONS)) label($(id), id);
 
     more.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -168,6 +174,7 @@
     document.documentElement.classList.add("k4m-built");
     initFullscreen();
     watchSettings();
+    watchLayers();
     syncThemeButton();
     themeFromFeeder();
     placeTopBar();
@@ -187,7 +194,84 @@
     setInterval(placeTopBar, 1000);
     hideListOnPhone();
     initSearch();
+    replayFocus();
+    setInterval(checkPhoto, 2000);
     return true;
+  }
+
+  // Layers: tar1090's layer chooser, opened from our button in the column
+  // (its own round button is hidden; its panel opens beside the column)
+  function layerSwitcher() {
+    return document.querySelector(".layer-switcher");
+  }
+  function toggleLayers(e) {
+    if (e) e.preventDefault();
+    const ls = layerSwitcher();
+    const b = ls && ls.querySelector(":scope > button");
+    if (b) b.click();
+  }
+  function watchLayers() {
+    const ls = layerSwitcher();
+    const btn = $("k4layers");
+    if (!ls || !btn) return;
+    const sync = () => {
+      const open = ls.classList.contains("shown");
+      btn.classList.toggle("activeButton", open);
+      btn.classList.toggle("inActiveButton", !open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    new MutationObserver(sync).observe(ls, { attributes: true, attributeFilter: ["class"] });
+    sync();
+  }
+
+  // Replay links from SkyStats (?replay=...&icao=...): tar1090 selects the
+  // aircraft but leaves Follow and Isolate off in replays. Switch both on once
+  // the aircraft has a position, so the replay shows just that aircraft.
+  function replayFocus() {
+    const q = new URLSearchParams(location.search);
+    if (!q.has("replay") || !q.has("icao") || q.has("noIsolation")) return;
+    const hex = q.get("icao").toLowerCase().split(",")[0];
+    let tries = 0;
+    const t = setInterval(() => {
+      try {
+        if (typeof SelectedPlane !== "undefined" && SelectedPlane && SelectedPlane.icao === hex && SelectedPlane.position) {
+          clearInterval(t);
+          if (!onlySelected) toggleIsolation("on");
+          if (!FollowSelected) toggleFollow(true);
+        } else if (++tries > 120) {
+          clearInterval(t);
+        }
+      } catch (e) {
+        clearInterval(t);
+      }
+    }, 500);
+  }
+
+  // Aircraft photo: tar1090 asks planespotters.net once and has no error
+  // handling, so a failed or slow request leaves "Loading image..." for good.
+  // After 8 s, ask again ourselves; if that fails too, show the outline.
+  let photoWait = null; // {hex, since, asked}
+  function checkPhoto() {
+    try {
+      const box = $("selected_photo");
+      const sel = typeof SelectedPlane !== "undefined" ? SelectedPlane : null;
+      if (!box || !sel || !/Loading image/i.test(box.textContent)) { photoWait = null; return; }
+      if (!photoWait || photoWait.hex !== sel.icao) { photoWait = { hex: sel.icao, since: Date.now(), asked: false }; return; }
+      if (photoWait.asked || Date.now() - photoWait.since < 8000) return;
+      photoWait.asked = true;
+      const plane = sel;
+      const base = typeof planespottersAPIurl !== "undefined" ? planespottersAPIurl : "https://api.planespotters.net/pub/photos/";
+      const ctl = window.AbortController ? new AbortController() : null;
+      const timer = setTimeout(() => ctl && ctl.abort(), 10000);
+      fetch(base + "hex/" + plane.icao.toUpperCase(), ctl ? { signal: ctl.signal } : {})
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+        .then((data) => {
+          clearTimeout(timer);
+          plane.psAPIresponse = data && (data.photos || data.images) ? data : { photos: [] };
+          if (SelectedPlane === plane && typeof displayPhoto === "function") displayPhoto();
+        });
+    } catch (e) { /* never break the map */ }
   }
 
   // light / dark: tar1090's own Dark Mode setting (kept in the browser like its other settings)
@@ -291,7 +375,8 @@
   // The free stretch of map beside the panels, for a bar at its current height.
   function freeSpan(bar, rightLimits) {
     const host = bar.offsetParent.getBoundingClientRect();
-    const r0 = bar.getBoundingClientRect();
+    // the dock's own row only (not the More panel open above it)
+    const r0 = (bar.querySelector(".k4m-dockbar") || bar).getBoundingClientRect();
     let left = 8;
     for (const id of ["selected_infoblock", "settings_infoblock", "k4m-topleft"]) {
       const el = $(id);
@@ -325,6 +410,18 @@
     bar.style.setProperty("left", Math.round(x) + "px", "important");
   }
   function placeTopBar() {
+    // replay: tar1090 shortens the map for its replay bar at the bottom; lift
+    // the dock, the altitude key and the selected aircraft above it
+    const mc = $("map_container"), canvas = $("map_canvas");
+    const lift = mc && canvas ? Math.max(0, mc.clientHeight - canvas.clientHeight) : 0;
+    document.documentElement.style.setProperty("--k4m-lift", lift + "px");
+    // Replay lit while its bar is open (tar1090 doesn't mark it)
+    const rp = $("RP");
+    if (rp) {
+      const on = shown($("replayBar"));
+      rp.classList.toggle("activeButton", on);
+      rp.classList.toggle("inActiveButton", !on);
+    }
     centreBar($("header_top"), [$("header_side"), document.querySelector(".layer-switcher")]);
     if (dock) {
       // phones: the selected aircraft sits at the bottom, so the dock goes above it
@@ -334,8 +431,16 @@
         const host = dock.offsetParent.getBoundingClientRect();
         bottom = Math.max(14, Math.round(host.bottom - info.getBoundingClientRect().top + 8));
       }
-      dock.style.setProperty("bottom", bottom + "px", "important");
+      dock.style.setProperty("bottom", bottom + lift + "px", "important");
       centreBar(dock, [$("altitude_chart"), document.querySelector(".ol-zoom")]);
+    }
+    // tar1090 puts the distance scale beside its own (narrower) aircraft pane
+    const scale = document.querySelector(".ol-scale-line");
+    if (scale && scale.offsetParent) {
+      const pane = $("selected_infoblock");
+      let x = 8;
+      if (shown(pane) && !PHONE.matches) x = Math.round(pane.getBoundingClientRect().right - scale.offsetParent.getBoundingClientRect().left + 8);
+      scale.style.setProperty("left", x + "px", "important");
     }
   }
 

@@ -3,6 +3,19 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-30 (unreleased)
+
+**Live map**
+- Layers, List, Settings and light/dark are one column at the top right again, with Layers at the
+  top; the layer list opens beside the column.
+- The search box is back in the aircraft list, where tar1090 has it.
+- Replay links from SkyStats switch on Follow and Isolate, so the replay shows just that aircraft.
+- Replay: the bottom buttons, the aircraft pane and the altitude key move up above the replay bar,
+  and Replay is lit while the bar is open.
+- Round zoom buttons that match the rest of the map; a bigger altitude key, set higher.
+- The aircraft pane is narrower and the photo fills it. A photo that doesn't arrive is asked for
+  again, and the outline shows instead of "Loading image..." for good.
+
 ## v3.0.15-29 (2026-11-20)
 
 A new look: **Daylight**, across the feeder, the live map and SkyStats, in light and dark.

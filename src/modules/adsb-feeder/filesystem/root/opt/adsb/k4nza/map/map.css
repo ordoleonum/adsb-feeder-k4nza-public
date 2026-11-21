@@ -669,8 +669,7 @@ html.k4m [data-k4] { font-family: var(--k4-font); }
 html.k4m .k4m-key { font-family: var(--k4-font); }
 html.k4m #header_top,
 html.k4m #header_side,
-html.k4m .k4m-dockbar,
-html.k4m #k4m-topleft #search_form {
+html.k4m .k4m-dockbar {
   background: var(--k4-glass) !important;
   border: 1px solid var(--k4-line) !important;
   box-shadow: var(--k4-shadow) !important;
@@ -678,13 +677,11 @@ html.k4m #k4m-topleft #search_form {
 }
 html.k4m #header_top { border-radius: 20px !important; padding: 5px !important; }
 
-/* top left: round Feeder button and the search pill */
+/* top left: round Feeder button */
 html.k4m #k4m-topleft {
   position: absolute;
   top: 12px;
   left: 12px;
-  width: 360px;
-  max-width: calc(100% - 24px);
   display: flex;
   gap: 8px;
   z-index: 30;
@@ -702,45 +699,6 @@ html.k4m #k4m-topleft #k4feeder {
   box-shadow: var(--k4-shadow) !important;
 }
 html.k4m #k4m-topleft #k4feeder .k4m-word { display: none; }
-html.k4m #k4m-topleft #search_form {
-  flex: 1;
-  min-width: 0;
-  width: auto !important;
-  display: flex !important;
-  align-items: center;
-  gap: 6px;
-  height: 48px;
-  box-sizing: border-box;
-  margin: 0 !important;
-  padding: 0 6px 0 16px !important;
-  border-radius: 999px !important;
-}
-html.k4m #k4m-topleft #search_input {
-  flex: 1;
-  min-width: 0;
-  width: auto !important;
-  height: 40px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  color: var(--k4-text) !important;
-  font: 15px var(--k4-font) !important;
-  box-shadow: none !important;
-}
-html.k4m #k4m-topleft #search_form .formButton { display: none !important; }
-html.k4m #k4m-topleft #search_form #search_clear_button {
-  display: inline-flex !important;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 12px !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: var(--k4-bg3) !important;
-  color: var(--k4-text) !important;
-  font: 600 12px var(--k4-font) !important;
-}
-
 /* top right: List, Settings, light / dark in one row, left of the layers button */
 html.k4m #header_side {
   top: 12px !important;
@@ -805,9 +763,8 @@ html.k4m #k4m-dock #k4m-more [data-k4] { width: 82px !important; display: inline
 
 /* phones: icons only; search across the top, tools below it */
 @media (max-width: 700px) {
-  html.k4m #k4m-topleft { top: 8px; left: 8px; width: auto; right: 70px; max-width: none; }
+  html.k4m #k4m-topleft { top: 8px; left: 8px; }
   html.k4m #k4m-topleft #k4feeder { width: 44px !important; height: 44px !important; min-height: 44px !important; }
-  html.k4m #k4m-topleft #search_form { height: 44px; }
   html.k4m #header_top { top: 60px !important; }
   html.k4m #header_side { top: 116px !important; right: 8px !important; }
   html.k4m #header_side .buttonContainer { flex-direction: column !important; }
@@ -819,9 +776,6 @@ html.k4m #k4m-dock #k4m-more [data-k4] { width: 82px !important; display: inline
 }
 
 /* -29 fixes after the first live look */
-html.k4m #k4m-topleft #search_form { flex-direction: row !important; flex-wrap: nowrap !important; }
-html.k4m #k4m-topleft #search_form .infoBlockTitleText { display: none !important; }
-html.k4m #k4m-topleft #search_input { display: block !important; }
 @media (min-width: 701px) {
   html.k4m #altitude_chart { width: auto !important; }
 }
@@ -839,4 +793,94 @@ html.k4m .k4m-compact [data-k4] { width: 48px !important; min-height: 44px !impo
 /* phones: no altitude key, as in the design (tar1090 keeps it in its settings) */
 @media (max-width: 700px) {
   html.k4m #altitude_chart { display: none !important; }
+}
+
+/* ======================================================================
+   -30: right column Layers / List / Settings / light-dark, search back in
+   the list, round zoom buttons, bigger altitude key set higher, narrower
+   aircraft pane, everything lifted above the replay bar
+   ====================================================================== */
+/* right column (top right), Layers first */
+html.k4m #header_side {
+  top: 12px !important;
+  right: 12px !important;
+  width: auto !important;
+}
+html.k4m #header_side .buttonContainer { flex-direction: column !important; }
+html.k4m #header_side [data-k4] { width: 62px !important; }
+/* tar1090's own round layers button is hidden (our Layers button opens it);
+   its panel opens to the left of the column */
+html.k4m .layer-switcher:not(.shown) { display: none !important; }
+html.k4m .layer-switcher.shown {
+  top: 88px !important;
+  right: 94px !important;
+  max-height: calc(100% - 110px) !important;
+}
+
+/* zoom: a slim rounded pair, same glass and lines as the other buttons */
+html.k4m .ol-zoom {
+  display: flex !important;
+  flex-direction: column;
+  padding: 4px !important;
+  gap: 2px;
+  background: var(--k4-glass) !important;
+  border: 1px solid var(--k4-line) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--k4-shadow) !important;
+  backdrop-filter: blur(8px);
+}
+html.k4m .ol-zoom .ol-zoom-in,
+html.k4m .ol-zoom .ol-zoom-out {
+  width: 40px !important;
+  height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: transparent none !important;
+  box-shadow: none !important;
+  color: var(--k4-text) !important;
+  font: 500 24px/1 var(--k4-font) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+html.k4m .ol-zoom .ol-zoom-in:hover,
+html.k4m .ol-zoom .ol-zoom-out:hover { background: var(--k4-bg3) !important; }
+
+@media (min-width: 701px) {
+  /* altitude key: bigger, and set above the bottom edge (and the dock's row) */
+  html.k4m #altitude_chart {
+    width: 460px !important;
+    max-width: calc(100% - 340px) !important;
+    bottom: calc(96px + var(--k4m-lift, 0px)) !important;
+    padding: 8px 12px !important;
+    border-radius: 14px !important;
+  }
+  html.k4m .ol-zoom { bottom: 140px !important; right: 12px !important; }
+
+  /* selected aircraft: narrower, the photo fills its width */
+  html.k4m #selected_infoblock {
+    width: 264px !important;
+    bottom: calc(14px + var(--k4m-lift, 0px)) !important;
+    max-height: calc(100% - 86px - var(--k4m-lift, 0px)) !important;
+  }
+}
+html.k4m #selected_photo,
+html.k4m #airplanePhoto { width: 100% !important; max-width: 100%; }
+html.k4m #airplanePhoto { height: auto !important; display: block; }
+html.k4m #photo_container { height: auto !important; min-height: 60px; }
+
+/* replay bar: full width under the lifted panels */
+html.k4m #replayBar { left: 0 !important; }
+
+@media (max-width: 700px) {
+  html.k4m #header_top { top: 8px !important; }
+  html.k4m #header_side { top: 8px !important; right: 8px !important; }
+  html.k4m #header_side [data-k4] { width: 40px !important; }
+  html.k4m .layer-switcher.shown { top: 80px !important; right: 62px !important; max-height: calc(100% - 96px) !important; }
+  html.k4m .ol-zoom { bottom: 12px !important; right: 8px !important; }
+  html.k4m .ol-zoom .ol-zoom-in,
+  html.k4m .ol-zoom .ol-zoom-out { width: 36px !important; height: 36px !important; }
 }
