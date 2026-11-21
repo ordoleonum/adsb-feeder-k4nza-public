@@ -5,29 +5,44 @@
  * map.js sets html.k4m-dark or html.k4m-light.
  */
 
-/* ---------- palette ---------- */
+/* ---------- fonts: the feeder's bundled Daylight fonts (SIL OFL), served next to this file ---------- */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("plus-jakarta-sans-latin-wght.woff2") format("woff2");
+}
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("ibm-plex-mono-latin-500.woff2") format("woff2"); }
+
+/* ---------- palette (Daylight) ---------- */
 html.k4m {
-  --k4-bg: #0f172a;        /* panels */
-  --k4-bg2: #1e293b;       /* raised / headers */
-  --k4-bg3: #273449;       /* hover */
-  --k4-line: rgba(148, 163, 184, 0.22);
-  --k4-text: #e2e8f0;
-  --k4-muted: #94a3b8;
-  --k4-accent: #3b82f6;
-  --k4-accent-text: #ffffff;
-  --k4-glass: rgba(15, 23, 42, 0.88);
-  --k4-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
+  --k4-bg: #141b29;        /* panels */
+  --k4-bg2: #1a2233;       /* raised / headers */
+  --k4-bg3: #253047;       /* hover */
+  --k4-line: #253047;
+  --k4-text: #e8ecf4;
+  --k4-muted: #9aa6b8;
+  --k4-accent: #7c8cff;
+  --k4-accent-text: #0c111c;
+  --k4-accent-soft: #222a4d;
+  --k4-glass: rgba(20, 27, 41, 0.97);
+  --k4-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --k4-font: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --k4-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 html.k4m.k4m-light {
   --k4-bg: #ffffff;
-  --k4-bg2: #f1f5f9;
-  --k4-bg3: #e2e8f0;
-  --k4-line: rgba(15, 23, 42, 0.12);
+  --k4-bg2: #f6f8fa;
+  --k4-bg3: #eef1f5;
+  --k4-line: #e2e7ee;
   --k4-text: #0f172a;
-  --k4-muted: #64748b;
-  --k4-accent: #2563eb;
-  --k4-glass: rgba(255, 255, 255, 0.92);
-  --k4-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+  --k4-muted: #556274;
+  --k4-accent: #3b4fe0;
+  --k4-accent-text: #ffffff;
+  --k4-accent-soft: #eef0fd;
+  --k4-glass: rgba(255, 255, 255, 0.97);
+  --k4-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
 }
 /* tar1090's own colour variables (it sets them inline, hence !important) */
 html.k4m {
@@ -45,7 +60,7 @@ html.k4m select,
 html.k4m button,
 html.k4m table,
 html.k4m .ui-widget {
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif !important;
+  font-family: var(--k4-font) !important;
 }
 html.k4m a { color: var(--k4-accent); }
 
@@ -520,7 +535,7 @@ html.k4m #k4m-more [data-k4] { width: 70px !important; }
   border-radius: 8px;
   background: #0b1220;
   color: #f1f5f9;
-  font: 12px/1.35 "Inter", "Segoe UI", system-ui, sans-serif;
+  font: 12px/1.35 var(--k4-font);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
@@ -643,3 +658,185 @@ html.k4m #replayDatepicker {
   padding: 3px 8px !important;
 }
 html.k4m #replayBar .ui-slider { background: rgba(148, 163, 184, 0.38) !important; border: 0 !important; }
+
+/* ======================================================================
+   -29 Daylight layout
+   top left: Feeder + search · top bar: view tools · top right: List,
+   Settings, light/dark · bottom dock: aircraft tools + More · selected
+   aircraft on the left · altitude key bottom right
+   ====================================================================== */
+html.k4m [data-k4] { font-family: var(--k4-font); }
+html.k4m .k4m-key { font-family: var(--k4-font); }
+html.k4m #header_top,
+html.k4m #header_side,
+html.k4m .k4m-dockbar,
+html.k4m #k4m-topleft #search_form {
+  background: var(--k4-glass) !important;
+  border: 1px solid var(--k4-line) !important;
+  box-shadow: var(--k4-shadow) !important;
+  backdrop-filter: blur(8px);
+}
+html.k4m #header_top { border-radius: 20px !important; padding: 5px !important; }
+
+/* top left: round Feeder button and the search pill */
+html.k4m #k4m-topleft {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 360px;
+  max-width: calc(100% - 24px);
+  display: flex;
+  gap: 8px;
+  z-index: 30;
+}
+html.k4m #k4m-topleft #k4feeder {
+  flex: none;
+  width: 48px !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  background: var(--k4-glass) !important;
+  border: 1px solid var(--k4-line) !important;
+  box-shadow: var(--k4-shadow) !important;
+}
+html.k4m #k4m-topleft #k4feeder .k4m-word { display: none; }
+html.k4m #k4m-topleft #search_form {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  box-sizing: border-box;
+  margin: 0 !important;
+  padding: 0 6px 0 16px !important;
+  border-radius: 999px !important;
+}
+html.k4m #k4m-topleft #search_input {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+  height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--k4-text) !important;
+  font: 15px var(--k4-font) !important;
+  box-shadow: none !important;
+}
+html.k4m #k4m-topleft #search_form .formButton { display: none !important; }
+html.k4m #k4m-topleft #search_form #search_clear_button {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--k4-bg3) !important;
+  color: var(--k4-text) !important;
+  font: 600 12px var(--k4-font) !important;
+}
+
+/* top right: List, Settings, light / dark in one row, left of the layers button */
+html.k4m #header_side {
+  top: 12px !important;
+  right: 80px !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 5px !important;
+  border-radius: 20px !important;
+}
+html.k4m #header_side .buttonContainer { flex-direction: row !important; align-items: center; gap: 2px; }
+html.k4m #header_side [data-k4] { width: 72px !important; }
+
+/* bottom dock and its More panel (opens upward) */
+html.k4m #k4m-dock {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+}
+html.k4m .k4m-dockbar {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 20px;
+}
+html.k4m .k4m-dockbar [data-k4] { width: 72px !important; display: inline-flex !important; }
+html.k4m #k4m-dock #k4m-more {
+  position: static;
+  grid-template-columns: repeat(3, 84px);
+  border-radius: 18px;
+}
+html.k4m #k4m-dock #k4m-more [data-k4] { width: 82px !important; display: inline-flex !important; }
+
+/* selected aircraft: on the left, under the search; fits the window */
+@media (min-width: 701px) {
+  html.k4m #selected_infoblock {
+    top: 72px !important;
+    bottom: 14px !important;
+    left: 12px !important;
+    margin: 0 !important;
+    width: 360px !important;
+    max-height: calc(100% - 86px) !important;
+  }
+  /* altitude key and zoom at the bottom right */
+  html.k4m #altitude_chart {
+    left: auto !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    width: 300px !important;
+    max-width: calc(100% - 24px);
+    box-sizing: border-box;
+  }
+  html.k4m .ol-zoom { right: 12px !important; left: auto !important; bottom: 96px !important; top: auto !important; }
+}
+
+/* phones: icons only; search across the top, tools below it */
+@media (max-width: 700px) {
+  html.k4m #k4m-topleft { top: 8px; left: 8px; width: auto; right: 70px; max-width: none; }
+  html.k4m #k4m-topleft #k4feeder { width: 44px !important; height: 44px !important; min-height: 44px !important; }
+  html.k4m #k4m-topleft #search_form { height: 44px; }
+  html.k4m #header_top { top: 60px !important; }
+  html.k4m #header_side { top: 116px !important; right: 8px !important; }
+  html.k4m #header_side .buttonContainer { flex-direction: column !important; }
+  html.k4m #header_side [data-k4] { width: 40px !important; }
+  html.k4m .k4m-dockbar [data-k4] { width: 48px !important; min-height: 44px !important; }
+  html.k4m .k4m-dockbar .k4m-word { display: none; }
+  html.k4m #k4m-dock #k4m-more { grid-template-columns: repeat(3, 76px); }
+  html.k4m #k4m-dock #k4m-more [data-k4] { width: 74px !important; }
+}
+
+/* -29 fixes after the first live look */
+html.k4m #k4m-topleft #search_form { flex-direction: row !important; flex-wrap: nowrap !important; }
+html.k4m #k4m-topleft #search_form .infoBlockTitleText { display: none !important; }
+html.k4m #k4m-topleft #search_input { display: block !important; }
+@media (min-width: 701px) {
+  html.k4m #altitude_chart { width: auto !important; }
+}
+
+/* -29: room for the top bar between the search and the top-right tools */
+@media (min-width: 701px) {
+  html.k4m #header_top [data-k4] { width: 62px !important; }
+  html.k4m #header_side [data-k4] { width: 60px !important; }
+  html.k4m #altitude_chart { width: 340px !important; }
+}
+
+/* -29: a bar without room for its labels shows icons only (labels stay in the tooltips) */
+html.k4m .k4m-compact .k4m-word { display: none !important; }
+html.k4m .k4m-compact [data-k4] { width: 48px !important; min-height: 44px !important; }
+/* phones: no altitude key, as in the design (tar1090 keeps it in its settings) */
+@media (max-width: 700px) {
+  html.k4m #altitude_chart { display: none !important; }
+}

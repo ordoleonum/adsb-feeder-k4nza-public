@@ -3,12 +3,13 @@
  * tar1090's own buttons are kept (same ids, same click handlers) and only
  * moved, labelled and given a tooltip; nothing in tar1090 is replaced.
  *
- *   top bar      Feeder, Home (H), Labels (L), Details (O), Track lbl (K), Tracks (T), Military (U)
+ *   top left     Feeder (back) and the search box; the selected aircraft below them
+ *   top bar      Home (H), Labels (L), Details (O), Track lbl (K), Tracks (T), Military (U)
  *                (centred over the map, clear of the panels on the left)
- *   right column List, Settings, Dim (B), Isolate (I), Follow (F), More
- *   More panel   Replay (Y), In view (V), Multi (M), Persist (P), Random (R), Full screen, Wide list
- *   phones       icons only; Dim, Isolate and Follow move into More;
- *                the aircraft list starts hidden
+ *   top right    List, Settings, light / dark
+ *   bottom dock  Follow (F), Isolate (I), Dim (B), Replay (Y), More
+ *   More panel   In view (V), Multi (M), Persist (P), Random (R), Full screen, Wide list
+ *   phones       icons only; the aircraft list starts hidden
  */
 (function () {
   "use strict";
@@ -37,6 +38,8 @@
     dim: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     isolate: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
     follow: '<path d="M4 20l7-16 7 16-7-4z"/>',
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
     view: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     multi: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><path d="M5 6.5l2 2 3-3"/>',
@@ -62,6 +65,7 @@
     I: ["Isolate", "isolate", "I", "Show only the selected aircraft"],
     F: ["Follow", "follow", "F", "Keep the map centred on the selected aircraft"],
     k4more: ["More", "more", "", "More map options"],
+    k4theme: ["Theme", "moon", "", "Switch between light and dark"],
     V: ["In view", "view", "V", "List only aircraft visible on the map"],
     M: ["Multi", "multi", "M", "Select several aircraft at once"],
     P: ["Persist", "persist", "P", "Keep aircraft on the map after they go out of range"],
@@ -69,10 +73,10 @@
     fullscreenButton: ["Full screen", "full", "", "Use the whole screen for the map"],
     expand_sidebar_button: ["Wide list", "wide", "", "Make the aircraft list wider"],
   };
-  const TOP = ["k4feeder", "H", "L", "O", "K", "T", "U"];
-  const SIDE = ["toggle_sidebar_control", "settingsCog", "B", "I", "F", "k4more"];
-  const SIDE_ON_PHONE_IN_MORE = ["B", "I", "F"];
-  const MORE = ["RP", "V", "M", "P", "R", "fullscreenButton", "expand_sidebar_control"];
+  const TOP = ["H", "L", "O", "K", "T", "U"];
+  const RIGHT = ["toggle_sidebar_control", "settingsCog", "k4theme"];
+  const DOCK = ["F", "I", "B", "RP", "k4more"];
+  const MORE = ["V", "M", "P", "R", "fullscreenButton", "expand_sidebar_control"];
   const PHONE = window.matchMedia("(max-width: 700px)");
 
   const $ = (id) => document.getElementById(id);
@@ -102,30 +106,55 @@
     return el;
   }
 
-  let morePanel;
+  let morePanel, dock, topLeft;
   function build() {
     const top = document.querySelector("#header_top .buttonContainer");
     const side = document.querySelector("#header_side .buttonContainer");
     if (!top || !side || !$("L")) return false;
     if (document.documentElement.classList.contains("k4m-built")) return true;
+    const host = $("header_top").parentNode;
 
     const feeder = makeButton("k4feeder", "a");
     feeder.href = FEEDER;
     feeder.addEventListener("click", backToFeeder);
     const more = makeButton("k4more");
     more.setAttribute("aria-expanded", "false");
+    const theme = makeButton("k4theme", "button");
+    theme.type = "button";
+    theme.addEventListener("click", toggleTheme);
+
+    // top left: Feeder and the search box (tar1090's own form, moved out of the list)
+    topLeft = document.createElement("div");
+    topLeft.id = "k4m-topleft";
+    topLeft.appendChild(feeder);
+    if ($("search_form")) topLeft.appendChild($("search_form"));
+    host.appendChild(topLeft);
+
+    // bottom dock with the More panel above it
+    dock = document.createElement("div");
+    dock.id = "k4m-dock";
     morePanel = document.createElement("div");
     morePanel.id = "k4m-more";
     morePanel.hidden = true;
-    $("header_side").appendChild(morePanel);
+    const dockBar = document.createElement("div");
+    dockBar.className = "k4m-dockbar buttonContainer";
+    dockBar.setAttribute("role", "toolbar");
+    dockBar.setAttribute("aria-label", "Aircraft tools");
+    dock.append(morePanel, dockBar);
+    host.appendChild(dock);
 
-    for (const id of TOP) if ($(id) || id === "k4feeder") top.appendChild(id === "k4feeder" ? feeder : $(id));
-    for (const id of SIDE) {
-      const el = id === "k4more" ? more : $(id);
+    for (const id of TOP) if ($(id)) top.appendChild($(id));
+    for (const id of RIGHT) {
+      const el = id === "k4theme" ? theme : $(id);
       if (el) side.appendChild(el);
     }
+    for (const id of DOCK) {
+      const el = id === "k4more" ? more : $(id);
+      if (el) dockBar.appendChild(el);
+    }
     for (const id of MORE) if ($(id)) morePanel.appendChild($(id));
-    for (const id of Object.keys(BUTTONS)) label($(id) || (id === "k4feeder" ? feeder : id === "k4more" ? more : null), id);
+    // leftovers tar1090 put in the column (spacers, the old wide-list wrapper) stay out of sight
+    for (const id of Object.keys(BUTTONS)) label($(id) || (id === "k4feeder" ? feeder : id === "k4more" ? more : id === "k4theme" ? theme : null), id);
 
     more.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -139,22 +168,51 @@
     document.documentElement.classList.add("k4m-built");
     initFullscreen();
     watchSettings();
+    syncThemeButton();
+    themeFromFeeder();
     placeTopBar();
     window.addEventListener("resize", placeTopBar);
     // the map area changes size when the list opens or closes
     if (window.ResizeObserver) {
       const ro = new ResizeObserver(() => placeTopBar());
-      for (const el of [$("header_top").offsetParent, $("map_canvas"), $("sidebar_container"), $("selected_infoblock")]) if (el) ro.observe(el);
+      for (const el of [host, $("map_canvas"), $("sidebar_container"), $("selected_infoblock")]) if (el) ro.observe(el);
     }
     for (const id of ["toggle_sidebar_button", "expand_sidebar_button"]) {
       const b = $(id);
       if (b) b.addEventListener("click", () => { setTimeout(placeTopBar, 60); setTimeout(placeTopBar, 400); });
     }
-    layoutForWidth();
-    PHONE.addEventListener("change", layoutForWidth);
+    PHONE.addEventListener("change", placeTopBar);
+    // fonts, tar1090's own panels and the selected aircraft settle after load:
+    // keep the bars clear of them (cheap: a few rectangle reads a second)
+    setInterval(placeTopBar, 1000);
     hideListOnPhone();
     initSearch();
     return true;
+  }
+
+  // light / dark: tar1090's own Dark Mode setting (kept in the browser like its other settings)
+  function darkOn() {
+    return typeof toggles !== "undefined" && toggles.darkMode ? !!toggles.darkMode.state : document.documentElement.classList.contains("k4m-dark");
+  }
+  function toggleTheme(e) {
+    if (e) e.preventDefault();
+    if (typeof toggles !== "undefined" && toggles.darkMode) toggles.darkMode.toggle(!toggles.darkMode.state);
+    syncThemeButton();
+  }
+  function syncThemeButton() {
+    const b = $("k4theme");
+    if (!b) return;
+    const dark = darkOn();
+    const word = dark ? "Light" : "Dark";
+    b.innerHTML = '<svg class="k4m-ico" viewBox="0 0 24 24" ' + P + ' aria-hidden="true">' + ICONS[dark ? "sun" : "moon"] + "</svg>" +
+      '<span class="k4m-word">' + word + "</span>";
+    b.dataset.k4tip = dark ? "Switch to light mode" : "Switch to dark mode";
+    b.setAttribute("aria-label", b.dataset.k4tip);
+  }
+  // the feeder passes its own choice when it opens the map (?k4theme=dark|light)
+  function themeFromFeeder() {
+    const want = new URLSearchParams(location.search).get("k4theme");
+    if ((want === "dark" || want === "light") && (want === "dark") !== darkOn()) toggleTheme();
   }
 
   function setMore(open) {
@@ -227,44 +285,58 @@
     sync();
   }
 
-  // top bar: centred over the map, but never over the panels on the left
-  // (selected aircraft, settings) or the button column on the right
-  function placeTopBar() {
-    const bar = $("header_top");
-    const side = $("header_side");
-    if (!bar || !side || !bar.offsetParent) return;
+  // top bar and bottom dock: centred over the map, but never over the panels on
+  // the left (selected aircraft, settings), the tools at the top right or the
+  // altitude key at the bottom right
+  // The free stretch of map beside the panels, for a bar at its current height.
+  function freeSpan(bar, rightLimits) {
     const host = bar.offsetParent.getBoundingClientRect();
-    const w = bar.offsetWidth;
-    const barBottom = bar.getBoundingClientRect().bottom;
+    const r0 = bar.getBoundingClientRect();
     let left = 8;
-    for (const id of ["selected_infoblock", "settings_infoblock"]) {
+    for (const id of ["selected_infoblock", "settings_infoblock", "k4m-topleft"]) {
       const el = $(id);
       if (!shown(el)) continue;
       const r = el.getBoundingClientRect();
-      if (r.width && r.top < barBottom) left = Math.max(left, r.right - host.left + 8);
+      if (r.width && r.top < r0.bottom && r.bottom > r0.top) left = Math.max(left, r.right - host.left + 10);
     }
-    const right = side.getBoundingClientRect().left - host.left - 8;
-    const centred = (right + 8) / 2 - w / 2;
+    let right = host.width - 8;
+    for (const el of rightLimits) {
+      if (!shown(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < r0.bottom && r.bottom > r0.top) right = Math.min(right, r.left - host.left - 10);
+    }
+    return [left, right];
+  }
+  // Centre a bar in that stretch. When the labelled bar doesn't fit (aircraft
+  // selected and the list open on a smaller screen) it shows icons only.
+  function centreBar(bar, rightLimits) {
+    if (!bar || !bar.offsetParent) return;
+    let [left, right] = freeSpan(bar, rightLimits);
+    if (bar.classList.contains("k4m-compact")) {
+      if ((Number(bar.dataset.fullWidth) || Infinity) <= right - left) bar.classList.remove("k4m-compact");
+    } else if (bar.offsetWidth > right - left) {
+      bar.dataset.fullWidth = bar.offsetWidth;
+      bar.classList.add("k4m-compact");
+    }
+    const w = bar.offsetWidth;
+    const centred = (left + right) / 2 - w / 2;
     let x = Math.max(left, centred);
-    if (x + w > right) x = Math.max(8, right - w); // narrow: stay clear of the column
+    if (x + w > right) x = Math.max(8, right - w);
     bar.style.setProperty("left", Math.round(x) + "px", "important");
   }
-
-  // phones: Dim, Isolate and Follow go into More (after Replay); back on wide screens
-  function layoutForWidth() {
-    const side = document.querySelector("#header_side .buttonContainer");
-    const more = $("k4more");
-    if (!side || !morePanel || !more) return;
-    // same order in both places: Dim, Isolate, Follow
-    const rp = $("RP");
-    const first = rp && rp.parentNode === morePanel ? rp.nextSibling : morePanel.firstChild;
-    for (const id of SIDE_ON_PHONE_IN_MORE) {
-      const el = $(id);
-      if (!el) continue;
-      if (PHONE.matches) morePanel.insertBefore(el, first);
-      else side.insertBefore(el, more);
+  function placeTopBar() {
+    centreBar($("header_top"), [$("header_side"), document.querySelector(".layer-switcher")]);
+    if (dock) {
+      // phones: the selected aircraft sits at the bottom, so the dock goes above it
+      const info = $("selected_infoblock");
+      let bottom = 14;
+      if (PHONE.matches && shown(info) && dock.offsetParent) {
+        const host = dock.offsetParent.getBoundingClientRect();
+        bottom = Math.max(14, Math.round(host.bottom - info.getBoundingClientRect().top + 8));
+      }
+      dock.style.setProperty("bottom", bottom + "px", "important");
+      centreBar(dock, [$("altitude_chart"), document.querySelector(".ol-zoom")]);
     }
-    placeTopBar();
   }
 
   // phones start with the map, not the list (only once, when the page opens)
@@ -454,6 +526,7 @@
     root.classList.add("k4m");
     root.classList.toggle("k4m-dark", dark);
     root.classList.toggle("k4m-light", !dark);
+    syncThemeButton(); // also when Dark Mode is switched in tar1090's own settings
   }
   syncTheme();
   new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });

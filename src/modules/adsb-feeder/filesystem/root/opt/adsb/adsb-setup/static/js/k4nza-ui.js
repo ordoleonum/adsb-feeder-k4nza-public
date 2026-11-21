@@ -530,7 +530,10 @@
       let url;
       try { url = new URL(a.href, location.href); } catch (err) { return; }
       if (url.host !== location.host || !mapPath.test(url.pathname)) return;
-      const w = window.open(url.href, "_blank");
+      // the map starts in the same light / dark look; appended as text so flags like
+      // "?heatmap" keep their exact form
+      const href = url.href.replace(/#.*$/, "") + (url.search ? "&" : "?") + "k4theme=" + currentTheme() + url.hash;
+      const w = window.open(href, "_blank");
       if (w) e.preventDefault(); // blocked: let the link open the usual way
     });
 
