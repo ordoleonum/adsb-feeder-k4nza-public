@@ -3,6 +3,36 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-29 (unreleased)
+
+A new look: **Daylight**, across the feeder, the live map and SkyStats, in light and dark.
+
+**New**
+- One look everywhere: new fonts (bundled, nothing fetched from the internet), calmer colours and a
+  light/dark switch (sun/moon) on every page. The feeder's choice carries over when it opens the
+  live map or SkyStats.
+- Feeder home page: a dashboard. Planes overhead and aircraft today with the history search, messages
+  and positions per second, the farthest and never-seen-before aircraft today, today hour by hour,
+  the closest aircraft right now, today's highlights (farthest, highest, latest military, rarest type),
+  which sites you share with, and station health. The full feed table is folded under "details".
+- Feeder menu: a top bar on a computer (Overview, Live map, SkyStats, Graphs, Setup, System), with
+  "k4nza-build" and the version under the station name. Phones keep their menu.
+- Live map: reorganised buttons. Feeder button and search top left, view tools top centre, list,
+  settings and light/dark top right, Follow, Isolate, Dim, Replay and More at the bottom. The
+  selected aircraft shows on the left, the altitude key bottom right. Bars show icons only when a
+  small window has no room for the labels.
+- SkyStats: new header with a **Feeder** button (closes the tab, back to the feeder), the station
+  name and "k4nza-build". The Activity tab is now a report for Today, Week, Month or All time: what
+  crossed your sky in one sentence, four key numbers, when your sky is busiest (day by hour), range
+  by direction and signal vs distance, who flew over most, aircraft types, where they were going,
+  and notable visitors with photos.
+- SkyStats: every visit time in **Search**, and each notable visitor, links to the live map's
+  **replay** of that moment with the aircraft selected.
+
+**Fixed**
+- Updates: the SkyStats download shows its progress every 15 seconds, restarts if it stalls for a
+  minute or drops (up to 4 tries), and says clearly when it couldn't finish. It looked hung before.
+
 ## v3.0.15-28 (2026-11-18)
 
 Mostly UI fixes: a page-by-page review of the feeder, the live map and SkyStats on a computer and a
