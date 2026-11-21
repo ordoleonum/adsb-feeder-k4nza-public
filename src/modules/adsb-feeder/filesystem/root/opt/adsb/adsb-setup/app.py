@@ -5391,8 +5391,12 @@ class AdsbIm:
         # The fonts are the feeder's own (static/fonts, never renamed), served here as well
         # because the map loads from another port and fonts need a CORS header.
         mimetypes = {"map.css": "text/css", "map.js": "application/javascript"}
-        fonts = ("plus-jakarta-sans-latin-wght.woff2", "ibm-plex-mono-latin-400.woff2",
-                 "ibm-plex-mono-latin-500.woff2", "ibm-plex-mono-latin-600.woff2")
+        fonts = (
+            "plus-jakarta-sans-latin-wght.woff2",
+            "ibm-plex-mono-latin-400.woff2",
+            "ibm-plex-mono-latin-500.woff2",
+            "ibm-plex-mono-latin-600.woff2",
+        )
         if name in fonts:
             mimetypes[name] = "font/woff2"
             path = pathlib.Path(get_adsb_base_dir()) / "adsb-setup" / "static" / "fonts" / name
