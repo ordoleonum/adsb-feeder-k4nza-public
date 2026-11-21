@@ -198,7 +198,7 @@
           if (c >= 80) {
             state = "bad";
             tip = `CPU temperature: ${fmtTemp(c)}, too hot. The Pi slows itself down; add a heatsink or a case with a fan and give it air`;
-          } else if (c >= 55) {
+          } else if (c >= 70) { // a Pi 4/5 without a fan often idles at 55-65°C
             state = "warn";
             tip = `CPU temperature: ${fmtTemp(c)}, warm. The Pi slows down at 80°C; a heatsink or fan helps`;
           }
@@ -571,7 +571,9 @@
       card.target = "_blank";
       card.title = "Open " + q + " in SkyStats";
     }
-    card.appendChild(photoBox(a));
+    // no aircraft (e.g. "None yet today"): no photo box, so on a new station the
+    // lone card is a short strip rather than a page-wide empty picture frame
+    if (a) card.appendChild(photoBox(a));
     card.appendChild(el("span", "k4-tag k4-tag-" + kind, tag));
     card.appendChild(el("div", "k4-highlight-title", title));
     card.appendChild(el("div", "k4-highlight-body", body));

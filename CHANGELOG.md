@@ -26,7 +26,7 @@ every release tag is kept (-33 stays too, so a feeder updating from it can go ba
   The live numbers show within seconds after a restart and refresh every few seconds.
 - Today's busiest and quietest hours, with Week and Month views.
 - Highlights (Military, Highest, Rarest type, Farthest) with a photo, each opening in SkyStats.
-- Pi health tiles: CPU temperature, power supply, disk space and SkyStats history size, turning
+- Pi health tiles: CPU temperature (amber from 70 °C), power supply, disk space and SkyStats history size, turning
   amber or red with advice. Tap any tile to read its advice.
 - An aircraft search box that searches your whole SkyStats history.
 - "Your feeds on other sites": a card for every site you feed, with its map and feed status page.
