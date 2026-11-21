@@ -269,7 +269,8 @@
         input.focus();
         return;
       }
-      window.open("/skystats/?q=" + encodeURIComponent(q), "_blank", "noopener");
+      // opened by this page (no noopener) so SkyStats' Feeder button can close the tab
+      window.open("/skystats/?q=" + encodeURIComponent(q) + "&k4theme=" + currentTheme(), "_blank");
     };
     button.addEventListener("click", go);
     // narrow screens: a placeholder that fits instead of one cut off mid-word
@@ -519,10 +520,10 @@
       }
     });
 
-    // the live map opens in a tab this page opens itself, so the map's Feeder
-    // button can close that tab and land back here (browsers only let a page
-    // close a tab that a script opened). Ctrl/middle click still opens normally.
-    const mapPath = /^\/map(_\d+)?(\/|\?|$)/;
+    // the live map and SkyStats open in a tab this page opens itself, so their
+    // Feeder buttons can close that tab and land back here (browsers only let a
+    // page close a tab that a script opened). Ctrl/middle click still opens normally.
+    const mapPath = /^\/(map(_\d+)?|skystats)(\/|\?|$)/;
     document.addEventListener("click", (e) => {
       const a = e.target.closest && e.target.closest("a[href]");
       if (!a || a.target !== "_blank" || e.defaultPrevented) return;
@@ -530,7 +531,7 @@
       let url;
       try { url = new URL(a.href, location.href); } catch (err) { return; }
       if (url.host !== location.host || !mapPath.test(url.pathname)) return;
-      // the map starts in the same light / dark look; appended as text so flags like
+      // the page starts in the same light / dark look; appended as text so flags like
       // "?heatmap" keep their exact form
       const href = url.href.replace(/#.*$/, "") + (url.search ? "&" : "?") + "k4theme=" + currentTheme() + url.hash;
       const w = window.open(href, "_blank");

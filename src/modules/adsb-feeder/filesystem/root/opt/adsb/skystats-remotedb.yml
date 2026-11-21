@@ -28,4 +28,7 @@ services:
       - RETENTION_DAYS=${SKYSTATS_RETENTION_DAYS:-0}
       # starting units for the web page: nautical, imperial or metric
       - DEFAULT_UNITS=${FEEDER_DISPLAY_UNITS:-nautical}
+      # the station name and feeder version in the page header
+      - STATION_NAME=${MLAT_SITE_NAME}
+      - FEEDER_VERSION=${_ADSBIM_BASE_VERSION}
       - LOG_LEVEL=${SKYSTATS_LOG_LEVEL:-INFO}

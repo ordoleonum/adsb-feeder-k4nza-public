@@ -34,6 +34,29 @@ fi
 #     its .sha256 asset.
 # The copy being replaced becomes the new skystats.prev.tar.gz. Only compressed
 # copies are kept: fewer SD card writes and about a third of the space.
+# Download a release asset, printing progress every 15 seconds (the update log
+# has no progress bar). A download that stalls (under 1 KB/s for 60 s) or
+# drops is retried from the start, up to 3 more times.
+k4nza_download_with_progress() {
+    local url="$1" out="$2" size="$3" pid have n=0
+    rm -f "$out"
+    curl -fsSL --connect-timeout 20 --retry 3 --retry-delay 10 --retry-all-errors         --speed-limit 1024 --speed-time 60         -H "Accept: application/octet-stream" "$url" -o "$out" &
+    pid=$!
+    while kill -0 "$pid" 2> /dev/null ; do
+        sleep 1
+        n=$(( n + 1 ))
+        if (( n % 15 == 0 )) ; then
+            have=$(stat -c %s "$out" 2> /dev/null || echo 0)
+            if (( size > 0 )) ; then
+                echo "  SkyStats download: $(( have / 1048576 )) of $(( size / 1048576 )) MB ($(( have * 100 / size ))%)"
+            else
+                echo "  SkyStats download: $(( have / 1048576 )) MB so far"
+            fi
+        fi
+    done
+    wait "$pid"
+}
+
 k4nza_fetch_skystats() {
     local ref tag id sha_id dest cur_ref prev_ref want got assets st
     ref=$(grep '^SKYSTATS_CONTAINER=' /opt/adsb/docker.image.versions | cut -d= -f2)
@@ -88,10 +111,13 @@ k4nza_fetch_skystats() {
             echo "WARNING: release $tag has no SkyStats container asset"
             return 1
         fi
-        echo "downloading SkyStats container for $tag"
-        if ! curl -fsSL -H "Accept: application/octet-stream" "$K4NZA_API/releases/assets/$id" -o "$dest/skystats.tar.gz.new" ; then
+        size=$(jq -r '.assets[] | select(.name == "skystats-image.tar.gz") | .size' <<< "$assets" | head -1)
+        [[ "$size" =~ ^[0-9]+$ ]] || size=0
+        echo "downloading SkyStats container for $tag ($(( size / 1048576 )) MB, this can take several minutes)"
+        if ! k4nza_download_with_progress "$K4NZA_API/releases/assets/$id" "$dest/skystats.tar.gz.new" "$size" ; then
             rm -f "$dest/skystats.tar.gz.new"
-            echo "WARNING: SkyStats container download failed"
+            echo "WARNING: SkyStats container download failed (tried 4 times; a download that stops for a minute is restarted)."
+            echo "WARNING: check the feeder's internet connection and run the update again. SkyStats keeps running the version it has."
             return 1
         fi
         if [ -n "$sha_id" ] ; then
