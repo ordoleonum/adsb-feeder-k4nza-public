@@ -623,6 +623,20 @@
     return true;
   }
 
+  // ---------- tab icon: the K4NZA antenna mark, as on the feeder and SkyStats ----------
+  const MARK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="13" fill="#3B4FE0"/><path d="M24 20V38M18 38h12M24 26l-4 12M24 26l4 12" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="18" r="2.8" fill="#fff"/><path d="M17.5 12.5a9 9 0 0 0 0 11M30.5 12.5a9 9 0 0 1 0 11" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M13 9a14 14 0 0 0 0 18M35 9a14 14 0 0 1 0 18" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  function setTabIcon() {
+    try {
+      document.querySelectorAll('link[rel~="icon"]').forEach((l) => l.remove());
+      const link = document.createElement("link");
+      link.rel = "icon";
+      link.type = "image/svg+xml";
+      link.href = "data:image/svg+xml," + encodeURIComponent(MARK);
+      document.head.appendChild(link);
+    } catch (e) { /* keep tar1090's icon */ }
+  }
+  setTabIcon();
+
   // ---------- theme: follow tar1090's own Dark Mode setting ----------
   function syncTheme() {
     const root = document.documentElement;

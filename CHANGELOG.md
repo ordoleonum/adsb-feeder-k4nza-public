@@ -5,6 +5,10 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 
 ## v3.0.15-30 (unreleased)
 
+**New look**
+- A new K4NZA mark, an antenna sending and hearing waves: in the feeder's top bar, as the tab icon
+  of the feeder, the live map and SkyStats, and as the phone home-screen icon.
+
 **Dashboard**
 - Numbers refresh faster: today's summary every 20 seconds (was a minute), the closest aircraft every
   5 seconds, and everything at once when you come back to the tab.
