@@ -1031,3 +1031,7 @@ a.k4-highlight-link:focus-visible { outline: 2px solid var(--k4-accent); outline
   #k4-topbar { column-gap: 0.6rem; }
   .k4-tn { padding: 0 0.55rem; }
 }
+
+/* Home: "Turn on SkyStats" card (shown only while SkyStats is off) */
+.k4-sky-off-list { margin: 0 0 1rem; padding-left: 1.2rem; columns: 2 17rem; column-gap: 2rem; }
+.k4-sky-off-list li { margin-bottom: 0.2rem; break-inside: avoid; }

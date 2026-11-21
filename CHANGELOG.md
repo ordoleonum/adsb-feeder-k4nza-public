@@ -8,6 +8,12 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 **Dashboard**
 - Phones: the headline breaks after "23 aircraft," like on a computer, so the two numbers sit on
   lines of their own instead of side by side.
+- While SkyStats is off, the home page says what it adds (history search, highlights, Week and
+  Month, replay links and more) with a **Turn on SkyStats** button. The card goes away once it's on.
+
+**Setup**
+- Advanced: SkyStats is the first section, and while it's off it lists what needs it and recommends
+  turning it on (unless the Pi has 1 GB of memory or less).
 
 ## v3.0.15-34
 
