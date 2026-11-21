@@ -1,0 +1,28 @@
+# Checks the K4NZA live map (k4nza/map/map.js + map.css) against the NEWEST
+# tar1090: the map uses some of tar1090's internals, and tar1090 updates
+# itself. Runs before every release image build (a failure stops the build)
+# and on demand (Actions > tar1090 check > Run workflow).
+name: tar1090 check
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  tar1090:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Get the newest tar1090
+      run: git clone --depth 1 https://github.com/wiedehopf/tar1090.git "$RUNNER_TEMP/tar1090"
+    - name: Check the live map against it
+      run: |
+        CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)" \
+          node tests/map/tar1090_check.mjs "$RUNNER_TEMP/tar1090/html" src/modules/adsb-feeder/filesystem/root/opt/adsb/k4nza/map

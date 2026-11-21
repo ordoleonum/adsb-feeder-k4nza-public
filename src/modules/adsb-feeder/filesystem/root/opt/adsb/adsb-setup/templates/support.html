@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% set active_page = "support" %}
+
+{% block content %}
+{% set k4_issue_url = 'https://github.com/ordoleonum/adsb-feeder-k4nza-public/issues/new?template=problem.yml'
+   ~ '&version=' ~ (env_value_by_tag('base_version') | urlencode)
+   ~ '&board=' ~ (env_value_by_tag('board_name') | urlencode) %}
+<div class="k4-page-header mt-3">
+  <h1 class="k4-page-title">{% block title %}Share diagnostics{% endblock %}</h1>
+  <div class="k4-page-subtitle">Report a problem with this K4NZA feeder, with logs attached</div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-6">
+    <div class="k4-card h-100">
+      <h5 class="mb-1">1. Download the logs</h5>
+      <p class="small k4-muted mb-3">The logs are anonymized before they leave the feeder: IP addresses, your location,
+        aggregator keys and other secrets are removed. Nothing is uploaded - the file is saved to this computer.</p>
+      <form method="post" enctype="multipart/form-data" class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary" name="upload" value="local_download"
+                title="Save the anonymized logs as a .txt file">Download logs</button>
+        <button type="submit" class="btn btn-outline-secondary" name="upload" value="local_view"
+                onclick="show_spinner(); return true;" title="Show the anonymized logs in this browser">View logs</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <div class="k4-card h-100">
+      <h5 class="mb-1">2. Report it on GitHub</h5>
+      <p class="small k4-muted mb-3">Opens a short form on the K4NZA project's GitHub page with your version and
+        hardware already filled in. Describe what happened and drag the downloaded log file into the "Logs" box.
+        A free GitHub account is needed.</p>
+      <a class="btn btn-primary" href="{{ k4_issue_url }}" target="_blank" rel="noopener"
+         title="Open a new problem report on GitHub">Report a problem on GitHub</a>
+      <p class="small k4-muted mt-3 mb-0">You can also see whether someone has already reported the same thing on the
+        <a href="https://github.com/ordoleonum/adsb-feeder-k4nza-public/issues" target="_blank" rel="noopener">issues page</a>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

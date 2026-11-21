@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% set active_page = "backup" %}
+
+{% block content %}
+<h1 class="mt-3 text-center text-danger">{% block title %} Create a backup of your configuration {% endblock %}</h1>
+<div>
+  {% with messages = get_flashed_messages(category_filter=["message"]) %}
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-warning">
+    {{ message }}
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+</div>
+<form method="post" enctype="multipart/form-data">
+  <p>
+  Config Backup: creates a zip file with your configuration settings<br>
+  Config + Graphs Backup: adds the data used to generate the statistical graphs (roughly +15MB)<br>
+  </p>
+  <a class="mb-3 btn btn-primary" href="/backupexecuteconfig">Config Backup</a>
+  <a class="mb-3 btn btn-primary" href="/backupexecutegraphs">Config + Graphs Backup</a>
+  <p>
+  In almost all cases one of the two options above is what you really want. The Full Backup creates significantly
+  larger backup files (read - it takes much longer to create the backup and much longer to restore) and unless you know that
+  you definitely do need that additional data, you should likely stick with one of the two options above.
+  </p>
+  <p>
+  Full Backup: adds on top of all that the replay / heatmap data<br>
+  </p>
+  <a class="mb-3 btn btn-primary" href="/backupexecutefull">Full Backup</a>
+  <p>
+  Depending on the amount of historic replay / heatmap data you have, a Full Backup can take a signficant amount of time
+  and result in a very large archive to be downloaded. If you want to limit the data retained on disk, you can use
+  MAX_GLOBE_HISTORY=365 in the environment variables on the expert page to only retain a year of data, this setting will
+  not impact graph data.
+  </p>
+  {% if is_enabled('skystats_db') %}
+  <h5 class="mt-4">SkyStats data</h5>
+  <p>
+  Downloads everything SkyStats has recorded as one compressed <code>.dump</code> file. Keep it together with your
+  configuration backup: after flashing a new image, restore the configuration first, enable SkyStats, then restore
+  this file on the <a href="/restore">Restore</a> page. (To open your data in a spreadsheet instead, use
+  SkyStats &rarr; Export.)
+  </p>
+  <p>
+  <a class="mb-3 btn btn-primary" href="/backupexecuteskystatsdb"
+     title="Download a compressed backup of the SkyStats database">SkyStats Data Backup</a>
+  </p>
+  {% endif %}
+</form>
+
+<h5 class="mt-4" id="nas">Network backup (NAS)</h5>
+<p>
+Saves a backup to a shared folder on a NAS (for example a Synology) every night: your settings and graphs and,
+when SkyStats is on, the SkyStats database. The feeder only connects to the NAS while the backup runs, so if the
+NAS is switched off the feeder keeps working normally and this page shows that the backup failed. Nothing extra is
+written to the SD card. Older backups are deleted automatically.
+</p>
+{% with messages = get_flashed_messages(category_filter=["nas"]) %}
+{% for message in messages %}
+<div class="alert alert-info py-2">{{ message }}</div>
+{% endfor %}
+{% endwith %}
+<div class="card mb-3" id="nas_status_card">
+  <div class="card-body py-2" id="nas_status_text">
+    {% if nas_progress.running %}
+    <span class="spinner-border spinner-border-sm me-1" role="status"></span> Backup running: {{ nas_progress.step }}…
+    {% elif nas_status.last_attempt %}
+    {% if nas_status.ok %}<span class="text-success">✓ Last backup worked</span>{% else %}<span class="text-danger">✗ Last backup failed</span>{% endif %}
+    <span class="k4nza-nas-time" data-epoch="{{ nas_status.last_attempt }}"></span><br>
+    <small>{{ nas_status.message }}</small>
+    {% if not nas_status.ok and nas_status.last_ok %}<br><small>Last good backup: <span class="k4nza-nas-time" data-epoch="{{ nas_status.last_ok }}"></span></small>{% endif %}
+    {% else %}
+    No NAS backup has run yet.
+    {% endif %}
+  </div>
+</div>
+<form method="POST" action="/k4nza/nas-backup" autocomplete="off">
+  <div class="row g-2 align-items-center">
+    <div class="col-12 mb-2">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" name="nas_enabled" id="nas_enabled" {% if nas.enabled %}checked{% endif %}>
+        <label class="form-check-label" for="nas_enabled">Back up to the NAS every night</label>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label mb-0" for="nas_host">NAS address</label>
+      <input class="form-control" id="nas_host" name="nas_host" value="{{ nas.host }}" placeholder="192.168.1.50 or DS1522.local">
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label mb-0" for="nas_share">Shared folder</label>
+      <input class="form-control" id="nas_share" name="nas_share" value="{{ nas.share }}" placeholder="k4nza-backup">
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label mb-0" for="nas_user">NAS username</label>
+      <input class="form-control" id="nas_user" name="nas_user" value="{{ nas.user }}" autocomplete="off">
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label mb-0" for="nas_password">NAS password</label>
+      <input class="form-control" type="password" id="nas_password" name="nas_password" autocomplete="new-password"
+             placeholder="{% if nas.has_password %}(saved - leave empty to keep it){% endif %}">
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label mb-0" for="nas_folder">Sub-folder (optional)</label>
+      <input class="form-control" id="nas_folder" name="nas_folder" value="{{ nas.folder }}" placeholder="(the feeder name)">
+    </div>
+    <div class="col-6 col-md-4">
+      <label class="form-label mb-0" for="nas_time">Time every night</label>
+      <input class="form-control" type="time" id="nas_time" name="nas_time" value="{{ nas.time }}">
+    </div>
+    <div class="col-6 col-md-4">
+      <label class="form-label mb-0" for="nas_keep">Backups to keep</label>
+      <input class="form-control" type="number" min="1" max="365" id="nas_keep" name="nas_keep" value="{{ nas.keep }}">
+    </div>
+    <div class="col-12 mt-3">
+      <button type="submit" class="btn btn-primary mb-2" name="action" value="save">Save</button>
+      <button type="submit" class="btn btn-secondary mb-2" name="action" value="test"
+              onclick="show_spinner(); return true;" title="Connect to the NAS and write a small test file">Test connection</button>
+      <button type="submit" class="btn btn-secondary mb-2" name="action" value="run" id="nas_run"
+              {% if nas_progress.running %}disabled{% endif %} title="Run a backup with the saved settings now">Back up now</button>
+    </div>
+  </div>
+  <p class="small text-muted mt-2">
+    Use a NAS user that can only open this one shared folder, not your NAS admin account. The password is kept in its
+    own file on this feeder and is not part of the configuration backup, so after restoring onto a new SD card you
+    enter it here again. Each backup goes into its own dated folder; to restore, copy the files from the NAS to your
+    computer and use the <a href="/restore">Restore</a> page.
+  </p>
+</form>
+<script>
+  (function () {
+    function fmt(epoch) {
+      var d = new Date(epoch * 1000);
+      return d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+    }
+    function fillTimes() {
+      document.querySelectorAll(".k4nza-nas-time").forEach(function (el) {
+        el.textContent = "(" + fmt(parseFloat(el.dataset.epoch)) + ")";
+      });
+    }
+    fillTimes();
+    var wasRunning = {{ 'true' if nas_progress.running else 'false' }};
+    function poll() {
+      fetch("/api/k4nza/nas_backup_status").then(function (r) { return r.json(); }).then(function (d) {
+        if (d.progress.running) {
+          wasRunning = true;
+          document.getElementById("nas_run").disabled = true;
+          document.getElementById("nas_status_text").innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Backup running: ';
+          document.getElementById("nas_status_text").append(d.progress.step + "…");
+        } else if (wasRunning) {
+          window.location.reload();
+          return;
+        }
+        setTimeout(poll, 5000);
+      }).catch(function () { setTimeout(poll, 15000); });
+    }
+    poll();
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% set active_page = "restore" %}
+
+{% block content %}
+<h1 class="mt-3 text-center text-danger">{% block title %} Restore setup from a backup {% endblock %}</h1>
+  <div>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-warning">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+  </div>
+<div class="row">
+  <div class="col-12 col-lg-6">
+    <h5 class="mt-3">Restore settings</h5>
+    <p>Choose a configuration backup (<code>.zip</code>) made on the Backup page.</p>
+    <form method="post" enctype="multipart/form-data" onsubmit="show_spinner(); return true;">
+      <input class="form-control mb-2" type="file" name="file" accept=".zip,.backup" />
+      <input class="btn btn-primary" type="submit" value="Upload settings backup" />
+    </form>
+  </div>
+  {% if is_enabled('skystats_db') %}
+  <div class="col-12 col-lg-6">
+    <h5 class="mt-3">Restore SkyStats data</h5>
+    <p>Choose a SkyStats backup (<code>.dump</code> from this build, or <code>.sql</code> from the standard
+      adsb.im image). It replaces the current SkyStats history. Large backups can take several minutes -
+      keep this page open. If anything goes wrong, your current data is kept.</p>
+    <form method="post" action="/restoreskystatsdb" enctype="multipart/form-data"
+          onsubmit="if (!confirm('Replace the current SkyStats history with this backup?')) return false; show_spinner(); return true;">
+      <input class="form-control mb-2" type="file" name="file" accept=".dump,.sql" />
+      <input class="btn btn-primary" type="submit" value="Restore SkyStats data" />
+    </form>
+  </div>
+  {% else %}
+  <div class="col-12 col-lg-6">
+    <h5 class="mt-3">Restore SkyStats data</h5>
+    <p>Enable SkyStats first (Setup &rsaquo; Advanced), then come back here to restore its data.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

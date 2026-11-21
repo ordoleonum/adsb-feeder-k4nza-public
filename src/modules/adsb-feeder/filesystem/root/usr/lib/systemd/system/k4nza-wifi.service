@@ -1,0 +1,14 @@
+[Unit]
+Description=Apply K4NZA WiFi settings from k4nza-wifi.txt on the boot partition
+Wants=NetworkManager.service
+After=NetworkManager.service local-fs.target
+Before=adsb-hotspot.service network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/adsb/k4nza/k4nza-wifi.sh
+SyslogIdentifier=k4nza-wifi
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

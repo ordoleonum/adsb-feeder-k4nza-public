@@ -1,0 +1,1061 @@
+{% extends 'base.html' %}
+{% set active_page = "index" %}
+{% block content %}
+{# painfully figure out which sites we are handling here - just the base, or a list of proxies? #}
+{% set ns = namespace() %}
+{% set ns.site_indices = [] %}
+{% if is_enabled('stage2') %}
+{% for site in range(env_value_by_tag('num_micro_sites') + 1) %}
+{% if loop.index0 > 0 %}
+{% set ns.site_indices = ns.site_indices + [loop.index0] %}
+{% endif %}
+{% endfor %}
+{% else %}
+{% set ns.site_indices = [0] %}
+{% endif %}
+{% set num_micro_sites = (ns.site_indices | length) %}
+{% if not widget_mode %}
+{% set k4home = adsb and not is_enabled('stage2') and not widget_mode %}
+{% set k4sky = k4home and is_enabled('skystats') and is_enabled('base_config') %}
+<div class="k4-page-header mt-3 {% if k4home %}d-none{% endif %}">
+  <h1 class="k4-page-title">
+    {% block title %}{{ list_value_by_tag("site_name", 0) }}{% endblock %}
+  </h1>
+  <div class="k4-page-subtitle">{% if env_value_by_tag('aggregator_choice') != 'nonadsb' %}ADS-B{% else %}SDR{% endif %} feeder home &middot; status, feeds and quick links</div>
+</div>
+  <div>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-warning">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+  </div>
+<div class="alert alert-danger {% if env_value_by_tag('dns_state') %}d-none{% endif %}" role="alert">
+  The feeder cannot resolve DNS queries. This will most likely prevent it from working at all. Try System -> Management -> Reboot to see if that will fix it.
+</div>
+<div class="alert alert-danger {% if not ipv6_broken %}d-none{% endif %}" role="alert">
+  The feeder has an IPv6 address but IPv6 isn't working. This can cause docker and other issues.
+</div>
+<div class="alert alert-danger {% if not compose_up_failed %}d-none{% endif %}" role="alert">
+  docker compose up has failed. If the retry doesn't work, go to System - Share Diagnostics and include that link when reporting the issue.
+  <form method="POST">
+    <button type="submit" name="submit" value="go" class="btn btn-primary">Retry</button>
+  </form>
+</div>
+<div class="alert alert-danger {% if not env_value_by_tag('under_voltage') %}d-none{% endif %}" role="alert">
+  The feeder system kernel detected under-voltage. This can lead to random crashes and various issues with clock
+  stability, reduced reception, failing SDRs, etc. Please check and likely replace your power supply.
+</div>
+<div class="alert alert-danger {% if not pi5_usb_current_limited %}d-none{% endif %}" role="alert">
+  This pi5 is limiting USB current to 600 mA, this is insufficient for more than 1 SDR or additional USB devices.<br>
+  You can fix this by using an official RPi power supply. <br>
+  Or override by adding usb_max_current_enable=1 in /boot/firmware/config.txt if you're confident your power supply is sufficient.
+</div>
+<div class="alert alert-danger {% if not env_value_by_tag('healthcheck_fail_reason') %}d-none{% endif %}" role="alert">
+  The system has been deemed unhealthy for this reason: {{env_value_by_tag('healthcheck_fail_reason')}}
+</div>
+<div id="ip-mismatch" class="alert alert-info d-none" role="alert">
+  The external IP of your browser and the feeder are different. The information in the status links for some of the
+  aggregators below may be incorrect.
+</div>
+<div id="low-disk" class="alert alert-info {% if not env_value_by_tag('low_disk') %}d-none{% endif %}" role="alert">
+  You are running low on disk space on the your feeder. This can lead to odd problems and even crashes. Consider
+  upgrading to a larger storage device.
+</div>
+<!-- widget_mode -->
+{% endif %}
+
+<div class="row">
+  <div
+       class="col-12 mb-3 {% if env_value_by_tag('aggregator_choice') not in ['micro', 'nano'] or is_enabled('stage2') %} d-none {% endif %}">
+    <h5>You are running in {{ env_value_by_tag('aggregator_choice') }} feeder mode</h5>
+    <div class="mt-3" id="stage2_contact_placeholder">Checking on last connection...</div>
+    <div class="mt-3 d-none" id="stage2_contact">The Stage 2 system at address <span id="stage2_address"></span> has
+      recently accessed this feeder.</div>
+    <div class="mt-3 d-none" id="stage2_no_recent_contact">No Stage 2 system has recently accessed this feeder. The last
+      contact was from <span id="stage2_last_contact_ip"></span> <span id="stage2_last_contact_time_since"></span> ago
+    </div>
+    <div class="mt-3 d-none" id="stage2_no_contact_found">Connect a Stage 2 system (which will feed aggregators) to this
+      system.
+      Most likely {% if tailscale_address != "" or zerotier_address != "" %}one of {%endif%}{{ local_address }}
+      {% if tailscale_address != "" %}, {{ tailscale_address}}{% endif %}{% if zerotier_address != "" %},
+      {{ zerotier_address}}{% endif %} will work as the IP address for this {{ env_value_by_tag('aggregator_choice') }} feeder.
+    </div>
+  </div>
+  {# ---------- Daylight home: hero, numbers, today, highlights, sharing, health ---------- #}
+  <div class="col-12 mb-3 {% if not adsb or is_enabled('stage2') %} d-none {% endif %}">
+    <section class="k4-hero">
+      <div class="k4-hero-text">
+        <div class="k4-hero-when" id="k4-hero-when"></div>
+        <h1 class="k4-hero-title">Currently tracking <span class="k4-accent-text"><span id="k4-tile-planes">&ndash;</span> aircraft</span>,<br class="d-none d-md-inline">
+          <span class="k4-accent-text" id="k4-tile-today">&ndash;</span> since midnight.</h1>
+      </div>
+      {% if k4sky %}
+      {# aircraft search: opens the SkyStats Search tab in a new tab; not a <form>, so the
+         page stays as it is and more searches can follow #}
+      <div class="k4-card k4-search" role="search">
+        <input class="form-control" type="search" id="k4-search-input" autocomplete="off" spellcheck="false"
+               placeholder="Search your history: N812DN, A1B2C3, DAL1423, B739 or Delta"
+               data-short-placeholder="Search your history"
+               aria-label="Search SkyStats for a registration, hex code, callsign, type or operator">
+        <button class="btn btn-primary" type="button" id="k4-search-btn" title="Opens SkyStats in a new tab">Search</button>
+      </div>
+      {% endif %}
+    </section>
+    <div id="k4-tiles" class="k4-tiles k4-numbers">
+      <div class="k4-tile" title="Radio messages decoded per second. Higher means better reception - antenna height and placement matter most.">
+        <div class="k4-tile-label">Messages a second</div><div class="k4-tile-value" id="k4-tile-mps">&ndash;</div>
+        <div class="k4-tile-sub">Higher is better reception</div></div>
+      <div class="k4-tile" title="Aircraft position reports decoded per second">
+        <div class="k4-tile-label">With a position</div><div class="k4-tile-value"><span id="k4-tile-pps">&ndash;</span><span class="k4-tile-unit"> / s</span></div>
+        <div class="k4-tile-sub">Position reports a second</div></div>
+      {% if k4sky %}
+      <div class="k4-tile" title="The farthest aircraft heard since midnight">
+        <div class="k4-tile-label">Farthest today</div><div class="k4-tile-value" id="k4-n-far">&ndash;</div>
+        <div class="k4-tile-sub" id="k4-n-far-sub">&nbsp;</div></div>
+      <div class="k4-tile" title="Aircraft heard today that your station had never heard before">
+        <div class="k4-tile-label">Never seen before</div><div class="k4-tile-value" id="k4-n-new">&ndash;</div>
+        <div class="k4-tile-sub" id="k4-n-new-sub">&nbsp;</div></div>
+      {% endif %}
+    </div>
+    {# kept for the stock status script #}
+    <div class="d-none">Status: <span id="{% if not is_enabled('stage2') %}mf_status_0{% endif %}"></span>
+      &middot; <span id="{% if not is_enabled('stage2') %}mf_stats_0{% endif %}"></span></div>
+  </div>
+  {% if not is_enabled('stage2') and adsb %}
+  <div class="col-12 mb-3">
+    <div class="k4-grid-3">
+      {% if k4sky %}
+      <section class="k4-card k4-span-2" id="k4-hours-card">
+        <div class="k4-card-head">
+          <h2 id="k4-hours-title">Today, hour by hour</h2>
+          <div class="k4-seg" role="group" aria-label="Show">
+            <button type="button" class="k4-seg-btn" data-k4-view="day" aria-pressed="true">Day</button>
+            <button type="button" class="k4-seg-btn" data-k4-view="week" aria-pressed="false">Week</button>
+            <button type="button" class="k4-seg-btn" data-k4-view="month" aria-pressed="false">Month</button>
+          </div>
+        </div>
+        <div class="k4-hours" id="k4-hours" role="img" aria-label="Aircraft heard each hour today"></div>
+        <div class="k4-hours-axis" id="k4-hours-axis"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
+        <div class="k4-muted k4-hours-note" id="k4-hours-note"></div>
+      </section>
+      {% endif %}
+      {# the stock daily chart: shown when SkyStats is off, kept (hidden) otherwise for its script #}
+      <div class="k4-card k4-chart-card {% if k4sky %}d-none{% else %}k4-span-2{% endif %}" style="position: relative;" id="chart-wrapper">
+        <canvas id="plane-history-chart"></canvas>
+      </div>
+      {% if not widget_mode %}
+      <section class="k4-card" id="k4-closest-card">
+        <div class="k4-card-head"><h2>Closest right now</h2></div>
+        <div id="k4-closest" class="k4-closest" data-units="{{ env_value_by_tag('display_units') }}"><div class="k4-muted">Looking&hellip;</div></div>
+        <a class="k4-soft-btn" href="/map/{{ env_value_by_tag('tar1090_query_params') }}" target="_blank" rel="noopener">Open the live map</a>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% if k4sky %}
+  <div class="col-12 mb-3">
+    <div class="k4-highlights" id="k4-highlights" hidden></div>
+  </div>
+  {% endif %}
+  {% if not widget_mode %}
+  <div class="col-12 mb-3">
+    <div class="k4-grid-2">
+      {% if k4home and (aggregators | length) > 0 %}
+      <section class="k4-card">
+        <div class="k4-card-head"><h2>Sharing with</h2><a href="/aggregators">Manage</a></div>
+        <div class="k4-chips">
+          {% for agg, name, map, status, table in aggregators %}
+          <a class="k4-chip" data-k4-chip="{{ agg }}" href="{{ status[0] or map }}" target="_blank" rel="noopener" title="{{ name }} feed status (opens in a new tab)">
+            <span class="k4-chip-state" aria-hidden="true"></span>{{ name }}<span class="k4-chip-note" id="k4-chip-note-{{ agg }}"></span>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+      {# Pi health, filled in by k4nza-ui.js #}
+      <section class="k4-card">
+        <div class="k4-card-head"><h2>Station health</h2></div>
+        <div id="k4-health-tiles" class="k4-tiles k4-health" data-freedom-units="{{ 1 if is_enabled('freedom_units') else 0 }}">
+          <div class="k4-tile d-none" id="k4-t-cpu" title="Temperature of the Pi's processor"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">CPU temperature</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-ext" title="Temperature from the external sensor"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">Outside temperature</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-pwr" title="Power supply"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">Power supply</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-sd" title="Free disk space"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">Disk free</div><div class="k4-tile-value">&ndash;</div></div></div>
+          <div class="k4-tile d-none" id="k4-t-data" title="Size of the SkyStats history"><span class="k4-health-icon" aria-hidden="true"></span>
+            <div><div class="k4-tile-label">SkyStats data</div><div class="k4-tile-value">&ndash;</div></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12 mb-3 {% if not is_enabled('stage2') %} d-none {% endif %}">
+    <h5>You are running as Stage 2 feeder</h5>
+    <div class="col-12 mb-3">{% if env_value_by_tag('num_micro_sites') == 0 %}No micro feeder sites configured, yet.
+      Please do so on the <a href={{ url_for('stage2') }}>Stage 2 Setup page</a>.{% else %}
+      <div class="row">
+        <div class="col-xl-5 col-lg-6 col-12">
+          <table class="table table-bordered table-sm lh-1 w-auto table-striped">
+            <thead>
+              <th class="text-center" scope="col">#</th>
+              <th class="text-center" scope="col">Name</th>
+              <th class="text-center" scope="col">Status / Stats</th>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-center" scope="row"><a href="/">*</a></td>
+                <td class="text-left"><a href="/map/">{{ list_value_by_tag("site_name", 0) }}</a></td>
+                <td class="text-center"><a href="/stats/"><span class="small" id="mf_status_0"></span>
+                  <br/><span class="small" id="mf_stats_0"></span></a></td>
+              </tr>
+              {% for site in env_value_by_tag('site_name') if not site == list_value_by_tag('site_name', 0) %}
+              <tr>
+                <td class="text-center" scope="row"><a href="/?m={{loop.index}}">{{loop.index}}</a></td>
+                <td class="text-left"><a href="/map_{{loop.index}}/">{{site}}</a></td>
+                <td class="text-center"><a href="/stats_{{loop.index}}/"><span id="mf_status_{{loop.index}}" class="small"></span>
+                  <br/><span id="mf_stats_{{loop.index}}" class="small"></span></a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-lg-6 col-12">
+          {% if is_enabled('stage2') %}
+          <div style="position: relative; width: 100%; height: 100%;" id="chart-wrapper">
+            <canvas id="plane-history-chart"></canvas>
+          </div>
+          {% endif %}
+        </div>
+        <div class="col-12">
+          Configure micro feeders on the <a href={{ url_for('stage2') }}>Stage 2 Setup page</a>.
+        </div>
+      </div>{% endif %}
+    </div>
+  </div>
+  {% if k4home %}<details class="col-12 mb-3 k4-details"><summary>Feed status details and links</summary><div class="row">{% endif %}
+  <div class="col-12 {% if (aggregators | length) == 0 %} d-none {% endif %}">
+    <h4>You are feeding</h4>
+    <div class="row small">
+      {% for tc in agg_tables %}
+      <div class="col-12 {% if num_micro_sites < 4 %}col-md-6{% endif %}" style="overflow-x: auto;">
+        <table class="table table-bordered table-sm lh-1 table-striped">
+          <thead>
+            <td class="stickycolumn" style="">Aggregator</td>
+            <td class="text-center" colspan="{{num_micro_sites}}">Enabled</td>
+            <td class="text-center" colspan="{{num_micro_sites}}">Data</td>
+            <td class="text-center" colspan="{{num_micro_sites}}">MLAT</td>
+            <td class="text-center" colspan="{{num_micro_sites}}">Status</td>
+          </thead>
+          <tbody>
+            {% if num_micro_sites > 1 %}
+            <tr>
+              <td class="stickycolumn" style="">Feeder #</td>
+              {% for cols in [1,2,3,4] %}
+              {% for idx in ns.site_indices %}
+              <td class="text-center">
+                <span width="3em">{{loop.index}}</span>
+              </td>
+              {% endfor %}
+              {% endfor %}
+            </tr>
+            {% endif %}
+            {% for agg, name, map, status, table in aggregators %}
+            {% if (tc == table) %}
+            <tr>
+              <td class="stickycolumn" style="">
+                <a href="{{ map }}">{{ name }}</a>
+              </td>
+              {% for idx in ns.site_indices %}
+              <td class="text-center">
+                <span id="{{ agg ~ 'span' ~ idx }}" width="3em">{% if list_is_enabled(agg, idx)%}<span class="icon-placeholder" data-icon="overall-good"></span>
+                  {% endif %}</span>
+              </td>
+              {% endfor %}
+              {% for idx in ns.site_indices %}
+              <td class="text-center">
+                <span id="{{ agg ~ 'beast' ~ idx }}" width="3em"></span>
+              </td>
+              {% endfor %}
+              {% for idx in ns.site_indices %}
+              <td class="text-center">
+                <span id="{{ agg ~ 'mlat' ~ idx }}" width="3em"></span>
+              </td>
+              {% endfor %}
+              {% for idx in ns.site_indices %}
+              <td class="text-center">
+                {% if status[idx] != "" and list_is_enabled(agg, idx) %}<a
+                   href="{{ status[idx] }}">&#x1f517;</a>{% endif %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+      <div class="col-12 mb-4 k4-feed-legend">
+        <span class="k4-muted">Last status update: <span id="last_status_update"></span></span>
+        {% if not widget_mode %}
+        <details class="d-inline-block ms-2">
+          <summary class="k4-link-summary">What do the symbols mean?</summary>
+          <div class="k4-legend-body">
+            <div><strong>Enabled</strong> means you are feeding that site.</div>
+            <div><span class="text-success"><span class="icon-placeholder" data-icon="overall-good"></span></span> good &middot;
+              <span class="text-warning"><span class="icon-placeholder" data-icon="feed-warning"></span></span> degraded / intermittent &middot;
+              <span class="text-danger"><span class="icon-placeholder" data-icon="feed-disconnected"></span></span> down &middot;
+              <span class="text-muted"><span class="icon-placeholder" data-icon="overall-good"></span></span> status not supported</div>
+            <div><span class="icon-placeholder" data-icon="feed-connected"></span> feed/MLAT connected &middot;
+              <span class="icon-placeholder" data-icon="feed-disconnected"></span> not connected &middot;
+              <span class="icon-placeholder" data-icon="mlat-sync-error"></span> MLAT sync errors (if this lasts for hours, see
+              <a href="https://github.com/wiedehopf/adsb-wiki/wiki/mlat-check" target="_blank" rel="noopener">this page</a>)</div>
+            <div><span class="icon-placeholder" data-icon="container-starting"></span> container started less than 30 seconds ago &middot;
+              <span class="icon-placeholder" data-icon="container-down"></span> container is down &middot;
+              <span class="icon-placeholder" data-icon="status-unknown"></span> no status available right now</div>
+            <div class="k4-muted">Degraded MLAT is usually a problem on the site's servers, not yours. It's only worth looking into
+              if adsb.fi or airplanes.live (and every other site) also show degraded MLAT.</div>
+          </div>
+        </details>
+        <span id="extra_legend" class="d-none"></span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% if not widget_mode %}
+  <div class="col-12 mb-4 {% if env_value_by_tag('aggregator_choice') in ['micro', 'nano'] %} d-none {% endif %}">
+    <div class="small">
+      {% if is_enabled('stage2') %}
+        {% if env_value_by_tag('num_micro_sites') > 0 %}
+          To configure aggregators, select a target MicroSite at the top of the page and select the Data Sharing menu.
+        {% endif %}
+      {% else %}
+        {% if ((aggregators | length) > 0) or (is_enabled('acarshub') and is_enabled('acars_aggregators_chosen')) or (is_enabled('shipfeeder') and is_enabled('ais_aggregators_chosen')) %}
+          Add or remove aggregators:
+        {% else %}
+          No aggregators configured. Add aggregators:
+        {% endif %}
+        <a href="/aggregators">Data Sharing</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12">
+    <div id="UF" class="row {% if env_value_by_tag('aggregator_choice') in ['nano', 'nonadsb'] %}d-none{%endif%}">
+      <hr />
+      <div class="col-12">
+        <h5>{% if env_value_by_tag('aggregator_choice') == 'micro' %}Local {%endif%}TAR1090 Mapping Interface</h5>
+      </div>
+      <div class="col col-md-4 col-lg-3">
+        <ul>
+          <li>
+            <a href="/map/{{ env_value_by_tag('tar1090_query_params') }}">map</a>
+          </li>
+          <li>
+            <a href="/stats/">statistics and graphs</a>
+          </li>
+        </ul>
+      </div>
+      <div class="col col-md-4 col-lg-3">
+        <ul>
+          <li>
+            <a href="/map/?replay">timelapse / replay</a>
+          </li>
+          <li>
+            <a href="/map/?heatmap">heatmap</a>
+          </li>
+          <li>
+            <a href="/map/?ptracks">tracks</a>
+          </li>
+        </ul>
+      </div>
+      <div class="text-muted small mb-4 col-12">
+        Please note that after a restart (or first install) it can take up to a couple of minutes for the pages above to
+        respond, so if you get an error, please wait a moment and try again.
+      </div>
+    </div>
+    {# figure out what's enabled for the integrated feeder or the microfeeders #}
+    {% for idx in ns.site_indices %}
+    {% if list_is_enabled("uat978", idx) %}
+    {% set ns.uat978 = true %}
+    {% endif %}
+    {% if list_is_enabled("adsblol", idx) %}
+    {% set ns.adsblol = true %}
+    {% endif %}
+    {% if list_is_enabled("adsbx", idx) %}
+    {% set ns.adsbx = true %}
+    {% endif %}
+    {% if list_is_enabled("alive", idx) %}
+    {% set ns.alive = true %}
+    {% endif %}
+    {% if list_is_enabled("flightradar", idx) %}
+    {% set ns.flightradar = true %}
+    {% endif %}
+    {% if list_is_enabled("flightaware", idx) %}
+    {% set ns.flightaware = true %}
+    {% endif %}
+    {% if list_is_enabled("planefinder", idx) %}
+    {% set ns.planefinder = true %}
+    {% endif %}
+    {% endfor %}
+    {% set k4_own_cards = ["adsblol", "flightradar", "flightaware", "planefinder", "adsbx", "alive"] %}
+    {% set ns.other_feeds = (aggregators | rejectattr(0, "in", k4_own_cards) | list | length) > 0 %}
+    <div id="UAT978" class="row {% if not ns.uat978 %}d-none{% endif %}">
+      <hr />
+      <div class="col-12">
+        <h5>UAT978 Mapping Interface</h5>
+      </div>
+      <div class="col-12">
+        <ul>
+          {% for idx in ns.site_indices %}
+          {% if list_is_enabled("uat978", idx) %}
+          <li>
+            {% if idx == 0 or list_value_by_tag('mf_ip', idx) == 'local' %}
+            <a href="/dump978/">{% if idx != 0 %}{{ list_value_by_tag('site_name', idx) }}{% endif %} Dump978 map</a>
+            {% else %}
+            <a href="http://{{ list_value_by_tag('mf_ip', idx) }}/dump978/">{{ list_value_by_tag('site_name', idx) }}
+              Dump978 map</a>
+            {% endif %}
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div
+         class="row mt-3 k4-agg-links {% if not (ns.adsblol or ns.flightradar or ns.planefinder or ns.adsbx or ns.alive or ns.flightaware or ns.other_feeds) %}d-none{% endif %}">
+      <div class="col-12 k4-agg-links-title">
+        <h5 class="mb-0">Your feeds on other sites</h5>
+        <div class="small k4-muted">Status pages and maps on the flight-tracking sites you share data with</div>
+      </div>
+      <div class="col-12 mb-2 {% if not ns.adsblol %}d-none{% endif %}">
+        <div class="lead">ADSB.lol</div>
+        <ul class="mb-0">
+          <li>
+            <a href="https://status.adsb.lol/">ADSB.lol status</a>
+          </li>
+          <li>
+            <a href="https://www.adsb.lol/docs/feeders-only/introduction/">ADSB.lol feeder introduction</a>
+          </li>
+          {% if num_micro_sites == 1 %}
+          <li><a id="adsblol-link-0" href="https://my.adsb.lol/">personal ADSB.lol URL with the planes you are
+              sending</a></li>
+          <li><a
+               href="https://mlat.adsb.lol/syncmap/#lat={{ list_value_by_tag('lat', 0) }}#lon={{ list_value_by_tag('lon', 0) }}#zoom=10">ADSB.lol
+              MLAT feeder map for the area around {{ list_value_by_tag('site_name', 0) }}</a></li>
+          {% endif %}
+        </ul>
+        {% if num_micro_sites > 1 %}
+        <table class="table table-sm table-borderless lh-1 w-auto mt-0 mb-0 ms-2">
+          <tbody>
+            {% for idx in ns.site_indices %}
+            {% if list_is_enabled("adsblol", idx) %}
+            <tr>
+              <th>{{ list_value_by_tag('site_name', idx) }}</th>
+              <td><a class="ms-1" id="adsblol-link-{{ idx }}"> personal URL</a></td>
+              <td><a
+                   href="https://mlat.adsb.lol/syncmap/#lat={{ list_value_by_tag('lat', idx) }}#lon={{ list_value_by_tag('lon', idx) }}#zoom=10">MLAT
+                  feeder map</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+        {% if is_enabled('stage2') %}
+        (on the MLAT maps only feeders that have MLAT privacy disabled will be shown)
+        {% else %}
+        {% if list_is_enabled("mlat_privacy", 0) %}
+        (since you have MLAT privacy enabled, your feeder won't be shown)
+        {% else %}
+        (your feeder will be at an approximate location as {{ list_value_by_tag('site_name', 0) }})
+        {% endif %}
+        {% endif %}
+      </div>
+      <div class="col-12 {% if not ns.flightradar %}d-none{% endif %}">
+        <hr />
+        <div class="lead">Flightradar24</div>
+        <div class="small text-muted">
+          Note: The Flightradar24 status page is for monitoring only.</br>
+          You should NOT change any settings through this page. Any changes you make there will not be saved.
+        </div>
+        <table class="table table-sm table-borderless lh-1 w-auto mt-0 mb-0 ms-2">
+          <tbody>
+            {% for idx in ns.site_indices %}
+            {% if list_is_enabled("flightradar", idx) %}
+            {% if idx != 0 %}{% set suffix = '_'~idx %}{% else %}{% set suffix = '' %}{% endif %}
+            <tr>
+              <th>{{ list_value_by_tag('site_name', idx) }}</th>
+              <td><a href="/fr24{{ suffix }}/">FR24 status</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col-12 {% if not ns.flightaware %}d-none{% endif %}">
+        <hr />
+        <div class="lead">FlightAware</div>
+        <div class="small text-muted">
+          Note: The SkyAware map on the status page does not work, it's not needed to supply data to FA<br>
+          (You can re-enable that map at the cost of increased cpu / memory consumption by adding PIAWARE_MINIMAL=false
+          to the environment variables on the expert page)
+        </div>
+        <table class="table table-sm table-borderless lh-1 w-auto mt-0 mb-0 ms-2">
+          <tbody>
+            {% for idx in ns.site_indices %}
+            {% if list_is_enabled("flightaware", idx) %}
+            {% if idx != 0 %}{% set suffix = '_'~idx %}{% else %}{% set suffix = '' %}{% endif %}
+            <tr>
+              <th>{{ list_value_by_tag('site_name', idx) }}</th>
+              <td><a href="/fa-status{{ suffix }}/">FlightAware status</a></td>
+              <td class="d-none"><a href="/fa{{ suffix }}/">FlightAware map</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col-12 {% if not ns.planefinder %}d-none{% endif %}">
+        <hr />
+        <div class="lead">PlaneFinder</div>
+        <table class="table table-sm table-borderless lh-1 w-auto mt-0 mb-0 ms-2">
+          <tbody>
+            {% for idx in ns.site_indices %}
+            {% if list_is_enabled("planefinder", idx) %}
+            {% if idx != 0 %}{% set suffix = '_'~idx %}{% else %}{% set suffix = '' %}{% endif %}
+            <tr>
+              <th>{{ list_value_by_tag('site_name', idx) }}</th>
+              <td><a href="/planefinder{{suffix}}/">Planefinder map</a>
+              <td><a href="/planefinder-stat{{ suffix }}/">Planefinder stats</a>
+              </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col-12 {% if not ns.adsbx %}d-none{% endif %}">
+        <hr />
+        <div class="lead">ADSBExchange</div>
+        <table class="table table-sm table-borderless lh-1 w-auto mt-0 mb-0 ms-2">
+          <tbody>
+            {% for idx in ns.site_indices %}
+            {% if list_is_enabled("adsbx", idx) %}
+            {% if idx != 0 %}{% set suffix = '_'~idx %}{% else %}{% set suffix = '' %}{% endif %}
+            <tr>
+              <th>{{ list_value_by_tag('site_name', idx) }}</th>
+              <td><a id="adsbxstatlink{{suffix}}" href="">{{s}}ADSBx Anywhere Stats</a></td>
+              <td><a id="adsbxmaplink{{suffix}}" href="">{{s}}ADSBx Anywhere Map</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col-12 {% if not ns.alive %}d-none{% endif %}">
+        <hr />
+        <div class="lead">airplanes.live</div>
+        <table class="table table-sm table-borderless lh-1 w-auto mt-0 mb-0 ms-2">
+          <tbody>
+            {% for idx in ns.site_indices %}
+            {% if list_is_enabled("alive", idx) %}
+            {% set suffix = '_'~idx %}
+            <tr>
+              <th>{{ list_value_by_tag('site_name', idx) }}</th>
+              <td><a id="alivestatus{{suffix}}" href="https://airplanes.live/myfeed/">{{s}}Status</a></td>
+              <td><a id="alivemaplink{{suffix}}" href="">{{s}}Map</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {# every other site you feed: its map and feed status page #}
+      {% for agg, name, map, status, table in aggregators if agg not in k4_own_cards %}
+      <div class="col-12">
+        <div class="lead">{{ name }}</div>
+        <ul class="mb-0">
+          {% if map %}<li><a href="{{ map }}" target="_blank" rel="noopener">Map</a></li>{% endif %}
+          {% for idx in ns.site_indices %}
+          {% if list_is_enabled(agg, idx) and status[idx] %}
+          <li><a href="{{ status[idx] }}" target="_blank" rel="noopener">{% if num_micro_sites > 1 %}{{ list_value_by_tag('site_name', idx) }}: {% endif %}Feed status</a></li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% if k4home %}</div></details>{% endif %}
+  <script>
+    // no Updates line on Home, but opening Home still starts the Pi OS update check
+    // (at most once a day) so the Updates page has a recent answer
+    fetch("/api/k4nza/os_status?from=home").catch(() => {});
+  </script>
+  <div
+       class="col-12 {% if not stage2_suggestion or env_value_by_tag('aggregator_choice') in ['micro', 'nano', 'nonadsb'] %} d-none {% endif %}">
+    <br>
+    Running the containers for the account-based aggregators on systems with 1GB of RAM or less can cause problems - it
+    certainly is possible, but many users have observed random issues like MLAT errors or generally issues reliably
+    connecting to those aggregators. A two stage setup which off-loads the connections to the aggregators to a different
+    system might be a good idea.
+  </div>
+  <!-- widget_mode -->
+  {% endif %}
+</div>
+<script src="/static/js/chart.js" integrity="sha256-QvTb/nDEMP/CLHEo82yujVmcrJC4zTfI9CpZ5WXl3rc="
+          crossorigin="anonymous"></script>
+<script>
+
+  console.log("num_micro_sites {{ num_micro_sites }}");
+
+  let chartContext = document.getElementById("plane-history-chart");
+  let shownIndices = new Set();
+  let chartGlobal = undefined;
+
+  function updateChart() {
+    if (!chartContext) {
+      // if the chartContext doesn't exist the charts don't exist, nothing to do
+      return;
+    }
+    function elaborateUpdateChart(chart, datasets, labels) {
+      // get the length of chart.data.labels
+      let days = chart.data.labels.length;
+      let newdays = labels.length;
+      let mfs = chart.data.datasets.length;
+      let newmfs = datasets.length;
+      // first deal with fewer days in the data (that's weird, really)
+      while (chart.data.labels.length > newdays) {
+        for (let j = 0; j < mfs; j++) chart.data.datasets[j].data.pop();
+        if (chart.data.labels.pop() == undefined) {
+          break;
+        }
+      }
+      days = chart.data.labels.length;
+      // now update the days that already exist
+      for (let i = 0; i < days; i++) {
+        if (chart.data.labels[i] != labels[i]) {
+          // this looks better if you pop and push
+          while (chart.data.labels.length > i) {
+            if (chart.data.labels.pop() == undefined) {
+              break;
+            }
+          }
+          for (let k = i; k < days; k++) chart.data.labels.push(labels[k]);
+        }
+        for (let j = 0; j < mfs; j++) {
+          if (chart.data.datasets[j].data[i] != datasets[j].data[i]) {
+            for (let k = i; k < days; k++) chart.data.datasets[j].data[k] = datasets[j].data[k];
+          }
+        }
+      }
+      // next, add any new days
+      for (let i = days; i < newdays; i++) {
+        chart.data.labels.push(labels[i]);
+        for (let j = 0; j < mfs; j++) chart.data.datasets[j].data.push(datasets[j].data[i]);
+      }
+      // finally, add new feeders
+      for (let i = mfs; i < newmfs; i++) {
+        chart.data.datasets.push(datasets[i]);
+      }
+      // by now, the data should be identical
+      chart.update();
+    }
+
+    function createChart(todayString, ar, len) {
+      chart = new Chart(chartContext, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: []
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: `Statistics ending ${todayString}`,
+              font: {
+                size: 18,
+              }
+            },
+            legend: {
+              display: (len > 1),
+              onClick: function (e, legendItem) {
+                let index = legendItem.datasetIndex;
+                let adding = e.native.shiftKey == false;
+                if (adding && shownIndices.size == 0) {
+                  // invert
+                  for (let i = 0; i < len; i++) {
+                    if (i != index) {
+                      shownIndices.add(i);
+                    }
+                  }
+                } else {
+                  if (shownIndices.has(index)) {
+                    shownIndices.delete(index);
+                  } else {
+                    shownIndices.add(index);
+                  }
+                }
+                if (shownIndices.size == len) shownIndices = new Set();
+                clear = shownIndices.size == 0;
+                let ci = this.chart;
+                for (let i = 0; i < len; i++) {
+                  let meta = ci.getDatasetMeta(i);
+                  meta.hidden = (clear ? false : (!shownIndices.has(i)));
+                }
+                // We hid a dataset ... rerender the chart
+                ci.update();
+              },
+              labels: {
+                boxWidth: 20,
+                useBorderRadius: true,
+                borderRadius: 2
+              }
+            }
+          },
+          aspectRatio: ar,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      return chart;
+    }
+    fetch("/api/stats", { signal: AbortSignal.timeout(15000) })
+          .then(response => response.json())
+          .then(planesHistory => {
+            // now let's format the data the way Chart.js wants it
+            let len = planesHistory.length;
+            let datasets = [];
+            let labels = [];
+            let feeders = [];
+            let light_distinct_colors = [
+              "#61c8ff", "#f57200", "#025dfb", "#01d723", "#7300b3", "#a6e927", "#9055ff", "#d8c200",
+              "#0039af", "#01db78", "#ff64f8", "#00560b", "#d60098", "#ade587", "#557bff", "#ffaf4c",
+              "#6b91ff", "#9d1500", "#3ca4ff", "#574200", "#005296", "#ca0061", "#017960", "#ff8bc4",
+              "#1a1a00", "#8ae3ec", "#50003d", "#e4d3b6", "#0f0021", "#ffbbca", "#4f1700", "#008b94"
+            ];
+            let dark_distinct_colors = [
+              "#a94500", "#e1ffe9", "#960089", "#00633e", "#ffce63", "#015d92", "#ff76d4", "#e96200",
+              "#ff96ae", "#a7d5ff", "#fdff90", "#bb61ff", "#4c5800", "#283e95", "#bd00e0", "#4fa900",
+              "#f8a9ff", "#9dff2f", "#007380", "#4b4539", "#a1003c", "#ffe5cb", "#c00028", "#90af00",
+              "#6cf7ff", "#0285fc", "#956900", "#ff1bd4", "#ff8f16", "#ff683c", "#890159", "#00d36d"
+            ];
+            let distinct_colors = [];
+            if (document.documentElement.dataset.mdbTheme == "dark") {
+              distinct_colors = dark_distinct_colors;
+            } else {
+              distinct_colors = light_distinct_colors;
+            }
+            // determine the length of the longest array in planesHistory and use that as the number of days for the chart
+            let days = 0;
+            for (let i = 0; i < len; i++) {
+              days = Math.max(planesHistory[i].length, days);
+            }
+            // days run midnight to midnight in the feeder's time zone
+            let feederTz = "{{ k4_feeder_tz }}";
+            let fmtDay, fmtMonthDay;
+            try {
+              fmtDay = new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: feederTz });
+              fmtMonthDay = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", timeZone: feederTz });
+            } catch (e) {
+              fmtDay = new Intl.DateTimeFormat("en-US", { day: "numeric" });
+              fmtMonthDay = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" });
+            }
+            todayString = fmtMonthDay.format(new Date());
+            // today's calendar date in that time zone, then step back whole days
+            // (not 24 hours, which goes wrong around daylight-saving changes)
+            let parts = {};
+            new Intl.DateTimeFormat("en-US", { year: "numeric", month: "numeric", day: "numeric", timeZone: fmtDay.resolvedOptions().timeZone })
+              .formatToParts(new Date()).forEach(p => { parts[p.type] = Number(p.value); });
+            for (let i = days-1; i >= 0; i--) {
+              labels.push(new Date(Date.UTC(parts.year, parts.month - 1, parts.day - i)).getUTCDate());
+            }
+            // now collect the feeder names - need to do this in jinja, not JS
+            feeders[0] = "{{ list_value_by_tag('site_name', 0) }}";
+            {% for idx in ns.site_indices %}
+            feeders["{{ idx }}"] = "{{ list_value_by_tag('site_name', idx) }}";
+            {% endfor %}
+            // now build the datasets
+            for (let i = 0; i < len; i++) {
+              datasets.push({
+                label: feeders[i],
+                data: planesHistory[i].reverse(),
+                borderColor: distinct_colors[i % distinct_colors.length]
+              });
+            }
+            if (chartGlobal === undefined) {
+              let ar = 2;
+              // the chart is full width, so make it wider than tall on big screens
+              const chartWidth = chartContext.parentElement.clientWidth;
+              if (len < 4) ar = chartWidth > 900 ? 3.4 : (chartWidth > 600 ? 2.6 : 1.6);
+              else if (len < 6) ar = 1.7;
+              else if (len < 9) ar = 1.4;
+              else if (len < 12) ar = 1.1;
+              else ar = 0.9;
+              chartGlobal = createChart(todayString, ar, len);
+            }
+            elaborateUpdateChart(chartGlobal, datasets, labels);
+          });
+  }
+  let browser_ip = null;
+  let feeder_ip = null;
+  let ip_message = "";
+  function compareIps() {
+    if (feeder_ip == null || browser_ip == null) {
+      return;
+    }
+    if (browser_ip != feeder_ip) {
+      let new_ip_message = ["IP check: browser got", browser_ip, "feeder has", feeder_ip].join(" ");
+      if (new_ip_message != ip_message) {
+        ip_message = new_ip_message;
+        console.log(ip_message);
+      }
+      $("#ip-mismatch").show();
+    } else {
+      $("#ip-mismatch").hide();
+    }
+  }
+  let startPageTask = {};
+  startPageTask.func = function(opt) {
+    if (!startPageTask.delay || (opt && opt.visibilityChange)) {
+      startPageTask.delay = 35 * 1000;
+    } else {
+      startPageTask.delay = Math.min(300 * 1000, startPageTask.delay * 1.5);
+    }
+    let now = Date.now() / 1000;
+    verbose && console.log(new Date().toLocaleTimeString() + " refreshing status, next check in " +
+      startPageTask.delay / 1000);
+    scheduleTask(startPageTask, startPageTask.delay);
+    $("#last_status_update").html(new Date().toLocaleTimeString());
+
+    if (!['micro', 'nano'].includes("{{ env_value_by_tags(['aggregator_choice']) }}")) {
+      fetch("https://api.ipify.org?format=json", { signal: AbortSignal.timeout(15000) })
+        .then(response => response.json())
+        .then(data => {
+          browser_ip = data["ip"];
+          compareIps();
+        });
+      fetch("/api/ip_info", { signal: AbortSignal.timeout(15000) })
+        .then(response => response.json())
+        .then(data => {
+          feeder_ip = data["feeder_ip"];
+          compareIps();
+        });
+    } else {
+      get_stage2_connection_status();
+    }
+    fetch("/api/status/im", { signal: AbortSignal.timeout(15000) })
+      .then(response => response.json())
+      .then(data => {
+        $("#latest_tag").text(data["latest_tag"]);
+        // Parse the beta version from latest_date field if it contains beta info
+        let betaText = data["latest_date"];
+        if (betaText && betaText.includes("beta")) {
+          // Extract just the version part if it's in the format "latest beta: vX.X.X-beta.XX"
+          let betaMatch = betaText.match(/v[\d\.]+-beta\.[\d]+/);
+          $("#beta_version").text(betaMatch[0]);
+        } else {
+          $("#beta_version").text(betaText || "");
+        }
+        $("#advice").html(data["advice"] + "&nbsp;");
+
+        let hasReleaseNotes = false;
+
+        if (data["show_update"] == "1") {
+          $("#update_buttons").removeClass("text-secondary");
+          const dev = data["advice"] && data["advice"].startsWith("you are running a development version");
+          if (dev || data["beta_changelog"]) {
+            $("#update_feeder_aps_beta").attr("disabled", false);
+            $("#beta_changelog_content").text(data["beta_changelog"] || "");
+            $("#beta_release_notes").removeClass("d-none");
+            hasReleaseNotes = true;
+          } else {
+            $("#beta_release_notes").addClass("d-none");
+          }
+          if (dev || data["main_changelog"]) {
+            let message = data["main_changelog"];
+            let set_disabled = false;
+            if (!dev && data["main_changelog"] == "this will get you back to the last release version") {
+              message = "you can downgrade to the last release version on the System->Management page";
+              set_disabled = true;
+            } else {
+              $("#stable_changelog_content").text(message || "");
+              $("#stable_release_notes").removeClass("d-none");
+              hasReleaseNotes = true;
+            }
+            $("#update_feeder_aps_stable").attr("disabled", set_disabled);
+          } else {
+            $("#stable_release_notes").addClass("d-none");
+          }
+        } else {
+          $("#update_buttons").addClass("text-secondary");
+          $("#update_feeder_aps_beta").attr("disabled", true);
+          $("#update_feeder_aps_stable").attr("disabled", true);
+          $("#beta_release_notes").addClass("d-none");
+          $("#stable_release_notes").addClass("d-none");
+        }
+
+        if (hasReleaseNotes) {
+          $("#release_notes_section").removeClass("d-none");
+        } else {
+          $("#release_notes_section").addClass("d-none");
+        }
+      });
+    {% for agg, name, m, s, table in aggregators %}
+    // agg {{ agg }}
+    {% for idx in ns.site_indices if matrix[idx] > 0 %}
+    // idx {{ idx }}
+    {% if list_is_enabled(agg, idx) %}
+    reset_status("{{ agg }}", {{ idx }});
+    {% endif %}
+    {% endfor %}
+    get_status("{{ agg }}");
+    {% endfor %}
+    updateChart();
+  }
+
+  // "Sharing with" chips on the home page mirror the feeding table's summary column
+  function k4ChipState(agg, idx, color, data) {
+    if (String(idx) !== "0") return;
+    const chip = document.querySelector('[data-k4-chip="' + CSS.escape(agg) + '"]');
+    if (!chip) return;
+    chip.dataset.state = { "text-success": "good", "text-warning": "warn", "text-danger": "bad" }[color] || "unknown";
+    const note = document.getElementById("k4-chip-note-" + agg);
+    if (note) {
+      const mlat = data["mlat"];
+      note.textContent = mlat === "good" ? "MLAT" : (mlat === "bad" || mlat === "warning") ? "MLAT degraded"
+        : mlat === "disconnected" ? "MLAT down" : "";
+    }
+  }
+
+  function setIcon(agg, cat, idx, icon, color) {
+    // look the element up by id rather than building a selector: aggregator
+    // identifiers can contain characters that are special in CSS selectors
+    // (the "." in "map.flights") and $("#map.flightsbeast0") matches nothing
+    $(document.getElementById(agg + cat + idx)).html(icon).attr("class", color);
+  }
+
+  async function reset_status(agg, idx) {
+    const loadingIcon = await loadIcon('status-unknown');
+    setIcon(agg, "beast", idx, loadingIcon, "text-muted");
+    setIcon(agg, "mlat", idx, loadingIcon, "text-muted");
+    setIcon(agg, "span", idx, loadingIcon, "text-muted");
+  }
+  function get_status(agg) {
+    fetch(`/api/status/${agg}`, { signal: AbortSignal.timeout(15000) })
+      .then(response => response.json())
+      .then(async dict => {
+        // Load all icons we might need
+        const icons = {
+          'good': await loadIcon('feed-connected'),
+          'disconnected': await loadIcon('feed-disconnected'),
+          'bad': await loadIcon('mlat-sync-error'),
+          'warning': await loadIcon('feed-warning'),
+          'starting': await loadIcon('container-starting'),
+          'container_down': await loadIcon('container-down'),
+          'unknown': await loadIcon('status-unknown'),
+          'disabled': ' ',
+        };
+        const colors = {
+          'good': 'text-success',
+          'disconnected':  'text-danger',
+          'bad': 'text-danger',
+          'warning': 'text-warning',
+          'starting': 'text-muted',
+          'container_down': 'text-danger',
+          'unknown': 'text-muted',
+          'disabled': 'text-muted',
+        };
+
+        const statusOkIcon = await loadIcon('overall-good');
+        const fallbackIcon = await loadIcon('status-unknown');
+
+        for (const idx of Object.keys(dict)) {
+          const data = dict[idx];
+
+          // Update beast and mlat status with loaded icons
+          const beastIcon = (data["beast"] === "" || data["beast"] === "disabled") ? "" : (icons[data["beast"]] || fallbackIcon);
+          const mlatIcon = (data["mlat"] === "" || data["mlat"] === "disabled") ? "" : (icons[data["mlat"]] || fallbackIcon);
+          // pick the colors
+          const beastColor = (data["beast"] === "" || data["beast"] === "disabled") ? "text-muted" : (colors[data["beast"]] || "text-muted");
+          const mlatColor = (data["mlat"] === "" || data["mlat"] === "disabled") ? "text-muted" : (colors[data["mlat"]] || "text-muted");
+
+          setIcon(agg, "beast", idx, beastIcon, beastColor);
+          setIcon(agg, "mlat", idx, mlatIcon, mlatColor);
+
+          const mlat_broken = !(data["mlat"] == "good" || data["mlat"] == "unknown" || data["mlat"] == "disabled");
+          const beast_broken = !(data["beast"] == "good" || data["beast"] == "unknown" || data["beast"] == "disabled");
+
+          let sumIcon = statusOkIcon;
+          let sumColor = "text-muted";
+          if (data["beast"] == "good" && !mlat_broken) {
+            sumIcon = statusOkIcon;
+            sumColor = "text-success";
+          } else if (data["beast"] == "starting") {
+            sumIcon = icons['starting'];
+            sumColor = "text-muted";
+          } else if (data["beast"] == "disconnected") {
+            sumIcon = icons['disconnected'];
+            sumColor = "text-danger";
+          } else if (beast_broken || mlat_broken) {
+            sumIcon = icons['warning'];
+            sumColor = "text-warning";
+          }
+
+          setIcon(agg, "span", idx, sumIcon, sumColor);
+          k4ChipState(agg, idx, sumColor, data);
+
+          if (agg == "adsblol") {
+            // console.log("set adsblol-link" + idx + " to " + data["adsblollink"])
+            $("#adsblol-link-" + idx).attr("href", data["adsblollink"]);
+          }
+          if (agg == "alive") {
+            $("#alivemaplink_" + idx).attr("href", data["alivemaplink"]);
+          }
+          if (agg == "adsbx") {
+            if (idx == 0) {
+              $("#adsbxstatlink").attr("href", "https://www.adsbexchange.com/api/feeders/?feed=" + data["adsbxfeederid"]);
+              $("#adsbxmaplink").attr("href", "https://globe.adsbexchange.com/?feed=" + data["adsbxfeederid"]);
+            } else {
+              // console.log("set adsbxstatlink" + idx)
+              $("#adsbxstatlink_" + idx).attr("href", "https://www.adsbexchange.com/api/feeders/?feed=" + data["adsbxfeederid"]);
+              $("#adsbxmaplink_" + idx).attr("href", "https://globe.adsbexchange.com/?feed=" + data["adsbxfeederid"]);
+            }
+          }
+        }
+      });
+  }
+  function get_stage2_connection_status() {
+    fetch("/api/stage2_connection", { signal: AbortSignal.timeout(15000) })
+      .then(response => response.json())
+      .then(data => {
+        $("#stage2_contact_placeholder").addClass("d-none");
+        if (data["stage2_connected"] == "recent") {
+          $("#stage2_address").text(data["address"]);
+          $("#stage2_contact").removeClass("d-none");
+        } else if (data["stage2_connected"] == "never") {
+          $("#stage2_no_contact_found").removeClass("d-none");
+        } else {
+          $("#stage2_last_contact_ip").text(data["address"]);
+          $("#stage2_last_contact_time_since").text(data["stage2_connected"]);
+          $("#stage2_no_recent_contact").removeClass("d-none");
+        }
+      })
+  }
+
+  registerTask(check_mf_task);
+  registerTask(startPageTask);
+
+</script>
+{% endblock %}
