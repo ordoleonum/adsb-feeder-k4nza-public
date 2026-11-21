@@ -3,7 +3,7 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-31 (unreleased)
+## v3.0.15-31 (2026-11-21)
 
 Fixes from a full review of -30 on a computer and a phone, in light and dark.
 

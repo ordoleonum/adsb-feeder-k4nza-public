@@ -26,19 +26,22 @@ writes to the SD card.
 | **A dashboard, not a status page** | Aircraft overhead and today, the closest aircraft right now, today's highlights with photos, busy hours by day, week or month, and Pi health that turns amber or red with advice. |
 | **A modern live map** | Light or dark, buttons with words, replay links that follow the aircraft, on an unmodified tar1090 that keeps getting its own updates. |
 
-## New in v3.0.15-30
+## New in v3.0.15-31
 
-- **Dashboard:** the highlight cards (military, highest, rarest type, farthest) show a photo and open
-  the aircraft in SkyStats; the busy-hours card switches between Day, Week and Month; numbers refresh
-  faster and catch up as soon as you come back to the tab.
-- **Live map:** Layers, List, Settings and light/dark in one column at the top right; the search box
-  back in the aircraft list; replay links from SkyStats follow and isolate the aircraft; nothing
-  covers the replay bar; round zoom buttons and a bigger altitude key; photos that don't arrive are
-  asked for again.
-- **SkyStats:** clean type names ("Boeing 737-800"), ADSBExchange links, type photos when an aircraft
-  has none of its own, and operator and type for military aircraft only the feeder's own database
-  knows.
-- A new antenna mark in the top bar and as the tab icon.
+Fixes from a full review of -30 on a computer and a phone, in light and dark:
+
+- **Live map photos:** a slow photo service is asked again instead of leaving "Loading image...", and
+  aircraft with no photo of their own show a typical photo of their type (clearly marked).
+- **Replay:** links open in your light or dark choice; on phones the aircraft panel sits above the
+  replay bar.
+- **Dashboard:** one count for today, Week and Month start at your first day of data, type names in
+  words on photos.
+- **SkyStats:** airline names no longer cut short, type names for aircraft known only by a code,
+  tidier operator names.
+
+**v3.0.15-30:** a dashboard with photo highlights and Day/Week/Month, a reorganised live map with a
+Layers column and replay links that follow the aircraft, clean type names in SkyStats, and a new
+antenna mark.
 
 **v3.0.15-29:** **Daylight**, the new look across the feeder, the live map and SkyStats, in light and
 dark, with the dashboard home page and the SkyStats report.
