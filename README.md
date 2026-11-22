@@ -43,16 +43,20 @@ updates you can undo, nightly backups to a NAS, and far fewer writes to the SD c
 
 Need WiFi or more detail? See the full [Install](#install) steps.
 
-## What's new in v3.0.15-34
+## What's new (v3.0.15-35 to -39)
 
-- 🧹 **A clean start:** this repository's history starts fresh at -34, and the
-  [CHANGELOG](CHANGELOG.md) is one entry listing everything this build adds to adsb.im v3.0.15.
-- ⚡ **Faster dashboard numbers** after a restart or update (seconds instead of 10-15).
-- 🔎 **SkyStats finds aircraft types by name:** "Stratotanker", "KC135", "737" or "Black Hawk".
-- 👆 **Bigger tap targets on phones** for checkboxes, radio buttons and table links.
-- ✈️ **Clearer headline:** "Currently tracking 28 aircraft, 1,064 since midnight." (it said
-  "overhead", but the count includes aircraft 100+ miles away).
-- 🏷️ **k4nza build -34** under the station name, and the station name fits on laptop-width windows.
+- 🏆 **Records you can trust:** Fastest, Slowest, Highest and Lowest are judged on each whole visit,
+  speeds count only after they check out, and unidentified radar relays stay off the lists. Bugs
+  from the original SkyStats put an airliner at 949 mph and filled Slowest with taxiing planes.
+- 🕛 **One clock everywhere:** days start at the station's midnight, and SkyStats and the dashboard
+  show the same "since midnight" count, whatever time zone your phone is in.
+- 🔒 **Safer by default:** another website can't change the feeder through your browser, and
+  shared logs no longer contain passwords or keys.
+- 🗺️ **Live map:** a bigger altitude key along the bottom and a distance scale that stays put.
+- 🧰 **Quieter and lighter:** background jobs can't get stuck, updates log no false errors, and a
+  SkyStats panel that asked the database every 2 seconds is gone.
+
+All the details are in the [CHANGELOG](CHANGELOG.md).
 
 ---
 
@@ -137,15 +141,20 @@ aircraft that only the feeder's own database knows about count too, with their o
 
 ### 📈 A report on your sky
 
-SkyStats opens on a report for **Today**, **Week**, **Month** or **All time**: how many flights
-crossed your sky (and how that compares with the period before), different aircraft and types, the
-farthest, the military ones, and when your sky is busiest, hour by hour for each day of the week.
+SkyStats opens on its **Activity** report for **Today**, **Week**, **Month** or **All time**: how many
+flights crossed your sky (and how that compares with the period before), different aircraft and
+types, the farthest, the military ones, and when your sky is busiest, hour by hour for each day of
+the week. Days and times follow your station's clock, wherever you open it from.
 
 ![SkyStats report](docs/screenshots/skystats-report.jpg)
 <sub>Sample data.</sub>
 
 Further down: **Aircraft types**, **Who flew over most**, **Where they were going** and **Notable
 visitors**, each with a photo and a **Replay** link.
+
+The **Records** tab keeps the fastest, slowest, highest and lowest aircraft you've heard. Each visit
+is judged once the aircraft has left, and a speed only counts after two readings agree with each
+other and with how far the aircraft actually moved.
 
 ### 📡 How well your station hears
 
@@ -166,7 +175,7 @@ much gain, too little gain and a blocked direction look like.
   <tr>
     <td valign="top" width="55%"><img src="docs/screenshots/skystats-export.jpg" alt="SkyStats export" width="100%"></td>
     <td valign="top">Everything as a ZIP, or one dataset at a time as CSV for Excel or Google
-      Sheets, with an optional date range.<br><br>
+      Sheets, with an optional date range. Open it from the gear (Settings) in SkyStats.<br><br>
       SkyStats backups can be restored under <i>System → Restore</i>.</td>
   </tr>
 </table>
@@ -250,6 +259,9 @@ running when something goes wrong.
   within 2 minutes of first seeing it and never again, so Slowest filled up with planes taxiing
   before take-off and Lowest with planes just after take-off. Records are now judged once the
   visit is over, and Slowest only counts aircraft that actually flew.
+- **Background jobs that can't get stuck:** the jobs that fill the record lists and Interesting
+  threw away a whole batch when one flight had an empty field, then retried that same batch
+  forever. One odd row no longer stops them.
 - **Airspeeds in the right columns:** indicated and true airspeed were saved in each other's
   columns in the Fastest and Slowest lists.
 
@@ -259,6 +271,9 @@ running when something goes wrong.
 <summary><b>Quiet and reachable on your network</b></summary>
 
 - **WiFi power saving is off**, so the Pi answers without delay spikes.
+- **Other websites can't change the feeder** through your browser: changes are accepted only from
+  the feeder's own pages, at whatever address you opened it. Shared logs blank out WiFi, login and
+  feed passwords and keys.
 - **Only the ports something uses are open:** 80 (this web interface), 8080 (map), 5173 (SkyStats),
   1089 (recovery page, for when an update goes wrong), 9999 (Dozzle, the container log viewer),
   30003 (SBS, for tools like Planefence), 30004 and 30104 (Beast in), 30005 and 30006 (Beast out),
@@ -318,7 +333,7 @@ The menu at the top (or the **Menu** tab on a phone) has everything:
 |---|---|
 | **Overview** | The dashboard: what you're tracking, today's highlights, history search, station health |
 | **Live map** | What you're receiving right now; Heatmap, Tracks, Replay and Map options are in its menu |
-| **SkyStats** | The report, routes, interesting aircraft, records, **Search** and **Export** |
+| **SkyStats** | Activity (the report), Routes, Interesting, Records and **Search**; **Export** is under its gear |
 | **Graphs** | How well your station is doing over hours, days and months |
 | **Setup** | Basic setup, Advanced, Radio (SDR) with a reception guide, and Data sharing |
 | **System** | Updates (with **Go back**), Management, Backup and Restore (with the nightly NAS backup), logs and diagnostics |
