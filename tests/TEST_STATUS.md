@@ -1,5 +1,20 @@
 # Test Suite Status & Coverage Plan
 
+## Current status (K4NZA build, 2026-11-21)
+
+- **479 tests** in `tests/unit` (446 before v3.0.15-35), all passing in CI on Python 3.10, 3.11 and 3.12.
+- **One deselected test:** `test_config.py::TestReadValuesFromEnvFile::test_read_env_file_missing`
+  (it patches `open()`, which `read_values_from_env_file` doesn't reach that way).
+- **Line coverage:** about 36% of `adsb-setup` (CI reports it on every push).
+- There is no `tests/integration` folder in this build; the integration failures listed below
+  refer to the stock adsb.im tree.
+- Run locally on Linux (the app expects Linux paths; on Windows the `AdsbIm` tests error out):
+  `ADSB_BASE_DIR=/tmp/adsb-test uv run pytest tests/`
+
+Everything below is the stock adsb.im status from 2025-10-23, kept for reference.
+
+---
+
 **Last Updated:** 2025-10-23
 **Test Suite Status:** 377 passing tests, 39% coverage
 

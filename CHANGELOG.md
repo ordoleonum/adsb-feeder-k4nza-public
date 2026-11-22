@@ -22,6 +22,20 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - Advanced: SkyStats is the first section, and while it's off it lists what needs it and recommends
   turning it on (unless the Pi has 1 GB of memory or less).
 
+**Security and reliability**
+- Another website can no longer change the feeder through your browser (for example add an SSH key or
+  start an update). Changes are accepted only from the feeder's own pages, at whatever address you
+  opened it (IP, `.local`, Tailscale, ZeroTier, NetBird), with nothing to set up.
+- With the login turned on, logging in takes you back to the page you were opening (it always went
+  to Home), and a link can no longer send you to another website after logging in. Sharing the logs
+  (Support) now needs the login too.
+- SkyStats data backup: if the backup can't be finished, the download now shows as failed in your
+  browser instead of saving a cut-off file that only fails when you restore it.
+- Each update keeps a dated copy of your settings (the ten newest) instead of overwriting the last one.
+- The SkyStats database password no longer shows in the Pi's process list during backups.
+- Image builds check the Raspberry Pi OS download against its official checksum and use a fixed
+  version of the build tools.
+
 ## v3.0.15-34
 
 The first public release of this history. It is based on adsb.im v3.0.15, and this entry lists
