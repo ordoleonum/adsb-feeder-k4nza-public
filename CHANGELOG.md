@@ -9,6 +9,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - Unidentified aircraft (TIS-B radar relays and other targets without a real aircraft address,
   shown with a "~" in front) no longer appear on the Fastest, Slowest, Highest and Lowest lists.
   Nothing says what they are, and their speeds don't come from the aircraft itself.
+- An empty record list keeps its title and says when records appear, instead of a bare
+  "No data available".
 
 ## v3.0.15-38 (2026-11-22)
 
