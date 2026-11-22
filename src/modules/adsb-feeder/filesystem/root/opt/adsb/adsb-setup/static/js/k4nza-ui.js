@@ -132,9 +132,8 @@
           setTile("k4-tile-planes", fmt(d.planes));
           setTile("k4-tile-mps", fmt(d.mps));
           setTile("k4-tile-pps", fmt(d.pps));
-          setTile("k4-tile-today", fmt(d.tplanes));
           todayPlanes = d.tplanes;
-          showNewSub();
+          showToday();
           statusOkAt = Date.now();
           showUpdated();
         }
@@ -308,13 +307,19 @@
     const mi = nm * 1.15078;
     return (mi < 10 ? Math.round(mi * 10) / 10 : Math.round(mi)) + " mi";
   }
-  // "Never seen before: 98, out of 466 since midnight": the same count as the
-  // headline (the receiver's own), so the page shows one number for today;
-  // SkyStats' count only until the receiver's first answer
+  // "N since midnight" in the headline and "Never seen before: 98, out of N":
+  // SkyStats' own "today" count whenever SkyStats answers, so the dashboard and
+  // SkyStats always show the same number; the receiver's count when it's off
   let todayPlanes = null, skyToday = null;
-  function showNewSub() {
-    const n = todayPlanes !== null && todayPlanes !== undefined && !isNaN(todayPlanes) ? todayPlanes : skyToday;
-    if (n !== null && n !== undefined && $id("k4-n-new-sub")) setTile("k4-n-new-sub", "Out of " + fmt(n) + " since midnight");
+  const isNum = (v) => v !== null && v !== undefined && !isNaN(v);
+  let homeFailed = false;
+  function showToday() {
+    // with SkyStats on, wait for its answer instead of flashing the receiver's count first
+    const waitForSky = $id("k4-hours-card") && !homeFailed;
+    const n = isNum(skyToday) ? skyToday : (waitForSky ? null : todayPlanes);
+    if (!isNum(n)) return;
+    setTile("k4-tile-today", fmt(n));
+    if ($id("k4-n-new-sub")) setTile("k4-n-new-sub", "Out of " + fmt(n) + " since midnight");
   }
   function fmtAlt(ft) {
     if (ft === "ground") return "on the ground";
@@ -460,12 +465,14 @@
     box.setAttribute("aria-label", "Different aircraft heard each day, last " + list.length + " days; busiest " + dayName(list[busiest].date, true));
   }
 
+  let nowHour = null;
   function drawHours(hours) {
     lastHours = hours;
     if (hoursView !== "day") return;
     const box = $id("k4-hours");
     if (!box || !Array.isArray(hours)) return;
-    const now = new Date().getHours();
+    // the station's hour (the bars are in the station's time zone), not this device's
+    const now = nowHour !== null ? nowHour : new Date().getHours();
     const shown = hours.slice(0, now + 1);
     const max = Math.max(1, ...shown);
     box.textContent = "";
@@ -635,6 +642,7 @@
     fetch("/api/k4nza/home", { signal: AbortSignal.timeout(20000) })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => {
+        if (typeof d.now_hour === "number") nowHour = d.now_hour;
         drawHours(d.hours);
         drawHighlights(d);
         if (d.farthest) {
@@ -644,10 +652,14 @@
         if (d.new_today !== undefined) {
           setTile("k4-n-new", fmt(d.new_today));
           skyToday = d.aircraft_today;
-          showNewSub();
+          showToday();
         }
       })
-      .catch(() => { /* SkyStats starting or off: the cards keep their last values */ });
+      .catch(() => {
+        // SkyStats starting or off: the cards keep their last values; the
+        // headline falls back to the receiver's count until SkyStats answers
+        if (!isNum(skyToday)) { homeFailed = true; showToday(); }
+      });
   }
 
   const ALT_COLORS = [[5000, "#f59e0b"], [12000, "#84cc16"], [20000, "#10b981"], [30000, "#0ea5e9"], [Infinity, "#6366f1"]];

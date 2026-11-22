@@ -5592,9 +5592,13 @@ class AdsbIm:
         if r.status_code != 200:
             return reply({"error": "SkyStats could not answer"}, 502)
         try:
-            return reply(r.json(), 200)
+            body = r.json()
         except ValueError:
             return reply({"error": "bad answer from SkyStats"}, 502)
+        if isinstance(body, dict) and not days:
+            # the hour bars are in the station's time zone: say which hour it is there
+            body["now_hour"] = datetime.now(self.k4_feeder_tz()).hour
+        return reply(body, 200)
 
     @staticmethod
     def k4nza_pick_closest(aircraft, n=4):

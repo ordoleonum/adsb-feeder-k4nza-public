@@ -441,7 +441,7 @@
               $("#mf_stats_" + i).html("go to <a href='/sdr_setup'>SDR Setup</a> to address this");
             } else if (d["pps"] > 0) {
               color_class = "text-success";
-              tooltip = "receiving data (plane total since midnight UTC)"
+              tooltip = "receiving data (plane total since local midnight)"
             } else if (d["uptime"] > 60) {
               color_class = "text-warning";
               tooltip = "receiving unusually little data"

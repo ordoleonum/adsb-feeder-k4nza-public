@@ -6,10 +6,21 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 ## v3.0.15-37 (unreleased)
 
 **Dashboard**
-- "Since midnight" now counts the same aircraft as SkyStats' "today": only aircraft with a
-  position, inside the SkyStats radius, and no ground vehicles or towers. Aircraft heard without
-  a position are no longer counted, so the two numbers match (earlier days in the history were
-  counted the old way and read a little higher).
+- "Since midnight" (in the headline and under "Never seen before") is SkyStats' own "today"
+  count whenever SkyStats is on, so the dashboard and SkyStats always show the same number.
+  With SkyStats off, the receiver's count is used, and it now counts the same aircraft SkyStats
+  would: only aircraft with a position, inside the SkyStats radius, and no ground vehicles or
+  towers (earlier days in its history were counted the old way and read a little higher).
+- "Today, hour by hour" follows the station's clock, also when the page is opened on a device
+  set to another time zone.
+- The status tooltip on the setup pages said the plane total counts from midnight UTC; it
+  counts from local midnight.
+
+**SkyStats**
+- Every day starts at the station's midnight (the feeder's time zone in Basic setup), whichever
+  time zone the phone or computer viewing it is in: "today", the charts, the Activity tab and
+  export ranges. Dates and times in Search, highlights and the record tables are shown on the
+  station's clock too.
 
 ## v3.0.15-36 (2026-11-22)
 

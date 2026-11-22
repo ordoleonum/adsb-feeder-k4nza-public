@@ -21,6 +21,8 @@ services:
       # App
       - LAT=${FEEDER_LAT}
       - LON=${FEEDER_LONG}
+      # the station's time zone: SkyStats' days start at the station's midnight
+      - STATION_TZ=${FEEDER_TZ}
       - RADIUS=${SKYSTATS_RADIUS}
       - ABOVE_RADIUS=${SKYSTATS_ABOVE_RADIUS}
       - DOMESTIC_COUNTRY_ISO=${SKYSTATS_DOMESTIC_COUNTRY_ISO}
