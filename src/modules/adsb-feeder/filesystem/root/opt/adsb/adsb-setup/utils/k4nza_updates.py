@@ -43,7 +43,8 @@ def latest_release(use_cache: bool = True) -> dict:
         return _cache["data"]
     result = {"ok": False, "tag": "", "published": "", "notes": "", "error": ""}
     try:
-        r = requests.get(f"{API}/releases/latest", headers={"Accept": "application/vnd.github+json"}, timeout=10)
+        # short connect timeout: the Updates page waits for this answer
+        r = requests.get(f"{API}/releases/latest", headers={"Accept": "application/vnd.github+json"}, timeout=(4, 10))
     except requests.RequestException as e:
         result["error"] = f"Could not reach GitHub ({e.__class__.__name__}). Is the feeder online?"
         return result
@@ -254,8 +255,18 @@ def _kernel_key(release: str) -> tuple:
     return tuple(nums)
 
 
+OS_UPDATE_FLAG = Path("/run/k4nza-os-update.running")
+
+
 def os_update_running() -> bool:
     """True while the Pi OS update (scripts/update-os) is still running."""
+    # scripts/update-os writes its process id here, whichever way it was started
+    try:
+        pid = int(OS_UPDATE_FLAG.read_text().strip())
+        if pid > 0 and Path(f"/proc/{pid}").exists():
+            return True
+    except (OSError, ValueError):
+        pass
     try:
         r = subprocess.run(["systemctl", "is-active", "adsb-feeder-update-os"], capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.SubprocessError):

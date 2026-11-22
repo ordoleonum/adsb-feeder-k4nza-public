@@ -251,7 +251,13 @@ else
         # which release: the one asked for on the Updates page ("Go back"), else the newest
         K4NZA_WANT=""
         if [ -f /opt/adsb/k4nza-update-target ] ; then
-            K4NZA_WANT=$(tr -d '[:space:]' < /opt/adsb/k4nza-update-target)
+            # only a fresh request counts: one left from a "Go back" whose update
+            # never ran must not turn a later normal update into a downgrade
+            if [ -n "$(find /opt/adsb/k4nza-update-target -mmin -60 2> /dev/null)" ] ; then
+                K4NZA_WANT=$(tr -d '[:space:]' < /opt/adsb/k4nza-update-target)
+            else
+                echo "ignoring an old Go back request from $(date -r /opt/adsb/k4nza-update-target 2> /dev/null)"
+            fi
             rm -f /opt/adsb/k4nza-update-target
         fi
         K4NZA_TAGS=$(git ls-remote --tags --refs "$K4NZA_REPO" 'k4nza-v*') || exit_with_message "could not reach GitHub - is the feeder online?"

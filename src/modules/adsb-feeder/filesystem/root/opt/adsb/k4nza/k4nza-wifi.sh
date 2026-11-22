@@ -74,7 +74,7 @@ if (( rc != 0 )); then
 fi
 
 # try to connect now (the network may take a moment to appear in scans)
-for i in 1 2 3 4 5 6; do
+for _ in 1 2 3 4 5 6; do
     if nmcli connection up k4nza-wifi &> /dev/null; then
         echo "k4nza-wifi: connected to '$SSID'"
         break

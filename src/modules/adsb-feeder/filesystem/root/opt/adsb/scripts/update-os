@@ -4,6 +4,11 @@
 # log to /run/adsb-feeder-image.log
 exec &>> /run/adsb-feeder-image.log
 
+# K4NZA: tells the Updates page an OS update is running, also when it runs from
+# the nightly update check (which isn't the adsb-feeder-update-os unit)
+echo $$ > /run/k4nza-os-update.running
+trap 'rm -f /run/k4nza-os-update.running' EXIT
+
 if [ -x /boot/dietpi/dietpi-update ] ; then
     G_INTERACTIVE=0 CONFIG_CHECK_APT_UPDATES=2 /boot/dietpi/dietpi-update 1
 else
@@ -26,8 +31,9 @@ fi
 # restart important services if not running for some reason
 # dietpi-update will stop adsb-setup / adsb-docker (dietpi services?!)
 # it should start it back up but let's just be safe here
-if ! systemctl is-active adsb-update.service; then
-    systemctl restart adsb-update.service
+# (start, not restart: a no-op while it is running or starting)
+if ! systemctl is-active --quiet adsb-setup.service; then
+    systemctl start adsb-setup.service
 fi
 if ! systemctl is-active adsb-docker.service; then
     systemctl restart adsb-docker.service

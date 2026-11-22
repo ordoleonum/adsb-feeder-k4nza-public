@@ -184,3 +184,20 @@ def test_render_notes_is_safe_and_stops_at_install_note():
 def test_render_notes_joins_wrapped_paragraph_lines():
     html = k4nza_updates.render_notes("First line of a paragraph\ncontinues here.\n\nSecond paragraph.\n")
     assert html == "<p>First line of a paragraph continues here.</p>\n<p>Second paragraph.</p>"
+
+
+
+def test_os_update_started_by_the_nightly_check_is_seen(tmp_path):
+    # scripts/update-os writes its process id to a flag file, whichever way it was started
+    flag = tmp_path / "k4nza-os-update.running"
+    not_running = _done("inactive", rc=3)
+    flag.write_text("4242")
+    with patch.object(k4nza_updates, "OS_UPDATE_FLAG", flag), patch.object(k4nza_updates.subprocess, "run", return_value=not_running):
+        with patch("pathlib.Path.exists", return_value=True):  # /proc/4242 is there
+            assert k4nza_updates.os_update_running() is True
+        with patch("pathlib.Path.exists", return_value=False):  # left over after a crash
+            assert k4nza_updates.os_update_running() is False
+        flag.write_text("not a pid")
+        assert k4nza_updates.os_update_running() is False
+        flag.unlink()
+        assert k4nza_updates.os_update_running() is False
