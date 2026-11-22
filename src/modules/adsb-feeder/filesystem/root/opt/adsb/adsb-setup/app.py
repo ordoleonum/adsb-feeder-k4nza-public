@@ -999,8 +999,32 @@ class AdsbIm:
             flash("The SkyStats database is not running, so it can't be backed up right now.")
             return redirect(url_for("backup"))
         dump_filename = dump_filename.replace(".sql", ".dump")
+        dump = k4nza_skystats_db.stream_dump(db_user, db_password, db_name)
+        try:
+            # wait for the first piece, so a dump that fails right away gets a message
+            # instead of an empty download
+            first = next(dump)
+        except StopIteration:
+            first = b""
+        except k4nza_skystats_db.DumpFailed as e:
+            print_err(f"SkyStats backup: {e}")
+            flash(f"The SkyStats backup failed ({e}). Your data is unchanged; try again in a minute.")
+            return redirect(url_for("backup"))
+        if not first:
+            flash("The SkyStats backup came out empty. Try again in a minute.")
+            return redirect(url_for("backup"))
+
+        def body():
+            yield first
+            try:
+                yield from dump
+            except k4nza_skystats_db.DumpFailed as e:
+                # cutting the download off here makes the browser show it as failed
+                print_err(f"SkyStats backup stopped part-way: {e}")
+                raise
+
         return Response(
-            stream_with_context(k4nza_skystats_db.stream_dump(db_user, db_password, db_name)),
+            stream_with_context(body()),
             mimetype="application/octet-stream",
             headers={"Content-Disposition": f'attachment; filename="{dump_filename}"'},
         )

@@ -13,6 +13,7 @@ Restore
 
 import os
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -21,13 +22,21 @@ APP_CONTAINER = "skystats"
 CHUNK = 1024 * 1024
 
 
+def _pg_env(password):
+    # "docker exec -e PGPASSWORD" (no value) copies it from this environment,
+    # so the password never shows up in the process list
+    env = dict(os.environ)
+    env["PGPASSWORD"] = password or ""
+    return env
+
+
 def _psql(user, password, dbname, sql, timeout=120):
     return subprocess.run(
         [
             "docker",
             "exec",
             "-e",
-            f"PGPASSWORD={password}",
+            "PGPASSWORD",
             DB_CONTAINER,
             "psql",
             "-h",
@@ -46,6 +55,7 @@ def _psql(user, password, dbname, sql, timeout=120):
         text=True,
         timeout=timeout,
         check=False,
+        env=_pg_env(password),
     )
 
 
@@ -56,14 +66,24 @@ def db_container_running():
     return r.returncode == 0 and r.stdout.strip() == "true"
 
 
+class DumpFailed(RuntimeError):
+    pass
+
+
 def stream_dump(user, password, dbname):
-    """Generator yielding a compressed custom-format pg_dump."""
+    """Generator yielding a compressed custom-format pg_dump.
+
+    Raises DumpFailed if pg_dump does not finish cleanly. Once the download has
+    started, that cuts the connection without the end-of-download marker, so
+    the browser shows the download as failed instead of saving a cut-off file.
+    """
+    errors = tempfile.TemporaryFile()
     proc = subprocess.Popen(
         [
             "docker",
             "exec",
             "-e",
-            f"PGPASSWORD={password}",
+            "PGPASSWORD",
             DB_CONTAINER,
             "pg_dump",
             "-h",
@@ -79,32 +99,42 @@ def stream_dump(user, password, dbname):
             "6",
         ],
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        stderr=errors,
+        env=_pg_env(password),
     )
     assert proc.stdout is not None
+    finished = False
     try:
         while True:
             chunk = proc.stdout.read(CHUNK)
             if not chunk:
                 break
             yield chunk
+        finished = True
     finally:
         proc.stdout.close()
         try:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
+            proc.wait()
+    if finished and proc.returncode != 0:
+        errors.seek(0)
+        last = errors.read().decode(errors="replace").strip().splitlines()[-1:] or [f"exit code {proc.returncode}"]
+        errors.close()
+        raise DumpFailed(f"pg_dump failed: {last[0]}")
+    errors.close()
 
 
 def dump_to_file(user, password, dbname, path: Path, timeout=4 * 3600):
     """Write a compressed custom-format pg_dump to path. Returns (ok, error)."""
     if not db_container_running():
         return False, "the SkyStats database is not running"
-    cmd = ["docker", "exec", "-e", f"PGPASSWORD={password}", DB_CONTAINER, "pg_dump", "-h", "localhost"]
+    cmd = ["docker", "exec", "-e", "PGPASSWORD", DB_CONTAINER, "pg_dump", "-h", "localhost"]
     cmd += ["-U", user, "-d", dbname, "--no-owner", "--no-privileges", "-Fc", "-Z", "6"]
     try:
         with open(path, "wb") as f:
-            r = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, timeout=timeout, check=False)
+            r = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, timeout=timeout, check=False, env=_pg_env(password))
     except subprocess.TimeoutExpired:
         return False, "pg_dump took too long"
     if r.returncode != 0:
@@ -138,11 +168,12 @@ def restore(upload_path: Path, user, password, dbname, log=print):
     log(f"skystats restore: loading {'custom' if is_custom else 'SQL'} dump into {tmpdb}")
     with open(upload_path, "rb") as f:
         r = subprocess.run(
-            ["docker", "exec", "-i", "-e", f"PGPASSWORD={password}", DB_CONTAINER] + cmd,
+            ["docker", "exec", "-i", "-e", "PGPASSWORD", DB_CONTAINER] + cmd,
             stdin=f,
             capture_output=True,
             timeout=4 * 3600,
             check=False,
+            env=_pg_env(password),
         )
     if r.returncode != 0:
         _psql(user, password, "postgres", f'DROP DATABASE IF EXISTS "{tmpdb}"')
