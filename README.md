@@ -246,6 +246,10 @@ running when something goes wrong.
   aircraft, so one bad reading could put an airliner on the Fastest list at 949 mph. A speed
   now counts only when two readings in a row agree, match how far the aircraft actually moved,
   come from its own ADS-B (not MLAT or TIS-B) and stay under 800 knots.
+- **Records judged on the whole visit:** the original judged each aircraft for the record lists
+  within 2 minutes of first seeing it and never again, so Slowest filled up with planes taxiing
+  before take-off and Lowest with planes just after take-off. Records are now judged once the
+  visit is over, and Slowest only counts aircraft that actually flew.
 - **Airspeeds in the right columns:** indicated and true airspeed were saved in each other's
   columns in the Fastest and Slowest lists.
 

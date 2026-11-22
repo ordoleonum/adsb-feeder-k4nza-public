@@ -11,8 +11,13 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   the aircraft actually moved, come from its own ADS-B (not MLAT or TIS-B) and stay under
   800 knots. The Fastest list starts over after this update, because the old entries can't be
   checked. This bug was in the original SkyStats.
+- Fastest, Slowest, Highest and Lowest judge each visit once it is over. They used to judge it
+  within 2 minutes of the aircraft appearing and never again, so Slowest listed planes taxiing
+  before take-off (an RV-6 at 3 knots that went on to fly at 162) and Lowest planes just after
+  take-off. Slowest also leaves out aircraft that never left the ground. Highest, Lowest and
+  Slowest are rebuilt from the history already recorded. Also from the original SkyStats.
 - Indicated and true airspeed were saved in each other's columns in the Fastest and Slowest
-  lists (also from the original); existing Slowest entries are corrected.
+  lists (also from the original).
 
 ## v3.0.15-37 (2026-11-22)
 
