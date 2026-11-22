@@ -243,8 +243,12 @@ running when something goes wrong.
 <summary><b>Quiet and reachable on your network</b></summary>
 
 - **WiFi power saving is off**, so the Pi answers without delay spikes.
-- **Only the ports something uses are open:** 8080 (map), 30003 (SBS, for tools like Planefence),
-  30004 and 30104 (Beast in), 30005 and 30006 (Beast out), 31005 (MLAT results).
+- **Only the ports something uses are open:** 80 (this web interface), 8080 (map), 5173 (SkyStats),
+  1089 (recovery page, for when an update goes wrong), 9999 (Dozzle, the container log viewer),
+  30003 (SBS, for tools like Planefence), 30004 and 30104 (Beast in), 30005 and 30006 (Beast out),
+  31005 (MLAT results). The web interface and recovery page ask for a password only if you turn on
+  the login (*System → Management*); the map, SkyStats and the log viewer never do, so keep the
+  feeder on a network you trust.
 - **No my.adsb.im registration:** the feeder is reached at `http://adsb-feeder.local/`, and the page
   footer shows its IP address.
 - **System → Share diagnostics** downloads anonymized logs and opens a problem report on this GitHub

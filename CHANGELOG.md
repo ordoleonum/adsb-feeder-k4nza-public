@@ -29,6 +29,12 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - With the login turned on, logging in takes you back to the page you were opening (it always went
   to Home), and a link can no longer send you to another website after logging in. Sharing the logs
   (Support) now needs the login too.
+- **Shared logs no longer contain secrets they shouldn't:** the WiFi password, the login password and
+  login key, the radiosonde password and AIS keys are now blanked out like the aggregator keys were.
+- Passwords and keys you type into the settings pages are no longer written to the feeder's log
+  (which the log viewer and older shared logs could show).
+- The recovery page's Reboot and Roll back links can no longer be set off by another website.
+- Share diagnostics only downloads or shows the logs; the old upload to public paste sites is gone.
 - SkyStats data backup: if the backup can't be finished, the download now shows as failed in your
   browser instead of saving a cut-off file that only fails when you restore it.
 - Each update keeps a dated copy of your settings (the ten newest) instead of overwriting the last one.
