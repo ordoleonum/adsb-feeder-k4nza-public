@@ -16,6 +16,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   before take-off (an RV-6 at 3 knots that went on to fly at 162) and Lowest planes just after
   take-off. Slowest also leaves out aircraft that never left the ground. Highest, Lowest and
   Slowest are rebuilt from the history already recorded. Also from the original SkyStats.
+- A visit seen too briefly for its speed to be checked shows a blank max speed in Search and
+  the exports instead of a number that may be wrong.
 - Indicated and true airspeed were saved in each other's columns in the Fastest and Slowest
   lists (also from the original).
 
