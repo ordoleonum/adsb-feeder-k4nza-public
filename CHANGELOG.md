@@ -13,6 +13,11 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - Browser tabs read "station · page", and the home tab says "station · Overview" instead of
   showing the station name twice.
 
+**Photos (dashboard, live map, SkyStats)**
+- "Typical type" photos pick the right Wikipedia page more often: a Robinson R44 shows an R44
+  (not a crash article or a Cessna), a Cessna 172 and twin-engine helicopters are no longer
+  skipped for mentioning an engine, and a UH-60 Black Hawk beats the HH-60 Pave Hawk page.
+
 **Setup**
 - Advanced: SkyStats is the first section, and while it's off it lists what needs it and recommends
   turning it on (unless the Pi has 1 GB of memory or less).

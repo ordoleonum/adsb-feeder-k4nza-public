@@ -263,8 +263,22 @@
   //    "typical ..., not this aircraft" (as on the dashboard and SkyStats).
   const PHOTO_WAIT = [8000, 15000, 30000, 60000];
   const photoState = new Map(); // hex -> {since, tries, asking, typeDone}
+  const WIKI_NOT = /\b(list of|disambiguation|airports?|airlines?|company|manufacturer|ships?|cars?|vehicles?|facility|factory|plant|assembly|museum|base|squadron|crash|accident|incident|disaster|category)\b/i;
+  // A page counts as an aircraft when its description names an aircraft and no
+  // engine ("single engine aircraft" and "twin-engine helicopter" yes, "turbojet aircraft engine" no).
+  // Among those, a page whose title is part of the searched name wins (UH-60 Black
+  // Hawk over HH-60 Pave Hawk), else the first one Wikipedia ranks.
   const WIKI_AIRCRAFT = /aircraft|airliner|trainer|fighter|helicopter|bomber|tanker|airlifter|airplane|aeroplane|jet|plane|glider|gunship/i;
-  const WIKI_NOT = /\b(engine|list of|family of|disambiguation|airport|airline|company|manufacturer|ship|car|vehicle|facility|factory|plant|assembly|museum|base|squadron)\b/i;
+  function wikiPick(pages, name) {
+    const key = (s) => String(s || "").toLowerCase().replace(/\s*\(.*\)$/, "").replace(/[^a-z0-9]/g, "");
+    const ok = pages.filter((pg) => {
+      const d = pg.description || "";
+      const engine = /\bengines?\b/i.test(d.replace(/\b(single|twin|multi|two|three|four|six|eight)[- ]engines?\b/gi, ""));
+      return pg.thumbnail && /\.jpe?g/i.test(pg.thumbnail.source) && WIKI_AIRCRAFT.test(d) && !engine &&
+        !WIKI_NOT.test(d + " " + pg.title);
+    });
+    return ok.find((pg) => key(pg.title).length >= 3 && key(name).includes(key(pg.title))) || ok[0] || null;
+  }
   const wikiCache = new Map(); // type name -> photo or null
 
   function photoMsg(text) {
@@ -283,8 +297,7 @@
       if (!r.ok) return null;
       const pages = Object.values(((await r.json()).query || {}).pages || {}).sort((x, y) => x.index - y.index);
       // photos only (JPEG): drawings and silhouettes are PNG or SVG
-      const page = pages.find((pg) => pg.thumbnail && /\.jpe?g/i.test(pg.thumbnail.source) && WIKI_AIRCRAFT.test(pg.description || "") &&
-        !WIKI_NOT.test((pg.description || "") + " " + pg.title));
+      const page = wikiPick(pages, name);
       const found = page ? { src: page.thumbnail.source, link: "https://en.wikipedia.org/wiki/" + encodeURIComponent(page.title.replace(/ /g, "_")) } : null;
       wikiCache.set(name, found);
       if (found) return found;
