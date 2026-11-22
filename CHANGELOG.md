@@ -3,11 +3,15 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-36 (unreleased)
+## v3.0.15-36 (2026-11-22)
 
 **Live map**
 - The distance scale stays in the bottom-left corner while an aircraft is open (it kept jumping
   between the corner and the side of the aircraft pane).
+
+**SkyStats**
+- The download button is gone from the top bar. Export is still in SkyStats Settings and in the
+  feeder backup.
 
 ## v3.0.15-35 (2026-11-21)
 
