@@ -43,10 +43,9 @@
   <script defer src="/static/js/k4nza-ui.js"></script>
   <!-- widget_mode is {{ widget_mode }} -->
   {% if not widget_mode %}
-  <title>
-    {{ list_value_by_tag("site_name", 0) }}{% if list_value_by_tag("site_name", 0) != "" %}:
-    {% endif %}{% block title %}{% endblock %}
-  </title>
+  {# Tab title "Station · Page"; the home page's title is the station name, so it reads "Station · Overview" #}
+  {% set k4site = list_value_by_tag("site_name", 0) %}{% set k4page = (self.title() if self.title is defined else "")|trim %}
+  <title>{% if k4site != "" %}{{ k4site }} · {% endif %}{% if k4page == k4site %}Overview{% else %}{{ k4page }}{% endif %}</title>
   <!-- Dashboard shell (top bar, sidebar, phone tab bar) replaces the stock navbar -->
   {% include '_k4nza_nav.html' %}
   <!-- widget_mode-->

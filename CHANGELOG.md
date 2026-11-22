@@ -10,6 +10,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   lines of their own instead of side by side.
 - While SkyStats is off, the home page says what it adds (history search, highlights, Week and
   Month, replay links and more) with a **Turn on SkyStats** button. The card goes away once it's on.
+- Browser tabs read "station · page", and the home tab says "station · Overview" instead of
+  showing the station name twice.
 
 **Setup**
 - Advanced: SkyStats is the first section, and while it's off it lists what needs it and recommends
