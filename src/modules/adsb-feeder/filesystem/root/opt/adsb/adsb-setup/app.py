@@ -4920,47 +4920,10 @@ class AdsbIm:
             with open(path) as f:
                 aircraftdict = json.load(f)
                 aircraft = aircraftdict.get("aircraft", [])
-                station = self.k4_station(idx)
-                planes = set(plane["hex"] for plane in aircraft if self.k4_counts_as_seen(plane, station))
+                planes = set([plane["hex"] for plane in aircraft if not plane["hex"].startswith("~")])
         except Exception:
             pass
         return planes
-
-    def k4_station(self, idx):
-        # (lat, lon, radius km) used for the daily count; None = no position filter
-        try:
-            lat = float(self._d.env_by_tags("lat").list_get(idx))
-            lon = float(self._d.env_by_tags("lon").list_get(idx))
-        except Exception:
-            return None
-        try:
-            radius = float(self._d.env_by_tags("skystats_radius").value)
-        except Exception:
-            radius = 500.0
-        return (lat, lon, radius)
-
-    @staticmethod
-    def k4_counts_as_seen(plane, station):
-        # Same rules SkyStats uses, so the dashboard's "since midnight" matches
-        # SkyStats' "today": a real ICAO address, a position, inside the radius,
-        # and not a ground vehicle / obstacle / tower.
-        hex_id = str(plane.get("hex", ""))
-        if not hex_id or hex_id.startswith("~"):
-            return False
-        if str(plane.get("category", "")).startswith("C") or plane.get("squawk") == "7777":
-            return False
-        if plane.get("t") == "TWR" or plane.get("r") == "TWR":
-            return False
-        lat, lon = plane.get("lat"), plane.get("lon")
-        if lat is None or lon is None:
-            return False
-        if station is None:
-            return True
-        slat, slon, radius = station
-        p1, p2 = math.radians(slat), math.radians(lat)
-        dp, dl = p2 - p1, math.radians(lon - slon)
-        a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-        return 6371.0 * 2 * math.asin(math.sqrt(a)) < radius
 
     def k4_feeder_tz(self):
         try:
