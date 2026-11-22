@@ -197,17 +197,23 @@ jobs:
         body_path: release-notes.md
         files: uploads/*
 
-    - name: Remove older release pages (their tags are kept)
+    - name: Remove release pages older than -35 (their tags are kept)
       if: steps.tag.outputs.is_release == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # only the newest release is listed on the Releases page; every tag
-        # stays, so a feeder can still go back to the version it ran before
+        # every release from -35 on keeps its page (image + SkyStats download),
+        # so any of them can be flashed or gone back to; older pages are removed.
+        # Every tag stays.
+        KEEP_FROM=35
         gh release list -R "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease \
             -q '.[] | select(.isPrerelease | not) | .tagName' | while read -r t ; do
           case "$t" in
             "${{ github.ref_name }}") ;;
-            k4nza-v*) echo "removing release page $t (tag kept)"; gh release delete "$t" -R "$GITHUB_REPOSITORY" --yes ;;
+            k4nza-v*)
+              n=${t##*-}
+              if [[ "$n" =~ ^[0-9]+$ ]] && [ "$n" -lt "$KEEP_FROM" ] ; then
+                echo "removing release page $t (tag kept)"; gh release delete "$t" -R "$GITHUB_REPOSITORY" --yes
+              fi ;;
           esac
         done
