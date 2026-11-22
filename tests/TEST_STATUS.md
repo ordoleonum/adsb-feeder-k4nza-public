@@ -2,7 +2,7 @@
 
 ## Current status (K4NZA build, 2026-11-21)
 
-- **479 tests** in `tests/unit` (446 before v3.0.15-35), all passing in CI on Python 3.10, 3.11 and 3.12.
+- **503 tests** in `tests/unit` (446 before v3.0.15-35), all passing in CI on Python 3.10, 3.11 and 3.12.
 - **One deselected test:** `test_config.py::TestReadValuesFromEnvFile::test_read_env_file_missing`
   (it patches `open()`, which `read_values_from_env_file` doesn't reach that way).
 - **Line coverage:** about 36% of `adsb-setup` (CI reports it on every push).
