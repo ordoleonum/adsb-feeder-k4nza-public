@@ -418,7 +418,6 @@ class AdsbIm:
         self.app.add_url_rule("/systemmgmt", "systemmgmt", self.systemmgmt, methods=["GET", "POST"])
         # one-click Pi OS and feeder updates
         self.app.add_url_rule("/updates", "updates", self.k4nza_updates_page, methods=["GET", "POST"])
-        self.app.add_url_rule("/api/k4nza/update_status", "k4nza_update_status", self.k4nza_update_status)
         self.app.add_url_rule("/api/k4nza/os_status", "k4nza_os_status", self.k4nza_os_status)
         # SD card, SkyStats data and power readings for the top bar
         self.app.add_url_rule("/api/k4nza/health", "k4nza_health", self.k4nza_health)
@@ -3752,7 +3751,9 @@ class AdsbIm:
         next_url = None
         for key, value in form.items():
             emptyStringPrint = "''"
-            print_err(f"handling {key} -> {emptyStringPrint if value == '' else value}")
+            # passwords and keys never go into the log (it is shown in Dozzle and in shared diagnostics)
+            shown = emptyStringPrint if value == "" else ("****" if k4nza_csrf.is_secret_field(key) else value)
+            print_err(f"handling {key} -> {shown}")
             # this seems like cheating... let's capture all of the submit buttons
             if value == "go" or value.startswith("go-"):
                 seen_go = True
@@ -5279,41 +5280,13 @@ class AdsbIm:
         if request.method != "POST":
             return render_template("support.html", url="")
 
-        url = "Internal Error uploading logs"
-
+        # K4NZA: the logs are only downloaded or shown here, never uploaded to a paste site
         target = request.form.get("upload")
         print_err(f'trying to upload the logs with target: "{target}"')
 
         if not target:
             print_err(f"ERROR: support POST request without target")
             return render_template("support.html", url="Error, unspecified upload target!")
-
-        if target == "0x0.st":
-            success, output = run_shell_captured(
-                command=f"bash {get_adsb_base_dir()}/log-sanitizer.sh 2>&1 | curl --user-agent 'adsb.im/1.0' -F 'secret=' -F'expires=24' -F'file=@-'  https://0x0.st",
-                timeout=60,
-            )
-            url = output.strip()
-            if success:
-                print_err(f"uploaded logs to {url}")
-            else:
-                print_err(f"failed to upload logs, output: {output}")
-                report_issue(f"failed to upload logs")
-            return render_template("support.html", url=url)
-
-        if target == "termbin.com":
-            success, output = run_shell_captured(
-                command=f"bash {get_adsb_base_dir()}/log-sanitizer.sh 2>&1 | nc termbin.com 9999",
-                timeout=60,
-            )
-            # strip extra chars for termbin
-            url = output.strip("\0\n").strip()
-            if success:
-                print_err(f"uploaded logs to {url}")
-            else:
-                print_err(f"failed to upload logs, output: {output}")
-                report_issue(f"failed to upload logs")
-            return render_template("support.html", url=url)
 
         if target == "local_view" or target == "local_download":
             return self.download_logs(target)
@@ -5474,10 +5447,6 @@ class AdsbIm:
                         time.sleep(0.2)
 
         return Response(tail(), mimetype="text/event-stream")
-
-    def k4nza_update_status(self):
-        refresh = request.args.get("refresh") == "1"
-        return k4nza_updates.status(refresh=refresh)
 
     def k4nza_os_status(self):
         if request.args.get("from") == "home":

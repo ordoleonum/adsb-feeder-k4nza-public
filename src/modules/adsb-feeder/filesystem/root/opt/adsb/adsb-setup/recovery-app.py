@@ -71,6 +71,10 @@ auth = WebAuth(
 )
 
 
+# links on this page that change something (reboot, roll back, reinstall)
+RECOVERY_RISKY_GETS = ("/reboot", "/rollback", "/recover-to/")
+
+
 # another website must not change anything through the visitor's browser
 @app.before_request
 def refuse_cross_site():
@@ -83,6 +87,7 @@ def refuse_cross_site():
         request.headers.get("Sec-Fetch-Site"),
         request.headers.getlist("X-Forwarded-Host"),
         request.scheme,
+        RECOVERY_RISKY_GETS,
     ):
         return Response("Refused: this change was sent from another website.", status=403)
     return None
@@ -332,7 +337,7 @@ def start_recovery(target_version):
 def reboot():
 
     if os.path.exists("/opt/adsb/adsb.im.secure_image"):
-        return (False, "Secure Image is set, reboot is disabled.")
+        return Response("Secure Image is set, reboot is disabled.", status=403)
 
     print_err("Reboot requested via recovery app!")
 

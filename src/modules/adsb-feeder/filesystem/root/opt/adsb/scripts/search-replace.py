@@ -52,7 +52,16 @@ sanitize_vars = [
     "SKYSTATS_DB_PASSWORD",
 ] + [k for k in config if re.match(r"ULTRAFEEDER_\w+_UUID$", k)]
 
+# K4NZA: also anything whose name says it is a secret (login secret and
+# password hash, radiosonde password, AIS keys, and whatever is added later)
+SECRET_NAME = re.compile(r"PASSWORD|PASSWD|SECRET|TOKEN|_KEY$|_HASH$", re.IGNORECASE)
+sanitize_vars += [k for k in config if SECRET_NAME.search(k) and k not in sanitize_vars]
+# values too short or too common to replace without garbling the log
+NOT_SECRET = {"none", "null", "true", "false", "auto", "yes", "no"}
+
 for name in sanitize_vars:
+    if name not in config:
+        continue
     item = config[name]
     pairs = []
     if type(item) == list:
@@ -68,6 +77,8 @@ for name in sanitize_vars:
             continue
         search = str(search).strip()
         if not search:
+            continue
+        if SECRET_NAME.search(name) and (len(search) < 4 or search.lower() in NOT_SECRET):
             continue
         # print(f"{search} {replace}")
         sr.append((search, replace))

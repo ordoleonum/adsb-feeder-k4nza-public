@@ -8,6 +8,7 @@ feeder was opened with. No address list is needed, so the LAN IP, .local
 names, Tailscale, ZeroTier or NetBird all keep working.
 """
 
+import re
 from typing import Iterable, Optional
 from urllib.parse import urlsplit
 
@@ -58,11 +59,12 @@ def is_cross_site(
     sec_fetch_site: Optional[str],
     forwarded_hosts: Iterable[str] = (),
     scheme: str = "http",
+    risky_get_prefixes: tuple = RISKY_GET_PREFIXES,
 ) -> bool:
     """True when the request was sent by a page from another address."""
     method = (method or "GET").upper()
     if method in SAFE_METHODS:
-        return path.startswith(RISKY_GET_PREFIXES) and sec_fetch_site == "cross-site"
+        return path.startswith(risky_get_prefixes) and sec_fetch_site == "cross-site"
     if sec_fetch_site == "cross-site":
         return True
     source = origin or referer
@@ -74,6 +76,14 @@ def is_cross_site(
         # sandboxed or privacy-stripped pages; the feeder's own pages never send it
         return True
     return _netloc(source) not in _own_addresses(host, forwarded_hosts, scheme)
+
+
+_SECRET_FIELD = re.compile(r"password|passwd|secret|token|(?:^|[-_])key(?:$|[-_])|ssh_pub", re.IGNORECASE)
+
+
+def is_secret_field(name: str) -> bool:
+    """Form fields whose value must not be written to the log."""
+    return bool(_SECRET_FIELD.search(name or ""))
 
 
 def safe_next(target: Optional[str]) -> str:

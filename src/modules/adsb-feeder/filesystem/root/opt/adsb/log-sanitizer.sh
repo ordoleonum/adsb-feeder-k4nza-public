@@ -127,6 +127,8 @@ replace_args+='s/--lon.[^ ]*/--lon <redacted>/g;'
 # remove FA name from piaware log
 replace_args+='s#flightaware.com/adsb/stats/user.*#flightaware.com/adsb/stats/user/<redacted>#g;'
 replace_args+='s/FlightAware as user .*/FlightAware as user <redacted>/g;'
+# K4NZA: form values of password / key / secret fields, as older versions logged them
+replace_args+='s/(handling \S*(?:password|passwd|secret|token|[-_]key)\S* -> ).*/$1<redacted>/i;'
 # replace 'handling ssh_pub' messages
 replace_args+='s/handling ssh_pub.*/handling ssh_pub <redacted>/;'
 # replace old messages of saing the ssh key to config

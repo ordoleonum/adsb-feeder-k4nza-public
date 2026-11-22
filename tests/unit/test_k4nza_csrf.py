@@ -151,3 +151,33 @@ def test_sending_logs_needs_the_login_when_one_is_set(client):
     origin = {"Origin": "http://adsb-feeder.local"}
     r = c.post("/support", base_url="http://adsb-feeder.local", data={"upload": "local_download"}, headers=origin)
     assert r.status_code == 302 and "/login" in r.headers["Location"]
+
+
+def test_recovery_links_from_other_websites_are_refused():
+    risky = ("/reboot", "/rollback", "/recover-to/")
+    for path in ("/reboot", "/rollback", "/recover-to/main"):
+        assert is_cross_site("GET", path, "adsb-feeder.local:1089", None, None, "cross-site", risky_get_prefixes=risky)
+        # the recovery page's own buttons, and typing the address, still work
+        assert not is_cross_site("GET", path, "adsb-feeder.local:1089", None, None, "same-origin", risky_get_prefixes=risky)
+        assert not is_cross_site("GET", path, "adsb-feeder.local:1089", None, None, "none", risky_get_prefixes=risky)
+    assert not is_cross_site("GET", "/recovery-status", "adsb-feeder.local:1089", None, None, "cross-site", risky_get_prefixes=risky)
+
+def test_settings_log_never_shows_passwords(client):
+    from unittest.mock import patch
+
+    import app as app_module
+
+    adsb_im, _ = client
+    lines = []
+    form = {"wifi_password": "MyWifiPass", "flightradar--key": "FR24KEY", "site_name": "K4NZA"}
+    with patch.object(app_module, "print_err", side_effect=lambda *a, **k: lines.append(" ".join(map(str, a)))):
+        with adsb_im.app.test_request_context("/update", method="POST", data=form):
+            try:
+                # past the restart-lock check (the mocked lock always looks taken)
+                app_module.AdsbIm.update.__wrapped__(adsb_im)
+            except Exception:
+                pass  # only the logging at the top matters here
+    log = "\n".join(lines)
+    assert "handling wifi_password -> ****" in log
+    assert "MyWifiPass" not in log and "FR24KEY" not in log
+    assert "handling site_name -> K4NZA" in log
