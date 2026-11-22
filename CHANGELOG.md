@@ -3,6 +3,14 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-37 (unreleased)
+
+**Dashboard**
+- "Since midnight" now counts the same aircraft as SkyStats' "today": only aircraft with a
+  position, inside the SkyStats radius, and no ground vehicles or towers. Aircraft heard without
+  a position are no longer counted, so the two numbers match (earlier days in the history were
+  counted the old way and read a little higher).
+
 ## v3.0.15-36 (2026-11-22)
 
 **Live map**
