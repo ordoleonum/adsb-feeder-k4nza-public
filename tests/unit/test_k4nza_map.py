@@ -1,6 +1,8 @@
 """Tests for the route that serves the K4NZA live-map styling to tar1090."""
 
+from datetime import datetime
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 import app as app_module
 from flask import Flask
@@ -94,7 +96,7 @@ def test_serves_the_bundled_fonts_with_cors(tmp_path):
 def _home(skystats=True, get=None, query=""):
     from types import SimpleNamespace
 
-    me = SimpleNamespace(_d=_D(skystats), k4_feeder_tz=lambda: "America/Chicago")
+    me = SimpleNamespace(_d=_D(skystats), k4_feeder_tz=lambda: ZoneInfo("America/Chicago"))
     flask_app = Flask(__name__)
     with flask_app.test_request_context("/api/k4nza/home" + query), patch.object(app_module.requests, "get", get or (lambda *a, **k: _Resp(500, {}))):
         resp = app_module.AdsbIm.k4nza_home(me)
@@ -112,6 +114,8 @@ def test_home_summary_comes_from_skystats_in_the_feeder_timezone():
     assert code == 200 and body["new_today"] == 2
     assert seen["url"] == "http://127.0.0.1:5173/api/k4nza/home"
     assert seen["params"] == {"tz": "America/Chicago"}
+    # the hour bars follow the station's clock, not the viewing device's
+    assert body["now_hour"] == datetime.now(ZoneInfo("America/Chicago")).hour
 
 
 def test_home_week_and_month_pass_the_days_through():
