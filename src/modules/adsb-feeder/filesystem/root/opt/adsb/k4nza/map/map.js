@@ -572,24 +572,19 @@
       dock.style.setProperty("bottom", bottom + "px", "important");
       centreBar(dock, [document.querySelector(".ol-zoom")]);
     }
-    // tar1090 puts the distance scale beside its own (narrower) aircraft pane
+    // the distance scale: always in the bottom-left corner (left is fixed in map.css,
+    // because tar1090 keeps moving it beside its own aircraft pane)
     const scale = document.querySelector(".ol-scale-line");
     if (scale && scale.offsetParent) {
-      const pane = $("selected_infoblock");
-      let x = 8;
-      if (shown(pane) && !PHONE.matches) x = Math.round(pane.getBoundingClientRect().right - scale.offsetParent.getBoundingClientRect().left + 8);
       const alt = $("altitude_chart");
       if (!PHONE.matches && shown(alt)) {
-        // computers: in the bottom-left corner, under the aircraft pane and level
-        // with the middle of the altitude key
+        // computers: under the aircraft pane, level with the middle of the altitude key
         const lift = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--k4m-lift"), 10) || 0;
-        x = 12;
         const y = 14 + lift + Math.max(0, Math.round((alt.offsetHeight - scale.offsetHeight) / 2));
         scale.style.setProperty("bottom", y + "px", "important");
       } else {
         scale.style.removeProperty("bottom");
       }
-      scale.style.setProperty("left", x + "px", "important");
     }
   }
 

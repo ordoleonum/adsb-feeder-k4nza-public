@@ -195,6 +195,10 @@ html.k4m .ol-scale-line {
   border-radius: 8px !important;
   padding: 3px 6px !important;
 }
+/* the scale stays in the bottom-left corner: tar1090 sets an inline left beside
+   its aircraft pane on every update, and only a stylesheet !important beats that */
+html.k4m .ol-scale-line { left: 12px !important; }
+@media (max-width: 700px) { html.k4m .ol-scale-line { left: 8px !important; } }
 html.k4m .ol-scale-line-inner { color: var(--k4-text) !important; border-color: var(--k4-text) !important; }
 html.k4m .ol-attribution {
   background: var(--k4-glass) !important;
