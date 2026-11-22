@@ -149,6 +149,9 @@ k4nza_fetch_skystats() {
     docker image inspect "$ref" &> /dev/null || docker load -i "$dest/skystats.tar.gz"
 }
 
+# names the pre-update copies of the settings (and an old log) so they no longer overwrite each other
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
 # if this gets downloaded to update an existing feeder from a version logging to /opt/adsb
 # to a version logging to /run/adsb-feeder-image.log, we need to initially continue to log to
 # the old target in order for the upgrade logic to work
@@ -389,6 +392,10 @@ fi
 mkdir -p /opt/adsb/config/backups
 cp /opt/adsb/config/.env /opt/adsb/config/backups/env."$TIMESTAMP" &> /dev/null
 cp /opt/adsb/config/config.json /opt/adsb/config/backups/config.json."$TIMESTAMP" &> /dev/null
+# keep the ten newest of each (they are small, but every update adds two)
+for k4nza_kind in env config.json ; do
+    ls -1t /opt/adsb/config/backups/"$k4nza_kind".* 2> /dev/null | tail -n +11 | xargs -r rm -f --
+done
 
 cd "${DIR}/adsb-feeder-image" || exit_with_message "can't cd to ${DIR}/adsb-feeder-image"
 
