@@ -126,6 +126,12 @@ class AdsbIm:
         # Initialize authentication system (with persistent secret key)
         if self._d.env_by_tags("app_secret").valuestr == "":
             self._d.env_by_tags("app_secret").value = secrets.token_hex(24)
+        # K4NZA -35: shared logs before -35 contained this key, so make a new one once
+        # (anyone logged in simply logs in again; with the login off nothing changes)
+        if k4nza_csrf.login_key_reset_due(self._d.config_path):
+            self._d.env_by_tags("app_secret").value = secrets.token_hex(24)
+            k4nza_csrf.mark_login_key_reset(self._d.config_path)
+            print_err("login key renewed once (v3.0.15-35)")
         self.app.secret_key = self._d.env_by_tags("app_secret").valuestr
         self._auth = WebAuth(
             self.app,

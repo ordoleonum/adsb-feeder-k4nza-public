@@ -9,6 +9,7 @@ names, Tailscale, ZeroTier or NetBird all keep working.
 """
 
 import re
+from pathlib import Path
 from typing import Iterable, Optional
 from urllib.parse import urlsplit
 
@@ -84,6 +85,24 @@ _SECRET_FIELD = re.compile(r"password|passwd|secret|token|(?:^|[-_])key(?:$|[-_]
 def is_secret_field(name: str) -> bool:
     """Form fields whose value must not be written to the log."""
     return bool(_SECRET_FIELD.search(name or ""))
+
+
+LOGIN_KEY_RESET_MARK = "k4nza-login-key-reset-35"
+
+
+def login_key_reset_due(config_dir) -> bool:
+    """True until the one-time login key renewal of v3.0.15-35 has been done."""
+    try:
+        return not (Path(config_dir) / LOGIN_KEY_RESET_MARK).exists()
+    except (TypeError, OSError):
+        return False  # no usable config folder: leave the key alone
+
+
+def mark_login_key_reset(config_dir) -> None:
+    try:
+        (Path(config_dir) / LOGIN_KEY_RESET_MARK).write_text("login key renewed after the v3.0.15-35 update\n")
+    except OSError:
+        pass  # renewed again at the next start: only means logging in once more
 
 
 def safe_next(target: Optional[str]) -> str:

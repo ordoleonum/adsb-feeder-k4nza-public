@@ -181,3 +181,41 @@ def test_settings_log_never_shows_passwords(client):
     assert "handling wifi_password -> ****" in log
     assert "MyWifiPass" not in log and "FR24KEY" not in log
     assert "handling site_name -> K4NZA" in log
+
+
+def test_login_key_is_renewed_once(tmp_path):
+    from utils.k4nza_csrf import login_key_reset_due, mark_login_key_reset
+
+    assert login_key_reset_due(tmp_path)
+    mark_login_key_reset(tmp_path)
+    assert not login_key_reset_due(tmp_path)
+    # no usable config folder (as in tests with a mocked one): never touch the key
+    assert not login_key_reset_due(object())
+
+
+def test_app_renews_the_login_key_once_at_start(tmp_path):
+    from unittest.mock import MagicMock, patch
+
+    import app as app_module
+
+    secret = MagicMock(valuestr="old-leaked-key")
+
+    def env(tag):
+        return secret if tag == "app_secret" else MagicMock(valuestr="1.0.0")
+
+    def start():
+        with patch("app.Data") as data_cls, patch("app.System"), patch("app.RouteManager"):
+            data = MagicMock()
+            data.env_by_tags.side_effect = env
+            data.config_path = tmp_path
+            data.version_file = str(tmp_path / "version")
+            data.proxy_routes = []
+            data_cls.return_value = data
+            app_module.AdsbIm()
+
+    start()
+    assert secret.value != "old-leaked-key" and len(secret.value) == 48
+    first = secret.value
+    secret.valuestr = first
+    start()
+    assert secret.value == first  # not renewed a second time

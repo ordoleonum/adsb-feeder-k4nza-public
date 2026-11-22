@@ -31,6 +31,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   (Support) now needs the login too.
 - **Shared logs no longer contain secrets they shouldn't:** the WiFi password, the login password and
   login key, the radiosonde password and AIS keys are now blanked out like the aggregator keys were.
+  Because older shared logs could contain the login key, -35 makes a new one once: if you use the
+  login, you'll be asked to log in again after the update.
 - Passwords and keys you type into the settings pages are no longer written to the feeder's log
   (which the log viewer and older shared logs could show).
 - The recovery page's Reboot and Roll back links can no longer be set off by another website.
