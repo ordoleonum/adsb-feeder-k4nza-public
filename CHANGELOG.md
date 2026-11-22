@@ -20,6 +20,9 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   the exports instead of a number that may be wrong.
 - Indicated and true airspeed were saved in each other's columns in the Fastest and Slowest
   lists (also from the original).
+- The Activity page no longer has "Tracking right now" at the bottom. It asked the database
+  what was overhead every 2 seconds for every open tab, even in the background; the dashboard
+  and live map already show that.
 
 ## v3.0.15-37 (2026-11-22)
 
