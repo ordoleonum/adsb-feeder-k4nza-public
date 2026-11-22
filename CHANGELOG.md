@@ -27,6 +27,8 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 **Setup**
 - Advanced: SkyStats is the first section, and while it's off it lists what needs it and recommends
   turning it on (unless the Pi has 1 GB of memory or less).
+- Data sharing: the AirNav Radar privacy shield is labelled "Privacy Policy" (it said "Terms of Use")
+  and is as easy to tap on a phone as the others.
 
 **Security and reliability**
 - Another website can no longer change the feeder through your browser (for example add an SSH key or
