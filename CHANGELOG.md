@@ -3,6 +3,13 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-39 (unreleased)
+
+**SkyStats**
+- Unidentified aircraft (TIS-B radar relays and other targets without a real aircraft address,
+  shown with a "~" in front) no longer appear on the Fastest, Slowest, Highest and Lowest lists.
+  Nothing says what they are, and their speeds don't come from the aircraft itself.
+
 ## v3.0.15-38 (2026-11-22)
 
 **SkyStats**
