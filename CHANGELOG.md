@@ -3,7 +3,7 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-39 (unreleased)
+## v3.0.15-39 (2026-11-22)
 
 **SkyStats**
 - Unidentified aircraft (TIS-B radar relays and other targets without a real aircraft address,
