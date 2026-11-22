@@ -240,6 +240,18 @@ running when something goes wrong.
 </details>
 
 <details>
+<summary><b>Bugs fixed from the original SkyStats</b></summary>
+
+- **Believable speed records:** the original saved the highest speed it ever heard from an
+  aircraft, so one bad reading could put an airliner on the Fastest list at 949 mph. A speed
+  now counts only when two readings in a row agree, match how far the aircraft actually moved,
+  come from its own ADS-B (not MLAT or TIS-B) and stay under 800 knots.
+- **Airspeeds in the right columns:** indicated and true airspeed were saved in each other's
+  columns in the Fastest and Slowest lists.
+
+</details>
+
+<details>
 <summary><b>Quiet and reachable on your network</b></summary>
 
 - **WiFi power saving is off**, so the Pi answers without delay spikes.
