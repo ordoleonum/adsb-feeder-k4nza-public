@@ -322,7 +322,11 @@ else
     # 'stable', 'oldstable' and 'beta' are channels.
     # a channel translates to the last tag in the corresponding branch
     # everything else is interpreted as a branch or a hash
-    if [[ "$TARGET" == "beta" ]] ; then
+    # K4NZA: releases are tags, not channels; the repo has no beta/stable
+    # branches, so resolving a channel only logged "malformed object name"
+    if [[ -n "$K4NZA" ]] ; then
+        :
+    elif [[ "$TARGET" == "beta" ]] ; then
         TARGET=$(git tag --merged origin/beta --sort=version:refname | grep '^v[0-9]' | tr - \~ | sort -V | tr \~ - | tail -1) || exit_with_message "error finding tag, giving up"
     elif [[ "$TARGET" == "stable" ]] ; then
         TARGET=$(git tag --merged origin/stable --sort=version:refname | grep '^v[0-9]'| tr - \~ | sort -V | tr \~ - | tail -1) || exit_with_message "error finding tag, giving up"
@@ -644,7 +648,10 @@ if [ -f /opt/adsb/os.adsb.feeder.image ] ; then
         rm -f /var/swap
     fi
     # avoid unnecessary diskwrites by zerotier
-    ln -sf /dev/null /var/lib/zerotier-one/metrics.prom
+    # K4NZA: only when zerotier is installed (logged an [ERROR] on every update otherwise)
+    if [[ -d /var/lib/zerotier-one ]]; then
+        ln -sf /dev/null /var/lib/zerotier-one/metrics.prom
+    fi
     # on dietpi, reduce the dhclient timeout
     if [[ -f /etc/dhcp/dhclient.conf ]] && ! grep -qs /etc/dhcp/dhclient.conf -e '^timeout 30;'; then
         echo "timeout 30;" >> /etc/dhcp/dhclient.conf

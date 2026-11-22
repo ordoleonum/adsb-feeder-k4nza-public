@@ -11,6 +11,12 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   Nothing says what they are, and their speeds don't come from the aircraft itself.
 - An empty record list keeps its title and says when records appear, instead of a bare
   "No data available".
+- The background jobs that fill the record lists and Interesting can no longer get stuck on a
+  single unreadable row (one row with an empty field used to stop the job for good).
+
+**Updates**
+- Updating no longer logs two harmless errors (a ZeroTier file on feeders without ZeroTier, and
+  a "malformed object name origin/stable" from a release channel this build doesn't use).
 
 ## v3.0.15-38 (2026-11-22)
 
