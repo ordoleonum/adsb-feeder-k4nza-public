@@ -3,7 +3,7 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-35 (unreleased)
+## v3.0.15-35 (2026-11-21)
 
 **Dashboard**
 - Phones: the headline breaks after "23 aircraft," like on a computer, so the two numbers sit on
