@@ -70,7 +70,7 @@ class WebAuth:
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not self.is_authenticated():
-                return redirect(url_for("login", next=request.url))
+                return redirect(url_for("login", next=request.full_path.rstrip("?")))
             return f(*args, **kwargs)
 
         return decorated_function
@@ -92,7 +92,7 @@ def create_auth_decorator(auth_instance: WebAuth):
         @wraps(f)
         def decorated_function(self, *args, **kwargs):
             if not auth_instance.is_authenticated():
-                return redirect(url_for("login", next=request.url))
+                return redirect(url_for("login", next=request.full_path.rstrip("?")))
             return f(self, *args, **kwargs)
 
         return decorated_function

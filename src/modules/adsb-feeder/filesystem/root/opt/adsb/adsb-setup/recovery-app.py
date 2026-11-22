@@ -9,6 +9,7 @@ import time
 from sys import argv
 
 from flask import Flask, Response, redirect, render_template, request, url_for
+from utils import k4nza_csrf
 from utils.auth import WebAuth
 
 # Import authentication utilities (using relative import from parent directory)
@@ -70,6 +71,23 @@ auth = WebAuth(
 )
 
 
+# another website must not change anything through the visitor's browser
+@app.before_request
+def refuse_cross_site():
+    if k4nza_csrf.is_cross_site(
+        request.method,
+        request.path,
+        request.host,
+        request.headers.get("Origin"),
+        request.headers.get("Referer"),
+        request.headers.get("Sec-Fetch-Site"),
+        request.headers.getlist("X-Forwarded-Host"),
+        request.scheme,
+    ):
+        return Response("Refused: this change was sent from another website.", status=403)
+    return None
+
+
 # Add authentication check before each request
 @app.before_request
 def check_authentication():
@@ -80,7 +98,7 @@ def check_authentication():
 
     # If authentication is enabled and user is not authenticated, redirect to login
     if not auth.is_authenticated():
-        return redirect(url_for("login", next=request.url))
+        return redirect(url_for("login", next=request.full_path.rstrip("?")))
 
     return None
 
@@ -242,8 +260,8 @@ def login():
 
     if auth.login(username, password):
         # Successful login
-        if next_page and next_page.startswith("/"):
-            return redirect(next_page)
+        if k4nza_csrf.safe_next(next_page):
+            return redirect(k4nza_csrf.safe_next(next_page))
         return redirect(url_for("recovery"))
     else:
         # Failed login

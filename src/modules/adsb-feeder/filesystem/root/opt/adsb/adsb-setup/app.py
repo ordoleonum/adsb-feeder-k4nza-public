@@ -48,7 +48,7 @@ from flask import (
     url_for,
 )
 from flask.logging import logging as flask_logging  # pyright: ignore[reportPrivateImportUsage]
-from utils import k4nza_health, k4nza_nas_backup, k4nza_skystats_db, k4nza_updates
+from utils import k4nza_csrf, k4nza_health, k4nza_nas_backup, k4nza_skystats_db, k4nza_updates
 from utils.agg_status import AggStatus, Healthcheck, ImStatus
 from utils.auth import WebAuth
 from utils.background import Background
@@ -147,6 +147,29 @@ class AdsbIm:
 
         # Add authentication check before each request
         @self.app.before_request
+        def refuse_cross_site():
+            # runs first: another website must not change anything through the visitor's browser
+            if k4nza_csrf.is_cross_site(
+                request.method,
+                request.path,
+                request.host,
+                request.headers.get("Origin"),
+                request.headers.get("Referer"),
+                request.headers.get("Sec-Fetch-Site"),
+                request.headers.getlist("X-Forwarded-Host"),
+                request.scheme,
+            ):
+                print_err(
+                    f"refused {request.method} {request.path} sent from another site "
+                    f"(origin {request.headers.get('Origin') or request.headers.get('Referer')}, host {request.host})"
+                )
+                return make_response(
+                    "Refused: this change was sent from another website. " "Open the feeder's own page and try again.",
+                    403,
+                )
+            return None
+
+        @self.app.before_request
         def check_authentication():
             # List of routes that don't require authentication
             public_routes = [
@@ -163,16 +186,21 @@ class AdsbIm:
                 "iconspng",  # AIS icons
                 "widget",
             ]
+            # the Share Diagnostics page stays readable, but uploading or downloading
+            # the logs needs the login when one is set
+            sends_logs = request.endpoint == "support" and request.method == "POST"
             # API endpoints should also be public
-            if request.endpoint and (
-                request.endpoint in public_routes or request.endpoint.startswith("api") or request.path.startswith("/api/")
+            if (
+                request.endpoint
+                and not sends_logs
+                and (request.endpoint in public_routes or request.endpoint.startswith("api") or request.path.startswith("/api/"))
             ):
                 return None
 
             # If authentication is enabled and user is not authenticated, redirect to login
             if not self._auth.is_authenticated():
                 print_err(f"redirecting to login page for {request.endpoint}")
-                return redirect(url_for("login", next=request.url))
+                return redirect(url_for("login", next=request.full_path.rstrip("?")))
 
             return None
 
@@ -471,7 +499,7 @@ class AdsbIm:
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not self._auth.is_authenticated():
-                return redirect(url_for("login", next=request.url))
+                return redirect(url_for("login", next=request.full_path.rstrip("?")))
             return f(*args, **kwargs)
 
         return decorated_function
@@ -5387,8 +5415,8 @@ class AdsbIm:
 
         if self._auth.login(username, password):
             # Successful login
-            if next_page and next_page.startswith("/"):
-                return redirect(next_page)
+            if k4nza_csrf.safe_next(next_page):
+                return redirect(k4nza_csrf.safe_next(next_page))
             return redirect(url_for("director"))
         else:
             # Failed login
