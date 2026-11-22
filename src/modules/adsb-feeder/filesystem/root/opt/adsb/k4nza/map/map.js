@@ -480,11 +480,12 @@
     sync();
   }
 
-  // top bar and bottom dock: centred over the map, but never over the panels on
-  // the left (selected aircraft, settings), the tools at the top right or the
-  // altitude key at the bottom right
+  // top bar, altitude key and bottom dock: centred over the map, but never over
+  // the panels on the left (selected aircraft, settings), the tools at the top
+  // right or the zoom buttons at the bottom right
   // The free stretch of map beside the panels, for a bar at its current height.
-  function freeSpan(bar, rightLimits) {
+  // (anyRow: the left panels count even where they end above the bar)
+  function freeSpan(bar, rightLimits, anyRow) {
     const host = bar.offsetParent.getBoundingClientRect();
     // the dock's own row only (not the More panel open above it)
     const r0 = (bar.querySelector(".k4m-dockbar") || bar).getBoundingClientRect();
@@ -493,7 +494,7 @@
       const el = $(id);
       if (!shown(el)) continue;
       const r = el.getBoundingClientRect();
-      if (r.width && r.top < r0.bottom && r.bottom > r0.top) left = Math.max(left, r.right - host.left + 10);
+      if (r.width && (anyRow || (r.top < r0.bottom && r.bottom > r0.top))) left = Math.max(left, r.right - host.left + 10);
     }
     let right = host.width - 8;
     for (const el of rightLimits) {
@@ -520,6 +521,7 @@
     if (x + w > right) x = Math.max(8, right - w);
     bar.style.setProperty("left", Math.round(x) + "px", "important");
   }
+  const ALT_KEY_MAX = 1000;
   function placeTopBar() {
     // replay: tar1090 shortens the map for its replay bar at the bottom; lift
     // the dock, the altitude key and the selected aircraft above it
@@ -535,16 +537,40 @@
     }
     centreBar($("header_top"), [$("header_side"), document.querySelector(".layer-switcher")]);
     if (dock) {
-      // phones: the selected aircraft sits at the bottom, so the dock goes above it
+      // computers: the altitude key at the bottom, as wide as the free map allows
+      // (up to ALT_KEY_MAX, so its numbers can be read), and the dock just above it
       const info = $("selected_infoblock");
       let bottom = 14 + lift;
+      const alt = $("altitude_chart");
+      if (!PHONE.matches && shown(alt) && alt.offsetParent) {
+        // beside the aircraft pane, which ends above the key
+        let [l, r] = freeSpan(alt, [document.querySelector(".ol-zoom")], true);
+        // and right of the distance scale in the bottom-left corner
+        const sc = document.querySelector(".ol-scale-line");
+        if (shown(sc)) l = Math.max(l, 12 + sc.offsetWidth + 10);
+        const w = Math.max(240, Math.min(ALT_KEY_MAX, r - l));
+        alt.style.setProperty("width", w + "px", "important");
+        alt.style.setProperty("left", Math.round(Math.max(l, (l + r) / 2 - w / 2)) + "px", "important");
+        bottom = 14 + lift + alt.offsetHeight + 8;
+      }
+      // computers: the aircraft pane ends level with the dock, above the altitude key
+      if (info && !PHONE.matches) {
+        if (bottom > 14 + lift) {
+          info.style.setProperty("bottom", bottom + "px", "important");
+          info.style.setProperty("max-height", "calc(100% - " + (72 + bottom) + "px)", "important");
+        } else {
+          info.style.removeProperty("bottom");
+          info.style.removeProperty("max-height");
+        }
+      }
+      // phones: the selected aircraft sits at the bottom, so the dock goes above it
       if (PHONE.matches && shown(info) && dock.offsetParent) {
         // (the pane is already lifted above the replay bar)
         const host = dock.offsetParent.getBoundingClientRect();
         bottom = Math.max(14 + lift, Math.round(host.bottom - info.getBoundingClientRect().top + 8));
       }
       dock.style.setProperty("bottom", bottom + "px", "important");
-      centreBar(dock, [$("altitude_chart"), document.querySelector(".ol-zoom")]);
+      centreBar(dock, [document.querySelector(".ol-zoom")]);
     }
     // tar1090 puts the distance scale beside its own (narrower) aircraft pane
     const scale = document.querySelector(".ol-scale-line");
@@ -552,6 +578,17 @@
       const pane = $("selected_infoblock");
       let x = 8;
       if (shown(pane) && !PHONE.matches) x = Math.round(pane.getBoundingClientRect().right - scale.offsetParent.getBoundingClientRect().left + 8);
+      const alt = $("altitude_chart");
+      if (!PHONE.matches && shown(alt)) {
+        // computers: in the bottom-left corner, under the aircraft pane and level
+        // with the middle of the altitude key
+        const lift = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--k4m-lift"), 10) || 0;
+        x = 12;
+        const y = 14 + lift + Math.max(0, Math.round((alt.offsetHeight - scale.offsetHeight) / 2));
+        scale.style.setProperty("bottom", y + "px", "important");
+      } else {
+        scale.style.removeProperty("bottom");
+      }
       scale.style.setProperty("left", x + "px", "important");
     }
   }

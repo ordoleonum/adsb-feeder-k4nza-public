@@ -18,6 +18,12 @@ The feeder's **Updates** page shows the newest entry as "What's new".
   (not a crash article or a Cessna), a Cessna 172 and twin-engine helicopters are no longer
   skipped for mentioning an engine, and a UH-60 Black Hawk beats the HH-60 Pave Hawk page.
 
+**Live map**
+- The altitude key is about twice as big and runs along the bottom (up to 1000 px wide, beside the
+  aircraft pane), so its numbers can be read, also in Plane-Alert screenshots. The Follow / Isolate /
+  Dim / Replay bar sits just above it, the aircraft pane ends level with that bar, the distance
+  scale sits in the bottom-left corner and zoom in the bottom-right corner.
+
 **Setup**
 - Advanced: SkyStats is the first section, and while it's off it lists what needs it and recommends
   turning it on (unless the Pi has 1 GB of memory or less).
