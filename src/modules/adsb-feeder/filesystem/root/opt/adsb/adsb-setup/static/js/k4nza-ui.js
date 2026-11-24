@@ -436,7 +436,8 @@
     if (trimmed) list = list.slice(first);
     const title = $id("k4-hours-title");
     if (title && trimmed) title.textContent = "Since " + dayName(list[0].date, true);
-    const max = Math.max(1, ...list.map((x) => x.aircraft));
+    const max = scaleTop(Math.max(...list.map((x) => x.aircraft)));
+    drawScale(max);
     box.textContent = "";
     // today isn't over yet, and a station's first day started part way
     // through, so neither is ever "the quietest"
@@ -465,6 +466,26 @@
     box.setAttribute("aria-label", "Different aircraft heard each day, last " + list.length + " days; busiest " + dayName(list[busiest].date, true));
   }
 
+  // the aircraft scale on the left: a tidy top (1, 2, 2.5 or 5 x 10^n per step,
+  // 4 steps) so the labels land on round numbers; bars are drawn against it
+  function scaleTop(max) {
+    const raw = Math.max(1, max) / 4;
+    const p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw && (s >= 1 && Number.isInteger(s)));
+    return (step || Math.ceil(raw)) * 4;
+  }
+  function drawScale(top) {
+    const y = $id("k4-hours-y");
+    if (!y) return;
+    y.textContent = "";
+    for (let i = 0; i <= 4; i++) {
+      const v = (top / 4) * i;
+      const s = el("span", "", v >= 10000 ? Math.round(v / 1000) + "k" : v.toLocaleString());
+      s.style.bottom = i * 25 + "%";
+      y.appendChild(s);
+    }
+  }
+
   let nowHour = null;
   function drawHours(hours) {
     lastHours = hours;
@@ -475,10 +496,12 @@
     const now = nowHour !== null ? nowHour : new Date().getHours();
     const shown = hours.slice(0, now + 1);
     const max = Math.max(1, ...shown);
+    const top = scaleTop(max);
+    drawScale(top);
     box.textContent = "";
     hours.forEach((n, h) => {
       const bar = el("span", "k4-hour" + (h === now ? " k4-hour-now" : "") + (n === max && h <= now ? " k4-hour-max" : "") + (h > now ? " k4-hour-later" : ""));
-      bar.style.height = h > now ? "0" : Math.max(2, Math.round((n / max) * 100)) + "%";
+      bar.style.height = h > now ? "0" : Math.max(2, Math.round((n / top) * 100)) + "%";
       bar.title = fmtHour(h) + ": " + n.toLocaleString() + " aircraft";
       box.appendChild(bar);
     });
@@ -637,6 +660,95 @@
     box.hidden = cards.length === 0;
   }
 
+  // Today's notable events (SkyStats works them out and orders them; an empty list hides the card).
+  // A line about an aircraft opens it in SkyStats Search, like the highlights.
+  // Several of one kind (records, new types, returns): the best one shows and
+  // the rest fold under a "Show 2 more records" button, kept open across refreshes.
+  const firstsOpen = new Set();
+  const FIRSTS_MORE = { range: ["record", "records"], type: ["new type", "new types"], back: ["return", "returns"] };
+  function drawFirsts(list) {
+    const wrap = $id("k4-firsts"), box = $id("k4-firsts-list");
+    if (!wrap || !box || !Array.isArray(list)) return;
+    const name = (a) => titleCase(a.model) || a.type || "";
+    const who = (a) => a.registration || a.callsign || a.hex.toUpperCase();
+    const ord = (n) => fmt(n) + "th"; // round numbers only: 100th, 1,000th
+    const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
+    const groups = []; // [{kind, rows}] in SkyStats' order
+    list.forEach((f) => {
+      const a = f.aircraft;
+      let tag, kind, what, sub;
+      if (f.kind === "range" && a) {
+        tag = "Record"; kind = "mil";
+        what = "Farthest ever to the " + (DIRS[f.direction] || f.direction) + ": " + fmtDist(f.distance_nm);
+        // the gain from the numbers as shown, so 194 and 184 read +10
+        const shown = fmtDist(f.distance_nm), was = fmtDist(f.old_nm);
+        const gain = Math.round((parseFloat(shown) - parseFloat(was)) * 10) / 10;
+        sub = "Old best " + was + (gain > 0 ? " (+" + gain + " " + shown.split(" ")[1] + ")" : "") + ". " +
+          who(a) + (name(a) ? " (" + name(a) + ")" : "");
+      } else if (f.kind === "type" && a) {
+        tag = "First"; kind = "accent";
+        what = "First " + (name(a) || a.type) + (a.model && a.type ? " (" + a.type + ")" : "") + " you've ever seen";
+        sub = [who(a), a.operator ? titleCase(a.operator) : ""].filter(Boolean).join(", ");
+      } else if (f.kind === "back" && a) {
+        tag = "Back"; kind = "civ";
+        what = who(a) + " is back after " + plural(f.days, "day", "days");
+        sub = [name(a), a.operator ? titleCase(a.operator) : ""].filter(Boolean).join(", ");
+      } else if (f.kind === "milestone" && a) {
+        tag = "Milestone"; kind = "good";
+        what = "Your " + ord(f.number) + " different aircraft";
+        sub = who(a) + (name(a) ? " (" + name(a) + ")" : "");
+      } else if (f.kind === "soon") {
+        tag = "Coming up"; kind = "good";
+        what = fmt(f.number - f.total) + " away from your " + ord(f.number) + " different aircraft";
+        sub = fmt(f.total) + " so far";
+      } else {
+        return;
+      }
+      const row = el(a && a.hex ? "a" : "div", "k4-first");
+      if (a && a.hex) {
+        row.href = "/skystats/?q=" + encodeURIComponent(a.registration || a.hex.toUpperCase());
+        row.target = "_blank";
+        row.rel = "noopener";
+      }
+      const mid = el("span");
+      mid.append(el("div", "k4-first-what", what), el("div", "k4-first-sub", sub));
+      row.append(el("span", "k4-tag k4-tag-" + kind, tag), mid, el("span", "k4-first-when", f.when ? fmtLocal(f.when) : ""));
+      const li = el("li");
+      li.appendChild(row);
+      const last = groups[groups.length - 1];
+      if (last && last.kind === f.kind) last.rows.push(li); else groups.push({ kind: f.kind, rows: [li] });
+    });
+    const items = [];
+    groups.forEach((g) => {
+      items.push(g.rows[0]);
+      const extra = g.rows.slice(1);
+      if (!extra.length) return;
+      const open = firstsOpen.has(g.kind);
+      const words = FIRSTS_MORE[g.kind] || ["more", "more"];
+      const btn = el("button", "k4-first-toggle");
+      btn.type = "button";
+      const label = () => {
+        const o = firstsOpen.has(g.kind);
+        btn.textContent = (o ? "Hide " : "Show ") + extra.length + " more " + (extra.length === 1 ? words[0] : words[1]);
+        btn.setAttribute("aria-expanded", String(o));
+        btn.classList.toggle("is-open", o);
+      };
+      btn.addEventListener("click", () => {
+        if (firstsOpen.has(g.kind)) firstsOpen.delete(g.kind); else firstsOpen.add(g.kind);
+        extra.forEach((li) => { li.hidden = !firstsOpen.has(g.kind); });
+        label();
+      });
+      label();
+      extra.forEach((li) => { li.hidden = !open; li.classList.add("k4-first-extra"); });
+      items.push(...extra);
+      const tli = el("li", "k4-first-more");
+      tli.appendChild(btn);
+      items.push(tli);
+    });
+    box.replaceChildren(...items);
+    wrap.hidden = items.length === 0;
+  }
+
   function updateHome() {
     if (!$id("k4-highlights") && !$id("k4-hours")) return;
     fetch("/api/k4nza/home", { signal: AbortSignal.timeout(20000) })
@@ -645,6 +757,7 @@
         if (typeof d.now_hour === "number") nowHour = d.now_hour;
         drawHours(d.hours);
         drawHighlights(d);
+        drawFirsts(d.firsts);
         if (d.farthest) {
           setTile("k4-n-far", fmtDist(d.farthest.distance_nm));
           setTile("k4-n-far-sub", "To the " + (DIRS[d.farthest.direction] || d.farthest.direction));

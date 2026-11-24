@@ -139,7 +139,10 @@
             <button type="button" class="k4-seg-btn" data-k4-view="month" aria-pressed="false">Month</button>
           </div>
         </div>
-        <div class="k4-hours" id="k4-hours" role="img" aria-label="Aircraft heard each hour today"></div>
+        <div class="k4-plot">
+          <div class="k4-yaxis" id="k4-hours-y" aria-hidden="true"></div>
+          <div class="k4-hours" id="k4-hours" role="img" aria-label="Aircraft heard each hour today"></div>
+        </div>
         <div class="k4-hours-axis" id="k4-hours-axis"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
         <div class="k4-muted k4-hours-note" id="k4-hours-note"></div>
       </section>
@@ -161,6 +164,13 @@
   {% if k4sky %}
   <div class="col-12 mb-3">
     <div class="k4-highlights" id="k4-highlights" hidden></div>
+  </div>
+  {# records, new types, long-lost returns, round numbers: hidden on days with none #}
+  <div class="col-12 mb-3" id="k4-firsts" hidden>
+    <section class="k4-card">
+      <div class="k4-card-head"><h2>Today's notable events</h2><a href="/skystats/" target="_blank" rel="noopener">SkyStats</a></div>
+      <ul class="k4-firsts-list" id="k4-firsts-list"></ul>
+    </section>
   </div>
   {% elif k4home and adsb and not is_enabled('stage2') %}
   {# SkyStats is off: say what it adds and where to turn it on (gone once it's on) #}

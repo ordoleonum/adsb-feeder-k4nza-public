@@ -915,6 +915,31 @@ code, pre, kbd, .k4-mono { font-family: var(--k4-mono); }
 .k4-tag-accent { background: var(--k4-accent-soft); color: var(--k4-accent-ink); }
 .k4-tag-civ { background: var(--k4-civ-soft); color: var(--k4-civ-ink); }
 .k4-tag-neu { background: var(--k4-neu-soft); color: var(--k4-text-2); }
+.k4-tag-good { background: var(--k4-good-soft); color: var(--k4-good-ink); }
+
+/* Today's notable events: tag, what happened, when */
+.k4-firsts-list { list-style: none; margin: 0; padding: 0; }
+.k4-first { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center;
+  padding: 0.65rem 0; border-top: 1px solid var(--k4-border-2); color: inherit; text-decoration: none; }
+.k4-firsts-list li:first-child .k4-first { border-top: 0; padding-top: 0.25rem; }
+a.k4-first:hover .k4-first-what { color: var(--k4-accent); }
+.k4-first .k4-tag { justify-self: start; white-space: nowrap; }
+.k4-first-what { font-weight: 600; line-height: 1.3; }
+.k4-first-sub { font-size: 0.85rem; color: var(--k4-muted); line-height: 1.3; margin-top: 0.1rem; }
+.k4-first-when { font-size: 0.85rem; color: var(--k4-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* more of the same kind: folded under a button lined up with the text */
+.k4-first-more { padding: 0 0 0.55rem 7.25rem; }
+.k4-first-toggle { border: 0; background: none; padding: 0.15rem 0; color: var(--k4-accent); font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; }
+.k4-first-toggle::after { content: ""; width: 0.45rem; height: 0.45rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: translateY(-0.12rem) rotate(45deg); transition: transform 0.15s; }
+.k4-first-toggle.is-open::after { transform: translateY(0.1rem) rotate(-135deg); }
+.k4-first-toggle:hover { text-decoration: underline; }
+@media (max-width: 576px) {
+  .k4-first { grid-template-columns: minmax(0, 1fr) auto; gap: 0.25rem 0.6rem; }
+  .k4-first .k4-tag { grid-column: 1 / -1; }
+  .k4-first-more { padding-left: 0; }
+}
 
 /* sharing with: one chip per site, its state from the feed checks */
 .k4-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -963,7 +988,15 @@ code, pre, kbd, .k4-mono { font-family: var(--k4-mono); }
 /* -29 home: polish after the first look */
 .k4-tile-unit { font-size: 0.55em; font-weight: 500; color: var(--k4-muted); letter-spacing: 0; }
 #k4-hours-card { display: flex; flex-direction: column; }
-#k4-hours-card .k4-hours { flex: 1 1 180px; height: auto; min-height: 180px; }
+#k4-hours-card .k4-plot { flex: 1 1 180px; min-height: 180px; display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+#k4-hours-card .k4-hours { flex: 1; height: auto; margin-top: 0;
+  /* faint lines at each scale step (4 steps) */
+  background: linear-gradient(to bottom, var(--k4-border) 1px, transparent 1px) 0 0 / 100% 25%;
+  border-bottom: 1px solid var(--k4-border); }
+/* aircraft scale on the left: labels sit on the lines */
+.k4-yaxis { position: relative; width: 2.6rem; flex: none; font-family: var(--k4-mono); font-size: 0.72rem; color: var(--k4-muted); }
+.k4-yaxis span { position: absolute; right: 0; transform: translateY(50%); line-height: 1; }
+#k4-hours-card .k4-hours-axis { margin-left: 3.1rem; }
 .k4-health { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 575.98px) {
   .k4-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
