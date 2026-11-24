@@ -82,7 +82,6 @@
     </details>
     {% endif %}
     {% if is_enabled('skystats') %}<a class="k4-tn" href="/skystats/" target="_blank" rel="noopener" title="Flight history, records and interesting aircraft (opens in a new tab)">SkyStats</a>{% endif %}
-    {% if base_ok and full_maps %}<a class="k4-tn" href="/stats/" target="_blank" rel="noopener" title="Message rate, range and signal over time (opens in a new tab)">Graphs</a>{% endif %}
     <details class="k4-tn-menu">
       <summary class="k4-tn {% if ap_setup %}active{% endif %}">Setup {{ icon('down') }}</summary>
       <div class="k4-tn-panel">
@@ -102,6 +101,7 @@
       <div class="k4-tn-panel">
         {{ item('/updates', 'Updates', 'refresh', 'Update the Pi OS and the feeder software', key='updates') }}
         {{ item('/systemmgmt', 'Management', 'server', 'Reboot, shut down, WiFi, SSH, remote access', key='systemmgmt') }}
+        {% if base_ok and full_maps %}{{ item('/stats/', 'Graphs', 'chart', 'Message rate, range and signal over time', newtab=True) }}{% endif %}
         {{ item('/backup', 'Backup', 'save', 'Download your settings and SkyStats data', key='backup') }}
         {{ item('/restore', 'Restore', 'save', 'Load settings or SkyStats data from a backup', key='restore') }}
         <div class="k4-tn-sep"></div>
@@ -151,9 +151,6 @@
     {% if is_enabled('skystats') %}
     {{ item('/skystats/', 'SkyStats', 'star', 'Flight history, records, interesting aircraft and export', newtab=True, id='skystats-navbar-button') }}
     {% endif %}
-    {% if base_ok and full_maps %}
-    {{ item('/stats/', 'Reception graphs', 'chart', 'Message rate, range and signal over time', newtab=True) }}
-    {% endif %}
     {% if is_enabled('acarshub') %}{{ item('/acarshub', 'ACARS Hub', 'msg', 'Aircraft text messages', newtab=True, id='k4-nav-acarshub') }}{% endif %}
     {% if is_enabled('run_shipfeeder') %}{{ item('/aiscatcher', 'AIS Catcher', 'ship', 'Ships', newtab=True, id='k4-nav-aiscatcher') }}{% endif %}
     {% if is_enabled('run_sonde') %}{{ item('/radiosonde', 'Radiosonde', 'balloon', 'Weather balloons', newtab=True, id='k4-nav-radiosonde') }}{% endif %}
@@ -182,6 +179,9 @@
     <div class="k4-nav-title">System</div>
     {{ item('/updates', 'Updates', 'refresh', 'Update the Pi OS and the feeder software', key='updates') }}
     {{ item('/systemmgmt', 'Management', 'server', 'Reboot, shut down, WiFi, SSH, remote access', key='systemmgmt') }}
+    {% if base_ok and full_maps %}
+    {{ item('/stats/', 'Graphs', 'chart', 'Message rate, range and signal over time', newtab=True) }}
+    {% endif %}
     {{ item('/backup', 'Backup', 'save', 'Download your settings and SkyStats data', key='backup') }}
     {{ item('/restore', 'Restore', 'save', 'Load settings or SkyStats data from a backup', key='restore') }}
     {% if is_enabled('stage2') and full_maps %}

@@ -3,6 +3,12 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-42 (unreleased)
+
+**Menus**
+- **Graphs** moved from the top menu bar into the **System** menu, right under Management (also in
+  the phone menu). The top bar is now Overview, Live map, SkyStats, Setup and System.
+
 ## v3.0.15-41 (2026-11-23)
 
 **Dashboard**

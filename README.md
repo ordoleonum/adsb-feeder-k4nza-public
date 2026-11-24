@@ -91,7 +91,7 @@ Open the feeder and it tells you what's happening in one sentence: *"Currently t
     <td valign="top"><b>Works on your phone too.</b><br><br>
       The same dashboard in one column, with bottom tabs and a slide-in menu.<br><br>
       A <b>sun/moon switch</b> picks light or dark, and the live map and SkyStats follow your choice.<br><br>
-      On a computer, a top menu (Overview, Live map, SkyStats, Graphs, Setup, System) shows your
+      On a computer, a top menu (Overview, Live map, SkyStats, Setup, System) shows your
       station name, the installed version and live receiver status.<br><br>
       <sub>Dark mode shown.</sub></td>
   </tr>
@@ -345,9 +345,8 @@ The menu at the top (or the **Menu** tab on a phone) has everything:
 | **Overview** | The dashboard: what you're tracking, today's highlights, history search, station health |
 | **Live map** | What you're receiving right now; Heatmap, Tracks, Replay and Map options are in its menu |
 | **SkyStats** | Activity (the report), Routes, Interesting, Records (with the notable events log) and **Search**; **Export** is under its gear |
-| **Graphs** | How well your station is doing over hours, days and months |
 | **Setup** | Basic setup, Advanced, Radio (SDR) with a reception guide, and Data sharing |
-| **System** | Updates (with **Go back**), Management, Backup and Restore (with the nightly NAS backup), logs and diagnostics |
+| **System** | Updates (with **Go back**), Management, **Graphs** (how well your station is doing over hours, days and months), Backup and Restore (with the nightly NAS backup), logs and diagnostics |
 
 The live map, graphs and SkyStats open in a new browser tab.
 
