@@ -662,17 +662,17 @@
 
   // Today's notable events (SkyStats works them out and orders them; an empty list hides the card).
   // A line about an aircraft opens it in SkyStats Search, like the highlights.
-  // Several of one kind (records, new types, returns): the best one shows and
+  // Several of one kind (records, new types, airlines, countries): the best one shows and
   // the rest fold under a "Show 2 more records" button, kept open across refreshes.
   const firstsOpen = new Set();
-  const FIRSTS_MORE = { range: ["record", "records"], type: ["new type", "new types"], back: ["return", "returns"] };
+  const FIRSTS_MORE = { range: ["record", "records"], type: ["new type", "new types"], airline: ["new airline", "new airlines"],
+    country: ["new country", "new countries"] };
   function drawFirsts(list) {
     const wrap = $id("k4-firsts"), box = $id("k4-firsts-list");
     if (!wrap || !box || !Array.isArray(list)) return;
     const name = (a) => titleCase(a.model) || a.type || "";
     const who = (a) => a.registration || a.callsign || a.hex.toUpperCase();
     const ord = (n) => fmt(n) + "th"; // round numbers only: 100th, 1,000th
-    const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
     const groups = []; // [{kind, rows}] in SkyStats' order
     list.forEach((f) => {
       const a = f.aircraft;
@@ -689,10 +689,18 @@
         tag = "First"; kind = "accent";
         what = "First " + (name(a) || a.type) + (a.model && a.type ? " (" + a.type + ")" : "") + " you've ever seen";
         sub = [who(a), a.operator ? titleCase(a.operator) : ""].filter(Boolean).join(", ");
-      } else if (f.kind === "back" && a) {
-        tag = "Back"; kind = "civ";
-        what = who(a) + " is back after " + plural(f.days, "day", "days");
-        sub = [name(a), a.operator ? titleCase(a.operator) : ""].filter(Boolean).join(", ");
+      } else if (f.kind === "busiest") {
+        tag = "Record"; kind = "mil";
+        what = "Busiest day ever: " + fmt(f.count) + " different aircraft so far";
+        sub = "Old best " + fmt(f.old_count) + (f.old_date ? " on " + dayName(f.old_date, true) : "");
+      } else if (f.kind === "airline" && a) {
+        tag = "First"; kind = "accent";
+        what = "First " + (f.airline || f.code) + " flight";
+        sub = [a.callsign, a.registration, name(a)].filter(Boolean).join(", ");
+      } else if (f.kind === "country" && a) {
+        tag = "First"; kind = "accent";
+        what = "First aircraft from " + f.country;
+        sub = who(a) + (name(a) ? " (" + name(a) + ")" : "") + (a.operator ? ", " + titleCase(a.operator) : "");
       } else if (f.kind === "milestone") {
         // no aircraft when it was an unidentified "~" target: the count only
         tag = "Milestone"; kind = "good";
