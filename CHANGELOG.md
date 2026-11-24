@@ -9,6 +9,10 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - **Graphs** moved from the top menu bar into the **System** menu, right under Management (also in
   the phone menu). The top bar is now Overview, Live map, SkyStats, Setup and System.
 
+**Notable events**
+- The firsts say what kind they are: **First type**, **First airline** and **First country**
+  (they all read "First"), on the dashboard card and in SkyStats' Records log.
+
 ## v3.0.15-41 (2026-11-23)
 
 **Dashboard**

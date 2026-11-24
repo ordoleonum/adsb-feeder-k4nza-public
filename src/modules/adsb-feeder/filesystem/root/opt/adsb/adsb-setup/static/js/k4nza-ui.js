@@ -686,7 +686,7 @@
         sub = "Old best " + was + (gain > 0 ? " (+" + gain + " " + shown.split(" ")[1] + ")" : "") + ". " +
           who(a) + (name(a) ? " (" + name(a) + ")" : "");
       } else if (f.kind === "type" && a) {
-        tag = "First"; kind = "accent";
+        tag = "First type"; kind = "accent";
         what = "First " + (name(a) || a.type) + (a.model && a.type ? " (" + a.type + ")" : "") + " you've ever seen";
         sub = [who(a), a.operator ? titleCase(a.operator) : ""].filter(Boolean).join(", ");
       } else if (f.kind === "busiest") {
@@ -694,11 +694,11 @@
         what = "Busiest day ever: " + fmt(f.count) + " different aircraft so far";
         sub = "Old best " + fmt(f.old_count) + (f.old_date ? " on " + dayName(f.old_date, true) : "");
       } else if (f.kind === "airline" && a) {
-        tag = "First"; kind = "accent";
+        tag = "First airline"; kind = "accent";
         what = "First " + (f.airline || f.code) + " flight";
         sub = [a.callsign, a.registration, name(a)].filter(Boolean).join(", ");
       } else if (f.kind === "country" && a) {
-        tag = "First"; kind = "accent";
+        tag = "First country"; kind = "accent";
         what = "First aircraft from " + f.country;
         sub = who(a) + (name(a) ? " (" + name(a) + ")" : "") + (a.operator ? ", " + titleCase(a.operator) : "");
       } else if (f.kind === "milestone") {
