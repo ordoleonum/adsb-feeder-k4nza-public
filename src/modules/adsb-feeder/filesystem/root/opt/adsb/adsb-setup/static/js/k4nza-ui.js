@@ -693,10 +693,11 @@
         tag = "Back"; kind = "civ";
         what = who(a) + " is back after " + plural(f.days, "day", "days");
         sub = [name(a), a.operator ? titleCase(a.operator) : ""].filter(Boolean).join(", ");
-      } else if (f.kind === "milestone" && a) {
+      } else if (f.kind === "milestone") {
+        // no aircraft when it was an unidentified "~" target: the count only
         tag = "Milestone"; kind = "good";
         what = "Your " + ord(f.number) + " different aircraft";
-        sub = who(a) + (name(a) ? " (" + name(a) + ")" : "");
+        sub = a ? who(a) + (name(a) ? " (" + name(a) + ")" : "") : "";
       } else if (f.kind === "soon") {
         tag = "Coming up"; kind = "good";
         what = fmt(f.number - f.total) + " away from your " + ord(f.number) + " different aircraft";
@@ -711,7 +712,8 @@
         row.rel = "noopener";
       }
       const mid = el("span");
-      mid.append(el("div", "k4-first-what", what), el("div", "k4-first-sub", sub));
+      mid.appendChild(el("div", "k4-first-what", what));
+      if (sub) mid.appendChild(el("div", "k4-first-sub", sub));
       row.append(el("span", "k4-tag k4-tag-" + kind, tag), mid, el("span", "k4-first-when", f.when ? fmtLocal(f.when) : ""));
       const li = el("li");
       li.appendChild(row);
