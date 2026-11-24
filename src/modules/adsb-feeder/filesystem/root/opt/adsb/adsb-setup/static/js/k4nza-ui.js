@@ -806,7 +806,7 @@
       .catch(() => { /* map not answering: keep the last list */ });
   }
 
-  // Each call takes the Pi a few milliseconds (SkyStats' summary ~50 ms), so
+  // Each call takes the Pi a few milliseconds (SkyStats' summary well under a second), so
   // the home page can refresh often: today's summary every 20 s, the closest
   // aircraft every 5 s (as the live numbers), and all of it at once when the
   // tab is shown again.
