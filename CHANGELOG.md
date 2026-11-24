@@ -3,7 +3,7 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
-## v3.0.15-40 (unreleased)
+## v3.0.15-40 (2026-11-23)
 
 **Dashboard**
 - New **Today's notable events** card: things that happened at your station for the first time
