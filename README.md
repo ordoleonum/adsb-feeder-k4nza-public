@@ -43,11 +43,12 @@ updates you can undo, nightly backups to a NAS, and far fewer writes to the SD c
 
 Need WiFi or more detail? See the full [Install](#install) steps.
 
-## What's new (v3.0.15-35 to -40)
+## What's new (v3.0.15-35 to -41)
 
 - ✨ **Today's notable events:** the dashboard tells you when something happens for the first time
-  ever: a new farthest distance in some direction, a type you've never seen, an aircraft back after
-  weeks away, your 5,000th different aircraft. SkyStats keeps the whole log on its Records tab.
+  ever: a new farthest distance in some direction, your busiest day, a type, an airline or a country
+  you've never seen, your 5,000th different aircraft. SkyStats keeps the whole log on its Records
+  tab, one line per day.
 - 🏆 **Records you can trust:** Fastest, Slowest, Highest and Lowest are judged on each whole visit,
   speeds count only after they check out, and unidentified radar relays stay off the lists. Bugs
   from the original SkyStats put an airliner at 949 mph and filled Slowest with taxiing planes.
@@ -78,8 +79,8 @@ Open the feeder and it tells you what's happening in one sentence: *"Currently t
 - **Today's highlights:** the latest military aircraft, the highest, the rarest type and the
   farthest, each with a photo. Click one to open it in SkyStats.
 - **Today's notable events:** what happened for the first time ever: a new range record in some
-  direction, a type you've never seen, an aircraft back after a week or more, a round number of
-  different aircraft. **Past events** opens the whole log.
+  direction, the busiest day so far, a type, airline or country you've never seen, a round number
+  of different aircraft. **Past events** opens the whole log.
 - **Sharing with** and **Station health:** the sites you feed (and MLAT), CPU temperature, power
   supply, disk space and history size. Anything amber or red explains what to do.
 - **Search your history** right from the top of the page.
@@ -159,8 +160,9 @@ the week. Days and times follow your station's clock, wherever you open it from.
 Further down: **Aircraft types**, **Who flew over most**, **Where they were going** and **Notable
 visitors**, each with a photo and a **Replay** link.
 
-The **Records** tab starts with your station's **notable events**, day by day: every new range
-record, first-ever type, long-awaited return and milestone, kept for good. Below them are the
+The **Records** tab starts with your station's **notable events**, one line per day that opens
+to show its new records, first-ever types, airlines and countries, and milestones, kept for good.
+Below them are the
 fastest, slowest, highest and lowest aircraft you've heard. Each visit is judged once the aircraft
 has left, and a speed only counts after two readings agree with each other and with how far the
 aircraft actually moved.

@@ -3,6 +3,24 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-41 (unreleased)
+
+**Dashboard**
+- Today's notable events: "back after a week or more" is gone. It caught nearly every regular
+  (36 on one day at a station in the middle of the country). In its place:
+  - **First airline:** the first flight ever of an airline ("First Icelandair flight"), from the
+    code at the start of its callsign.
+  - **First country:** the first aircraft registered in a country ("First aircraft from Iceland").
+  - **Busiest day ever:** once today has more different aircraft than any day before ("1,812
+    different aircraft so far, old best 1,784 on Fri, Nov 20"); it keeps counting through the day.
+- The order is records, then firsts (types, airlines, countries), then milestones.
+
+**SkyStats**
+- The notable events log on the Records tab is much shorter: one line per day ("Today: 2 records,
+  11 firsts, 1 milestone"), today open; tap a day to see it. Inside a day the best of each kind
+  shows and the rest fold under "Show 7 more new types".
+- The "back" events logged by -40 are removed.
+
 ## v3.0.15-40 (2026-11-23)
 
 **Dashboard**
