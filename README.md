@@ -27,7 +27,7 @@ updates you can undo, nightly backups to a NAS, and far fewer writes to the SD c
 | Feature | What it means for you |
 |---|---|
 | 🗂️ **Every aircraft you've ever heard** | Search your whole history by registration, callsign, type, operator or group, with photos and a replay of each visit. |
-| 📊 **A dashboard, not a status page** | What you're tracking, what's closest, today's highlights with photos, busy hours, and Pi health that warns you in plain English. |
+| 📊 **A dashboard, not a status page** | What you're tracking, what's closest, today's highlights with photos, new records and firsts, busy hours, and Pi health that warns you in plain English. |
 | 🗺️ **A modern live map** | Light or dark, buttons with words, and replay links that follow the aircraft, on an unmodified tar1090. |
 | 🔄 **Updates you can undo** | Feeder and Raspberry Pi OS updates from one page. Something wrong? **Go back** reinstalls the previous version. |
 | 💾 **Nightly backup to your NAS** | Settings, graphs and your whole flight history, saved every night to a Synology or any SMB share. |
@@ -43,8 +43,11 @@ updates you can undo, nightly backups to a NAS, and far fewer writes to the SD c
 
 Need WiFi or more detail? See the full [Install](#install) steps.
 
-## What's new (v3.0.15-35 to -39)
+## What's new (v3.0.15-35 to -40)
 
+- ✨ **Today's notable events:** the dashboard tells you when something happens for the first time
+  ever: a new farthest distance in some direction, a type you've never seen, an aircraft back after
+  weeks away, your 5,000th different aircraft. SkyStats keeps the whole log on its Records tab.
 - 🏆 **Records you can trust:** Fastest, Slowest, Highest and Lowest are judged on each whole visit,
   speeds count only after they check out, and unidentified radar relays stay off the lists. Bugs
   from the original SkyStats put an airliner at 949 mph and filled Slowest with taxiing planes.
@@ -69,10 +72,14 @@ Open the feeder and it tells you what's happening in one sentence: *"Currently t
 
 - **Four live numbers:** messages and positions per second, the farthest aircraft today, and how many
   you'd never seen before.
-- **Busy hours:** today hour by hour, or aircraft per day for the last week or month.
+- **Busy hours:** today hour by hour, or aircraft per day for the last week or month, with a
+  count scale on the side.
 - **Closest right now:** the four nearest aircraft with type, distance and altitude.
 - **Today's highlights:** the latest military aircraft, the highest, the rarest type and the
   farthest, each with a photo. Click one to open it in SkyStats.
+- **Today's notable events:** what happened for the first time ever: a new range record in some
+  direction, a type you've never seen, an aircraft back after a week or more, a round number of
+  different aircraft. **Past events** opens the whole log.
 - **Sharing with** and **Station health:** the sites you feed (and MLAT), CPU temperature, power
   supply, disk space and history size. Anything amber or red explains what to do.
 - **Search your history** right from the top of the page.
@@ -152,9 +159,11 @@ the week. Days and times follow your station's clock, wherever you open it from.
 Further down: **Aircraft types**, **Who flew over most**, **Where they were going** and **Notable
 visitors**, each with a photo and a **Replay** link.
 
-The **Records** tab keeps the fastest, slowest, highest and lowest aircraft you've heard. Each visit
-is judged once the aircraft has left, and a speed only counts after two readings agree with each
-other and with how far the aircraft actually moved.
+The **Records** tab starts with your station's **notable events**, day by day: every new range
+record, first-ever type, long-awaited return and milestone, kept for good. Below them are the
+fastest, slowest, highest and lowest aircraft you've heard. Each visit is judged once the aircraft
+has left, and a speed only counts after two readings agree with each other and with how far the
+aircraft actually moved.
 
 ### 📡 How well your station hears
 
@@ -333,7 +342,7 @@ The menu at the top (or the **Menu** tab on a phone) has everything:
 |---|---|
 | **Overview** | The dashboard: what you're tracking, today's highlights, history search, station health |
 | **Live map** | What you're receiving right now; Heatmap, Tracks, Replay and Map options are in its menu |
-| **SkyStats** | Activity (the report), Routes, Interesting, Records and **Search**; **Export** is under its gear |
+| **SkyStats** | Activity (the report), Routes, Interesting, Records (with the notable events log) and **Search**; **Export** is under its gear |
 | **Graphs** | How well your station is doing over hours, days and months |
 | **Setup** | Basic setup, Advanced, Radio (SDR) with a reception guide, and Data sharing |
 | **System** | Updates (with **Go back**), Management, Backup and Restore (with the nightly NAS backup), logs and diagnostics |

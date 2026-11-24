@@ -3,6 +3,36 @@
 What changed in each K4NZA ADS-B Feeder release. The newest release is at the top.
 The feeder's **Updates** page shows the newest entry as "What's new".
 
+## v3.0.15-40 (unreleased)
+
+**Dashboard**
+- New **Today's notable events** card: things that happened at your station for the first time
+  ever. A new farthest distance in some direction ("Farthest ever to the south-southwest: 194 mi,
+  old best 184 mi"), an aircraft type you've never seen before, an aircraft back after a week or
+  more away, and round numbers of different aircraft (your 1,000th, 5,000th...) or how close the
+  next one is. Records come first, then firsts, returns and milestones. When there are several of
+  one kind the best one shows and the rest fold under "Show 2 more". Each aircraft opens in
+  SkyStats Search, and **Past events** opens the whole log. The card is hidden on days with
+  nothing new, and records, firsts and returns wait until the station has a week of history.
+- "Today, hour by hour" has an aircraft-count scale on the left, with faint lines at each step,
+  in the Day, Week and Month views.
+
+**SkyStats**
+- **Notable events log** at the top of the Records tab: every record, first, return and
+  milestone, by day, newest first. SkyStats checks for new ones once a minute and keeps them for
+  good, even after the flights behind them are trimmed from the history.
+- The dashboard's summary is much quicker. Finding the rarest type of the day counted every
+  flight in the history once for each type, which took about a second after two weeks and grew
+  every day.
+- Search shows the plane-alert-db category and tags of an aircraft (for example "Hired Gun",
+  "Cargo", "Government Contractor") under its type.
+- The Activity tab's range and signal charts cover the same days as the rest of the tab: since
+  the station's midnight, the last 7 days or the last 30, instead of a rolling 24 hours, week or
+  month. The signal chart says how many readings the period has, not how many dots it draws
+  (at most 2,500).
+- The Activity tab refreshes every 20 seconds (it was every minute), so its numbers keep up with
+  the dashboard; the range and signal charts refresh every minute.
+
 ## v3.0.15-39 (2026-11-22)
 
 **SkyStats**
