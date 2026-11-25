@@ -13,6 +13,10 @@ The feeder's **Updates** page shows the newest entry as "What's new".
 - The firsts say what kind they are: **First type**, **First airline** and **First country**
   (they all read "First"), on the dashboard card and in SkyStats' Records log.
 
+**SkyStats**
+- Clicking a registration on the **Interesting** tab opens its search in a new browser tab, so
+  the Interesting list stays where you were.
+
 ## v3.0.15-41 (2026-11-23)
 
 **Dashboard**
